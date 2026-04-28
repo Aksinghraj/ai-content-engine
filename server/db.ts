@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, contentHistory, InsertContentHistory } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,58 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function saveContentHistory(data: InsertContentHistory) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot save content history: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db.insert(contentHistory).values(data);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to save content history:", error);
+    throw error;
+  }
+}
+
+export async function getContentHistoryByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get content history: database not available");
+    return [];
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(contentHistory)
+      .where(eq(contentHistory.userId, userId))
+      .orderBy(desc(contentHistory.createdAt));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get content history:", error);
+    return [];
+  }
+}
+
+export async function getContentHistoryById(id: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get content history: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(contentHistory)
+      .where(eq(contentHistory.id, id))
+      .limit(1);
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error("[Database] Failed to get content history:", error);
+    return null;
+  }
+}
