@@ -15,6 +15,13 @@
       "when": 1777374355212,
       "tag": "0001_big_shaman",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1777441877987,
+      "tag": "0002_tearful_pet_avengers",
+      "breakpoints": true
     }
   ]
 }

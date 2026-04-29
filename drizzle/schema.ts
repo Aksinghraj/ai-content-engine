@@ -1,4 +1,4 @@
-import { int, json, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, json, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
 
 /**
@@ -18,6 +18,16 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  // Subscription tier: 'free' or 'pro'
+  subscriptionTier: mysqlEnum("subscriptionTier", ["free", "pro"]).default("free").notNull(),
+  // Token balance for free tier users
+  tokenBalance: int("tokenBalance").default(100).notNull(),
+  // Stripe customer ID for Pro users
+  stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
+  // Stripe subscription ID for Pro users
+  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 255 }),
+  // Theme preference: 'light', 'dark', 'auto'
+  theme: mysqlEnum("theme", ["light", "dark", "auto"]).default("auto").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -55,4 +65,64 @@ export const contentHistoryRelations = relations(contentHistory, ({ one }) => ({
     fields: [contentHistory.userId],
     references: [users.id],
   }),
+}));
+
+/**
+ * Token usage tracking table.
+ * Tracks daily token consumption for free tier users.
+ */
+export const tokenUsage = mysqlTable("tokenUsage", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  tokensUsed: int("tokensUsed").notNull(),
+  date: timestamp("date").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type TokenUsage = typeof tokenUsage.$inferSelect;
+export type InsertTokenUsage = typeof tokenUsage.$inferInsert;
+
+/**
+ * Automation schedules table for Pro users.
+ * Stores scheduled content generation tasks.
+ */
+export const automationSchedules = mysqlTable("automationSchedules", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  niche: varchar("niche", { length: 255 }).notNull(),
+  targetAudience: varchar("targetAudience", { length: 255 }).notNull(),
+  platform: varchar("platform", { length: 100 }).notNull(),
+  goal: varchar("goal", { length: 100 }).notNull(),
+  contentStyle: varchar("contentStyle", { length: 100 }).notNull(),
+  // Cron expression for scheduling
+  cronExpression: varchar("cronExpression", { length: 100 }).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AutomationSchedule = typeof automationSchedules.$inferSelect;
+export type InsertAutomationSchedule = typeof automationSchedules.$inferInsert;
+
+// Add relations for new tables
+export const tokenUsageRelations = relations(tokenUsage, ({ one }) => ({
+  user: one(users, {
+    fields: [tokenUsage.userId],
+    references: [users.id],
+  }),
+}));
+
+export const automationSchedulesRelations = relations(automationSchedules, ({ one }) => ({
+  user: one(users, {
+    fields: [automationSchedules.userId],
+    references: [users.id],
+  }),
+}));
+
+// Update users relations to include new tables
+export const usersRelationsUpdated = relations(users, ({ many }) => ({
+  contentHistory: many(contentHistory),
+  tokenUsage: many(tokenUsage),
+  automationSchedules: many(automationSchedules),
 }));

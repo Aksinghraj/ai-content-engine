@@ -3,8 +3,9 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
-import { saveContentHistory, getContentHistoryByUserId, getContentHistoryById } from "./db";
+import { saveContentHistory, getContentHistoryByUserId, getContentHistoryById, getTodayTokenUsage, trackTokenUsage } from "./db";
 import { generateContentPackage } from "./_core/contentGenerator";
+import { subscriptionRouter } from "./routers/subscription";
 
 export const appRouter = router({
   system: systemRouter,
@@ -19,6 +20,8 @@ export const appRouter = router({
     }),
   }),
 
+  subscription: subscriptionRouter,
+
   content: router({
     generate: protectedProcedure
       .input(
@@ -31,8 +34,20 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ ctx, input }) => {
+        const user = ctx.user;
+        
+        // Check if user can generate content (free tier limit)
+        if (user.subscriptionTier === "free") {
+          const todayUsage = await getTodayTokenUsage(user.id);
+          if (todayUsage >= 5) {
+            throw new Error("Daily limit of 5 generations reached. Upgrade to Pro for unlimited access.");
+          }
+        }
+        
+        // Generate content
         const generatedContent = await generateContentPackage(input);
 
+        // Save history
         await saveContentHistory({
           userId: ctx.user.id,
           niche: input.niche,
@@ -42,6 +57,11 @@ export const appRouter = router({
           contentStyle: input.contentStyle,
           generatedContent: generatedContent as any,
         });
+        
+        // Track token usage for free tier
+        if (user.subscriptionTier === "free") {
+          await trackTokenUsage(user.id, 1);
+        }
 
         return generatedContent;
       }),

@@ -37,3 +37,18 @@
 ## Phase 6: Deployment
 - [x] Create final checkpoint
 - [x] Prepare for publishing
+
+## Phase 7: Monetization Backend
+- [x] Update database schema for tokens, subscriptions, and user tiers
+- [x] Add login menu to navigation header
+- [x] Implement theme switcher (3 themes: light, dark, auto)
+- [x] Build token system with usage tracking
+- [x] Create subscription tier system (Free/Pro)
+- [x] Set feature limits for Free tier (5 generations/day, basic features)
+- [x] Set unlimited features for Pro tier
+- [x] Integrate Stripe payment processing
+- [x] Add Pro subscription management UI
+- [ ] Implement automation features for Pro users
+- [x] Add usage dashboard showing token balance
+- [x] Write tests for monetization features
+- [ ] Create final checkpoint

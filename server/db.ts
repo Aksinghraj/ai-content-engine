@@ -1,6 +1,6 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, and, gte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, contentHistory, InsertContentHistory } from "../drizzle/schema";
+import { InsertUser, users, contentHistory, InsertContentHistory, tokenUsage, automationSchedules } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -142,5 +142,113 @@ export async function getContentHistoryById(id: number) {
   } catch (error) {
     console.error("[Database] Failed to get content history:", error);
     return null;
+  }
+}
+
+// Token management functions
+export async function trackTokenUsage(userId: number, tokensUsed: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot track token usage: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db.insert(tokenUsage).values({
+      userId,
+      tokensUsed,
+      date: new Date(),
+    });
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to track token usage:", error);
+    throw error;
+  }
+}
+
+export async function getTodayTokenUsage(userId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get token usage: database not available");
+    return 0;
+  }
+
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const result = await db
+      .select()
+      .from(tokenUsage)
+      .where(and(
+        eq(tokenUsage.userId, userId),
+        gte(tokenUsage.date, today)
+      ));
+    
+    return result.reduce((sum: number, record: any) => sum + record.tokensUsed, 0);
+  } catch (error) {
+    console.error("[Database] Failed to get token usage:", error);
+    return 0;
+  }
+}
+
+export async function updateUserTokenBalance(userId: number, newBalance: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update token balance: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db
+      .update(users)
+      .set({ tokenBalance: newBalance })
+      .where(eq(users.id, userId));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to update token balance:", error);
+    throw error;
+  }
+}
+
+export async function updateUserSubscription(userId: number, tier: 'free' | 'pro', stripeCustomerId?: string, stripeSubscriptionId?: string) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update subscription: database not available");
+    return null;
+  }
+
+  try {
+    const updateData: any = { subscriptionTier: tier };
+    if (stripeCustomerId) updateData.stripeCustomerId = stripeCustomerId;
+    if (stripeSubscriptionId) updateData.stripeSubscriptionId = stripeSubscriptionId;
+    
+    const result = await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, userId));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to update subscription:", error);
+    throw error;
+  }
+}
+
+export async function updateUserTheme(userId: number, theme: 'light' | 'dark' | 'auto') {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update theme: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db
+      .update(users)
+      .set({ theme })
+      .where(eq(users.id, userId));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to update theme:", error);
+    throw error;
   }
 }
