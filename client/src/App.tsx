@@ -9,6 +9,7 @@ import Home from "./pages/Home";
 import Generator from "./pages/Generator";
 import Pricing from "./pages/Pricing";
 import Dashboard from "./pages/Dashboard";
+import Automation from "./pages/Automation";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -20,6 +21,7 @@ function Router() {
         <Route path={"/generator"} component={Generator} />
         <Route path={"/pricing"} component={Pricing} />
         <Route path={"/dashboard"} component={Dashboard} />
+        <Route path={"/automation"} component={Automation} />
         <Route path={"/404"} component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />

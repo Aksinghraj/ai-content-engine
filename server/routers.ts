@@ -6,6 +6,7 @@ import { z } from "zod";
 import { saveContentHistory, getContentHistoryByUserId, getContentHistoryById, getTodayTokenUsage, trackTokenUsage } from "./db";
 import { generateContentPackage } from "./_core/contentGenerator";
 import { subscriptionRouter } from "./routers/subscription";
+import { automationRouter } from "./routers/automation";
 
 export const appRouter = router({
   system: systemRouter,
@@ -21,6 +22,7 @@ export const appRouter = router({
   }),
 
   subscription: subscriptionRouter,
+  automation: automationRouter,
 
   content: router({
     generate: protectedProcedure

@@ -252,3 +252,106 @@ export async function updateUserTheme(userId: number, theme: 'light' | 'dark' | 
     throw error;
   }
 }
+
+// Automation schedule management functions
+export async function createAutomationSchedule(userId: number, schedule: any) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot create automation schedule: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db.insert(automationSchedules).values({
+      userId,
+      name: schedule.name,
+      niche: schedule.niche,
+      targetAudience: schedule.targetAudience,
+      platform: schedule.platform,
+      goal: schedule.goal,
+      contentStyle: schedule.contentStyle,
+      cronExpression: schedule.cronExpression,
+      isActive: true,
+    });
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to create automation schedule:", error);
+    throw error;
+  }
+}
+
+export async function getAutomationSchedulesByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get automation schedules: database not available");
+    return [];
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(automationSchedules)
+      .where(eq(automationSchedules.userId, userId))
+      .orderBy(desc(automationSchedules.createdAt));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get automation schedules:", error);
+    return [];
+  }
+}
+
+export async function updateAutomationSchedule(scheduleId: number, updates: any) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update automation schedule: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db
+      .update(automationSchedules)
+      .set(updates)
+      .where(eq(automationSchedules.id, scheduleId));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to update automation schedule:", error);
+    throw error;
+  }
+}
+
+export async function deleteAutomationSchedule(scheduleId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot delete automation schedule: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db
+      .delete(automationSchedules)
+      .where(eq(automationSchedules.id, scheduleId));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to delete automation schedule:", error);
+    throw error;
+  }
+}
+
+export async function getActiveAutomationSchedules() {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get active automation schedules: database not available");
+    return [];
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(automationSchedules)
+      .where(eq(automationSchedules.isActive, true));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get active automation schedules:", error);
+    return [];
+  }
+}
