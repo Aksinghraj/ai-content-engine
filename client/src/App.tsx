@@ -6,18 +6,26 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import Header from "./components/Header";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Features from "./pages/Features";
+import Settings from "./pages/Settings";
+import Payments from "./pages/Payments";
+import HomeNew from "./pages/HomeNew";
 import Generator from "./pages/Generator";
 import Pricing from "./pages/Pricing";
 import Dashboard from "./pages/Dashboard";
 import Automation from "./pages/Automation";
 
 function Router() {
-  // make sure to consider if you need authentication for certain routes
   return (
     <>
-      <Header />
       <Switch>
-        <Route path={"\\"} component={Home} />
+        <Route path={"/login"} component={Login} />
+        <Route path={"/home"} component={HomeNew} />
+        <Route path={"/features"} component={Features} />
+        <Route path={"/settings"} component={Settings} />
+        <Route path={"/payments"} component={Payments} />
+        <Route path={"/"} component={Home} />
         <Route path={"/generator"} component={Generator} />
         <Route path={"/pricing"} component={Pricing} />
         <Route path={"/dashboard"} component={Dashboard} />

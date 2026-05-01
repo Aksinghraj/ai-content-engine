@@ -96,7 +96,7 @@ export default function Generator() {
   const [progress, setProgress] = useState(0);
 
   const generateMutation = trpc.content.generate.useMutation();
-  const getHistoryQuery = trpc.content.getHistory.useQuery(undefined, {
+  const getHistoryQuery = trpc.content.history.useQuery(undefined, {
     enabled: isAuthenticated,
   });
 

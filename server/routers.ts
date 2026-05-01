@@ -7,6 +7,7 @@ import { saveContentHistory, getContentHistoryByUserId, getContentHistoryById, g
 import { generateContentPackage } from "./_core/contentGenerator";
 import { subscriptionRouter } from "./routers/subscription";
 import { automationRouter } from "./routers/automation";
+import { eq, desc, and, gte } from "drizzle-orm";
 
 export const appRouter = router({
   system: systemRouter,
@@ -48,34 +49,43 @@ export const appRouter = router({
         
         // Generate content
         const generatedContent = await generateContentPackage(input);
-
-        // Save history
+        
+        // Save to history
         await saveContentHistory({
-          userId: ctx.user.id,
+          userId: user.id,
           niche: input.niche,
           targetAudience: input.targetAudience,
           platform: input.platform,
           goal: input.goal,
           contentStyle: input.contentStyle,
-          generatedContent: generatedContent as any,
+          generatedContent: JSON.stringify(generatedContent),
         });
         
-        // Track token usage for free tier
-        if (user.subscriptionTier === "free") {
-          await trackTokenUsage(user.id, 1);
-        }
-
+        // Track token usage
+        await trackTokenUsage(user.id, 1);
+        
         return generatedContent;
       }),
 
-    getHistory: protectedProcedure.query(async ({ ctx }) => {
-      return await getContentHistoryByUserId(ctx.user.id);
+    history: protectedProcedure.query(async ({ ctx }) => {
+      const history = await getContentHistoryByUserId(ctx.user.id);
+      return history.map((item: any) => ({
+        ...item,
+        generatedContent: JSON.parse(item.generatedContent as string),
+      }));
     }),
 
     getById: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .query(async ({ input }) => {
-        return await getContentHistoryById(input.id);
+      .query(async ({ ctx, input }) => {
+        const content = await getContentHistoryById(input.id);
+        if (!content || content.userId !== ctx.user.id) {
+          throw new Error("Content not found");
+        }
+        return {
+          ...content,
+          generatedContent: JSON.parse(content.generatedContent as string),
+        };
       }),
   }),
 });
