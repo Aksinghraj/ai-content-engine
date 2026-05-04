@@ -34,13 +34,13 @@ export default function Payments() {
 
   const checkoutMutation = trpc.subscription.createCheckoutSession.useMutation({
     onSuccess: (data) => {
-      if (data.url) {
-        window.open(data.url, "_blank");
-        toast.success("Redirecting to payment...");
+      if (data.orderId) {
+        toast.success("Payment order created. Razorpay integration coming soon...");
       }
+      setIsProcessing(false);
     },
-    onError: (error) => {
-      toast.error(error.message || "Failed to create checkout session");
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to create payment order");
       setIsProcessing(false);
     },
   });
@@ -175,24 +175,20 @@ export default function Payments() {
                   <p className="text-white font-semibold capitalize">{details.status}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-400 mb-1">Renewal Date</p>
-                  <p className="text-white font-semibold">
-                    {details.currentPeriodEnd.toLocaleDateString()}
-                  </p>
+                  <p className="text-sm text-slate-400 mb-1">Status</p>
+                  <p className="text-white font-semibold">Active</p>
                 </div>
                 <div>
                   <p className="text-sm text-slate-400 mb-1">Billing Cycle</p>
                   <p className="text-white font-semibold">Monthly</p>
                 </div>
               </div>
-              {details.cancelAtPeriodEnd && (
+              {false && (
                 <div className="flex items-start gap-3 p-4 bg-yellow-900/20 border border-yellow-700/50 rounded-lg">
                   <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-semibold text-yellow-200">Subscription Ending</p>
-                    <p className="text-sm text-yellow-300">
-                      Your subscription will end on {details.currentPeriodEnd.toLocaleDateString()}
-                    </p>
+                    <p className="text-sm text-yellow-300">Your subscription will end soon</p>
                   </div>
                 </div>
               )}

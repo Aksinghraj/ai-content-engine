@@ -23,9 +23,8 @@ export default function Pricing() {
         priceId: "price_1234567890",
       });
 
-      if (result.url) {
-        window.open(result.url, "_blank");
-        toast.success("Redirecting to checkout...");
+      if (result.orderId) {
+        toast.success("Payment order created. Razorpay integration coming soon...");
       }
     } catch (error) {
       toast.error("Failed to start checkout");

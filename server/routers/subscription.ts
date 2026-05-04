@@ -1,9 +1,22 @@
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { updateUserSubscription, updateUserTheme, getTodayTokenUsage, updateUserTokenBalance } from "../db";
-import { Stripe } from "stripe";
+import crypto from "crypto";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
+// Razorpay will be initialized when credentials are added
+let razorpay: any = null;
+
+try {
+  if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+    const RazorpayClass = require('razorpay');
+    razorpay = new RazorpayClass({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+  }
+} catch (error) {
+  console.warn('[Razorpay] Not initialized - credentials not set yet');
+}
 
 // Subscription tier limits
 const TIER_LIMITS = {
@@ -17,6 +30,11 @@ const TIER_LIMITS = {
     maxHistoryItems: -1, // unlimited
     features: ["basic_generation", "history", "automation", "advanced_analytics", "batch_generation", "priority_support"],
   },
+};
+
+// Razorpay plan IDs
+const RAZORPAY_PLANS = {
+  pro_monthly: process.env.RAZORPAY_PLAN_ID_MONTHLY || "plan_pro_monthly",
 };
 
 export const subscriptionRouter = router({
@@ -80,49 +98,76 @@ export const subscriptionRouter = router({
       return { success: true, remaining: newBalance, unlimited: false };
     }),
 
-  // Create checkout session for Pro subscription
+  // Create Razorpay order for Pro subscription
   createCheckoutSession: protectedProcedure
-    .input(z.object({ priceId: z.string() }))
+    .input(z.object({ priceId: z.string().optional() }))
     .mutation(async ({ ctx, input }) => {
       const user = ctx.user;
       
       try {
-        // Create or get Stripe customer
-        let customerId = user.stripeCustomerId;
-        
-        if (!customerId) {
-          const customer = await stripe.customers.create({
-            email: user.email || undefined,
-            name: user.name || undefined,
-            metadata: {
-              userId: user.id.toString(),
-            },
-          });
-          customerId = customer.id;
-        }
-        
-        // Create checkout session
-        const session = await stripe.checkout.sessions.create({
-          customer: customerId,
-          mode: "subscription",
-          payment_method_types: ["card"],
-          line_items: [
-            {
-              price: input.priceId,
-              quantity: 1,
-            },
-          ],
-          success_url: `${ctx.req.headers.origin}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${ctx.req.headers.origin}/pricing`,
-          metadata: {
+        // Create Razorpay order
+        const order = await razorpay.orders.create({
+          amount: 99900, // ₹999 in paise (monthly Pro subscription)
+          currency: "INR",
+          receipt: `order_${user.id}_${Date.now()}`,
+          notes: {
             userId: user.id.toString(),
+            userEmail: user.email || "",
+            userName: user.name || "",
+            plan: "pro_monthly",
           },
         });
         
-        return { sessionId: session.id, url: session.url };
+        return {
+          orderId: order.id,
+          amount: order.amount,
+          currency: order.currency,
+          keyId: process.env.RAZORPAY_KEY_ID,
+        };
       } catch (error) {
-        console.error("Stripe checkout error:", error);
-        throw new Error("Failed to create checkout session");
+        console.error("Razorpay order creation error:", error);
+        throw new Error("Failed to create payment order");
+      }
+    }),
+
+  // Verify Razorpay payment
+  verifyPayment: protectedProcedure
+    .input(z.object({
+      orderId: z.string(),
+      paymentId: z.string(),
+      signature: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const user = ctx.user;
+      
+      try {
+        // Verify signature
+        const shasum = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "");
+        shasum.update(`${input.orderId}|${input.paymentId}`);
+        const digest = shasum.digest("hex");
+        
+        if (digest !== input.signature) {
+          throw new Error("Invalid payment signature");
+        }
+        
+        // Fetch payment details to verify
+        const payment = await razorpay.payments.fetch(input.paymentId);
+        
+        if (payment.status !== "captured") {
+          throw new Error("Payment not captured");
+        }
+        
+        // Update user subscription to Pro
+        await updateUserSubscription(user.id, "pro", input.paymentId);
+        
+        return {
+          success: true,
+          message: "Payment verified and subscription upgraded to Pro",
+          tier: "pro",
+        };
+      } catch (error) {
+        console.error("Payment verification error:", error);
+        throw new Error("Failed to verify payment");
       }
     }),
 
@@ -130,43 +175,33 @@ export const subscriptionRouter = router({
   getSubscriptionDetails: protectedProcedure.query(async ({ ctx }) => {
     const user = ctx.user;
     
-    if (!user.stripeSubscriptionId) {
+    if (user.subscriptionTier !== "pro") {
       return null;
     }
     
-    try {
-      const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
-      const sub = subscription as any;
-      return {
-        id: sub.id,
-        status: sub.status,
-        currentPeriodStart: new Date(sub.current_period_start * 1000),
-        currentPeriodEnd: new Date(sub.current_period_end * 1000),
-        cancelAtPeriodEnd: sub.cancel_at_period_end,
-      };
-    } catch (error) {
-      console.error("Error fetching subscription:", error);
-      return null;
-    }
+    return {
+      tier: "pro",
+      status: "active",
+      features: TIER_LIMITS.pro.features,
+      generationsPerDay: "Unlimited",
+      supportLevel: "Priority",
+    };
   }),
 
-  // Cancel subscription
-  cancelSubscription: protectedProcedure.mutation(async ({ ctx }) => {
+  // Downgrade to Free
+  downgradeToFree: protectedProcedure.mutation(async ({ ctx }) => {
     const user = ctx.user;
     
-    if (!user.stripeSubscriptionId) {
-      throw new Error("No active subscription");
+    if (user.subscriptionTier === "free") {
+      throw new Error("Already on Free tier");
     }
     
     try {
-      await stripe.subscriptions.update(user.stripeSubscriptionId, {
-        cancel_at_period_end: true,
-      });
-      
-      return { success: true, message: "Subscription will be cancelled at period end" };
+      await updateUserSubscription(user.id, "free", undefined);
+      return { success: true, message: "Downgraded to Free tier", tier: "free" };
     } catch (error) {
-      console.error("Error cancelling subscription:", error);
-      throw new Error("Failed to cancel subscription");
+      console.error("Downgrade error:", error);
+      throw new Error("Failed to downgrade subscription");
     }
   }),
 });
