@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
@@ -100,11 +100,13 @@ export default function Generator() {
     enabled: isAuthenticated,
   });
 
-  // Load history on mount
-  if (getHistoryQuery.data && history.length === 0 && !getHistoryQuery.isLoading) {
-    const historyData = getHistoryQuery.data as HistoryItem[];
-    setHistory(historyData);
-  }
+  // Load history on mount - moved to useEffect to avoid render-phase setState
+  useEffect(() => {
+    if (getHistoryQuery.data && history.length === 0 && !getHistoryQuery.isLoading) {
+      const historyData = getHistoryQuery.data as HistoryItem[];
+      setHistory(historyData);
+    }
+  }, [getHistoryQuery.data, getHistoryQuery.isLoading, history.length])
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
