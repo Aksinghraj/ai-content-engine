@@ -77,6 +77,19 @@ interface HistoryItem {
 const PLATFORMS = ["Instagram", "YouTube", "LinkedIn", "Twitter", "TikTok", "Facebook"];
 const GOALS = ["Growth", "Engagement", "Sales", "Authority", "Brand Awareness"];
 const STYLES = ["Educational", "Entertaining", "Storytelling", "Bold", "Inspirational", "Humorous"];
+const LANGUAGES = [
+  { code: "en", name: "English" },
+  { code: "hi", name: "Hindi" },
+  { code: "hinglish", name: "Hinglish" },
+  { code: "ta", name: "Tamil" },
+  { code: "te", name: "Telugu" },
+  { code: "kn", name: "Kannada" },
+  { code: "ml", name: "Malayalam" },
+  { code: "mr", name: "Marathi" },
+  { code: "gu", name: "Gujarati" },
+  { code: "bn", name: "Bengali" },
+  { code: "pa", name: "Punjabi" },
+];
 
 export default function Generator() {
   const { user, isAuthenticated } = useAuth();
@@ -88,12 +101,14 @@ export default function Generator() {
     platform: "",
     goal: "",
     contentStyle: "",
+    language: "hinglish",
   });
 
   const [generatedContent, setGeneratedContent] = useState<ContentPackage | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [selectedLanguage, setSelectedLanguage] = useState("hinglish");
 
   const generateMutation = trpc.content.generate.useMutation();
   const getHistoryQuery = trpc.content.history.useQuery(undefined, {
@@ -160,6 +175,7 @@ export default function Generator() {
       platform: item.platform,
       goal: item.goal,
       contentStyle: item.contentStyle,
+      language: "hinglish",
     });
   };
 
@@ -308,6 +324,29 @@ export default function Generator() {
                         {STYLES.map((s) => (
                           <SelectItem key={s} value={s}>
                             {s}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="language">Language</Label>
+                    <Select
+                      value={selectedLanguage}
+                      onValueChange={(value) => {
+                        setSelectedLanguage(value);
+                        setFormData({ ...formData, language: value });
+                      }}
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger id="language">
+                        <SelectValue placeholder="Select language" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {LANGUAGES.map((lang) => (
+                          <SelectItem key={lang.code} value={lang.code}>
+                            {lang.name}
                           </SelectItem>
                         ))}
                       </SelectContent>

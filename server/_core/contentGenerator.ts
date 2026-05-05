@@ -6,6 +6,7 @@ interface ContentGenerationInput {
   platform: string;
   goal: string;
   contentStyle: string;
+  language?: string;
 }
 
 interface GeneratedContent {
@@ -172,12 +173,15 @@ export async function generateContentPackage(
 }
 
 function buildContentPrompt(input: ContentGenerationInput): string {
+  const languageInstruction = getLanguageInstruction(input.language || "en");
+  
   return `Generate a complete, high-engagement content package for:
 - Niche: ${input.niche}
 - Target Audience: ${input.targetAudience}
 - Platform: ${input.platform}
 - Goal: ${input.goal}
 - Content Style: ${input.contentStyle}
+${languageInstruction}
 
 Return a JSON object with this exact structure:
 {
@@ -219,6 +223,24 @@ RULES:
 - Ensure all arrays have the exact number of items specified
 - Make hooks max 12 words each, starting with attention-grabbing first 3 words
 - Make script under 45 seconds when read aloud`;
+}
+
+function getLanguageInstruction(language: string): string {
+  const languageMap: Record<string, string> = {
+    en: "- Language: English",
+    hi: "- Language: Hindi",
+    hinglish: "- Language: Hinglish (Mix of Hindi and English)",
+    ta: "- Language: Tamil",
+    te: "- Language: Telugu",
+    kn: "- Language: Kannada",
+    ml: "- Language: Malayalam",
+    mr: "- Language: Marathi",
+    gu: "- Language: Gujarati",
+    bn: "- Language: Bengali",
+    pa: "- Language: Punjabi",
+  };
+  
+  return languageMap[language] || languageMap["en"];
 }
 
 function normalizeContentPackage(data: any): GeneratedContent {
