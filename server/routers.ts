@@ -34,6 +34,7 @@ export const appRouter = router({
           platform: z.string().min(1),
           goal: z.string().min(1),
           contentStyle: z.string().min(1),
+          language: z.string().optional().default("en"),
         })
       )
       .mutation(async ({ ctx, input }) => {
