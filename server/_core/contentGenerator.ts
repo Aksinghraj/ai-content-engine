@@ -162,7 +162,6 @@ export async function generateContentPackage(
       throw new Error("No content received from LLM");
     }
 
-    // Handle both string and array content from LLM
     const contentString = typeof content === "string" ? content : JSON.stringify(content);
     const parsed = JSON.parse(contentString);
     return normalizeContentPackage(parsed);
@@ -172,16 +171,57 @@ export async function generateContentPackage(
   }
 }
 
+function getLanguageName(language: string): string {
+  const map: Record<string, string> = {
+    en: "English",
+    hi: "Hindi",
+    hinglish: "Hinglish",
+    ta: "Tamil",
+    te: "Telugu",
+    kn: "Kannada",
+    ml: "Malayalam",
+    mr: "Marathi",
+    gu: "Gujarati",
+    bn: "Bengali",
+    pa: "Punjabi",
+  };
+  return map[language] || "English";
+}
+
+function getDetailedLanguageInstructions(language: string): string {
+  const instructions: Record<string, string> = {
+    en: "Generate content in clear, engaging English suitable for social media.",
+    hi: "Generate ALL content in Hindi. Use simple and engaging Hindi language. Make it relatable and viral-worthy.",
+    hinglish: "Generate content in Hinglish - mix Hindi and English naturally. Use casual, trendy language that resonates with Indian youth. Make it fun and relatable.",
+    ta: "Generate ALL content in Tamil. Use engaging and simple Tamil language suitable for social media.",
+    te: "Generate ALL content in Telugu. Use engaging and simple Telugu language suitable for social media.",
+    kn: "Generate ALL content in Kannada. Use engaging and simple Kannada language suitable for social media.",
+    ml: "Generate ALL content in Malayalam. Use engaging and simple Malayalam language suitable for social media.",
+    mr: "Generate ALL content in Marathi. Use engaging and simple Marathi language suitable for social media.",
+    gu: "Generate ALL content in Gujarati. Use engaging and simple Gujarati language suitable for social media.",
+    bn: "Generate ALL content in Bengali. Use engaging and simple Bengali language suitable for social media.",
+    pa: "Generate ALL content in Punjabi. Use engaging and simple Punjabi language suitable for social media.",
+  };
+  return instructions[language] || instructions["en"];
+}
+
 function buildContentPrompt(input: ContentGenerationInput): string {
-  const languageInstruction = getLanguageInstruction(input.language || "en");
+  const languageCode = input.language || "en";
+  const languageName = getLanguageName(languageCode);
+  const languageInstructions = getDetailedLanguageInstructions(languageCode);
   
-  return `Generate a complete, high-engagement content package for:
+  return `Generate a complete, high-engagement content package in ${languageName}.
+
+Content Details:
 - Niche: ${input.niche}
 - Target Audience: ${input.targetAudience}
 - Platform: ${input.platform}
 - Goal: ${input.goal}
 - Content Style: ${input.contentStyle}
-${languageInstruction}
+
+${languageInstructions}
+
+CRITICAL INSTRUCTION: Generate EVERY SINGLE piece of content (all viral ideas, hooks, scripts, captions, hashtags, carousel slides, tweets, LinkedIn posts, YouTube descriptions, and tips) ENTIRELY in ${languageName}. Do NOT use English. Do NOT mix languages. Everything must be in ${languageName}.
 
 Return a JSON object with this exact structure:
 {
@@ -222,29 +262,11 @@ RULES:
 - Keep language simple and human-like
 - Ensure all arrays have the exact number of items specified
 - Make hooks max 12 words each, starting with attention-grabbing first 3 words
-- Make script under 45 seconds when read aloud`;
-}
-
-function getLanguageInstruction(language: string): string {
-  const languageMap: Record<string, string> = {
-    en: "- Language: English",
-    hi: "- Language: Hindi",
-    hinglish: "- Language: Hinglish (Mix of Hindi and English)",
-    ta: "- Language: Tamil",
-    te: "- Language: Telugu",
-    kn: "- Language: Kannada",
-    ml: "- Language: Malayalam",
-    mr: "- Language: Marathi",
-    gu: "- Language: Gujarati",
-    bn: "- Language: Bengali",
-    pa: "- Language: Punjabi",
-  };
-  
-  return languageMap[language] || languageMap["en"];
+- Make script under 45 seconds when read aloud
+- REMEMBER: ALL content must be in ${languageName}`;
 }
 
 function normalizeContentPackage(data: any): GeneratedContent {
-  // Ensure all required fields exist with proper structure
   return {
     viralIdeas: Array.isArray(data.viralIdeas) ? data.viralIdeas.slice(0, 10) : [],
     bestIdea: {
