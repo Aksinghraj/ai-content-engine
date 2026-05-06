@@ -15,6 +15,8 @@ import Generator from "./pages/Generator";
 import Pricing from "./pages/Pricing";
 import Dashboard from "./pages/Dashboard";
 import Automation from "./pages/Automation";
+import AdvancedAutomation from "./pages/AdvancedAutomation";
+import Analytics from "./pages/Analytics";
 
 function Router() {
   return (
@@ -29,8 +31,10 @@ function Router() {
         <Route path={"/generator"} component={Generator} />
         <Route path={"/pricing"} component={Pricing} />
         <Route path={"/dashboard"} component={Dashboard} />
-        <Route path={"/automation"} component={Automation} />
-        <Route path={"/404"} component={NotFound} />
+         <Route path={"automation"} component={Automation} />
+        <Route path={"advanced-automation"} component={AdvancedAutomation} />
+        <Route path={"analytics"} component={Analytics} />
+        <Route path={"404"} component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />
       </Switch>

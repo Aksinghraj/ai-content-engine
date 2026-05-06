@@ -7,6 +7,8 @@ import { saveContentHistory, getContentHistoryByUserId, getContentHistoryById, g
 import { generateContentPackage } from "./_core/contentGenerator";
 import { subscriptionRouter } from "./routers/subscription";
 import { automationRouter } from "./routers/automation";
+import { analyticsRouter } from "./routers/analytics";
+import { generateAutomationContent, AutomationType } from "./_core/automationGenerators";
 import { eq, desc, and, gte } from "drizzle-orm";
 
 export const appRouter = router({
@@ -24,6 +26,104 @@ export const appRouter = router({
 
   subscription: subscriptionRouter,
   automation: automationRouter,
+  analytics: analyticsRouter,
+
+  automationGenerators: router({
+    generateBlog: protectedProcedure
+      .input(
+        z.object({
+          niche: z.string().min(1),
+          topic: z.string().min(1),
+          tone: z.string().min(1),
+          language: z.string().optional().default("en"),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.subscriptionTier !== "pro") {
+          throw new Error("This feature is only available for Pro users");
+        }
+        return generateAutomationContent({
+          ...input,
+          platform: "blog",
+        });
+      }),
+
+    generateTweets: protectedProcedure
+      .input(
+        z.object({
+          niche: z.string().min(1),
+          topic: z.string().min(1),
+          tone: z.string().min(1),
+          language: z.string().optional().default("en"),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.subscriptionTier !== "pro") {
+          throw new Error("This feature is only available for Pro users");
+        }
+        return generateAutomationContent({
+          ...input,
+          platform: "tweet",
+        });
+      }),
+
+    generateEmail: protectedProcedure
+      .input(
+        z.object({
+          niche: z.string().min(1),
+          topic: z.string().min(1),
+          tone: z.string().min(1),
+          language: z.string().optional().default("en"),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.subscriptionTier !== "pro") {
+          throw new Error("This feature is only available for Pro users");
+        }
+        return generateAutomationContent({
+          ...input,
+          platform: "email",
+        });
+      }),
+
+    generateInstagram: protectedProcedure
+      .input(
+        z.object({
+          niche: z.string().min(1),
+          topic: z.string().min(1),
+          tone: z.string().min(1),
+          language: z.string().optional().default("en"),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.subscriptionTier !== "pro") {
+          throw new Error("This feature is only available for Pro users");
+        }
+        return generateAutomationContent({
+          ...input,
+          platform: "instagram",
+        });
+      }),
+
+    generateFacebook: protectedProcedure
+      .input(
+        z.object({
+          niche: z.string().min(1),
+          topic: z.string().min(1),
+          tone: z.string().min(1),
+          language: z.string().optional().default("en"),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.subscriptionTier !== "pro") {
+          throw new Error("This feature is only available for Pro users");
+        }
+        return generateAutomationContent({
+          ...input,
+          platform: "facebook",
+        });
+      }),
+  }),
 
   content: router({
     generate: protectedProcedure

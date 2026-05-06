@@ -1,4 +1,4 @@
-import { getActiveAutomationSchedules, saveContentHistory } from "../db";
+import { getActiveAutomationSchedules, saveContentHistory, logAutomationExecution } from "../db";
 import { generateContentPackage } from "./contentGenerator";
 import * as cron from "node-cron";
 
@@ -87,6 +87,14 @@ async function executeAutomation(schedule: any) {
       generatedContent: generatedContent as any,
     });
 
+    // Log execution success
+    await logAutomationExecution(
+      schedule.userId,
+      schedule.id,
+      'success',
+      generatedContent
+    );
+
     console.log(`[Automation] Successfully executed schedule: ${schedule.name}`);
     
     return {
@@ -96,6 +104,15 @@ async function executeAutomation(schedule: any) {
     };
   } catch (error) {
     console.error(`[Automation] Failed to execute schedule ${schedule.id}:`, error);
+    
+    // Log execution failure
+    await logAutomationExecution(
+      schedule.userId,
+      schedule.id,
+      'failed',
+      undefined,
+      error instanceof Error ? error.message : "Unknown error"
+    );
     
     return {
       success: false,

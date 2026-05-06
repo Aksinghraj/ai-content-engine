@@ -1,7 +1,8 @@
-import { desc, eq, and, gte } from "drizzle-orm";
+
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, contentHistory, InsertContentHistory, tokenUsage, automationSchedules } from "../drizzle/schema";
+import { InsertUser, users, contentHistory, InsertContentHistory, tokenUsage, automationSchedules, automationExecutionLogs, contentAnalytics } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import { eq, desc, and, gte, sql } from "drizzle-orm";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -353,5 +354,170 @@ export async function getActiveAutomationSchedules() {
   } catch (error) {
     console.error("[Database] Failed to get active automation schedules:", error);
     return [];
+  }
+}
+
+// Analytics tracking functions
+export async function trackContentAnalytics(userId: number, data: any) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot track analytics: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db.insert(contentAnalytics).values({
+      userId,
+      contentHistoryId: data.contentHistoryId,
+      platform: data.platform,
+      engagement: data.engagement || 0,
+      reach: data.reach || 0,
+      conversions: data.conversions || 0,
+      clicks: data.clicks || 0,
+      shares: data.shares || 0,
+      comments: data.comments || 0,
+      date: new Date(),
+    });
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to track analytics:", error);
+    throw error;
+  }
+}
+
+export async function getContentAnalyticsByUserId(userId: number, days: number = 7) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get analytics: database not available");
+    return [];
+  }
+
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const result = await db
+      .select()
+      .from(contentAnalytics)
+      .where(and(
+        eq(contentAnalytics.userId, userId),
+        gte(contentAnalytics.date, startDate)
+      ))
+      .orderBy(desc(contentAnalytics.date));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get analytics:", error);
+    return [];
+  }
+}
+
+export async function getAnalyticsByPlatform(userId: number, days: number = 7) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get platform analytics: database not available");
+    return [];
+  }
+
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const result = await db
+      .select({
+        platform: contentAnalytics.platform,
+        totalEngagement: sql`SUM(${contentAnalytics.engagement})`,
+        totalReach: sql`SUM(${contentAnalytics.reach})`,
+        totalConversions: sql`SUM(${contentAnalytics.conversions})`,
+      })
+      .from(contentAnalytics)
+      .where(and(
+        eq(contentAnalytics.userId, userId),
+        gte(contentAnalytics.date, startDate)
+      ))
+      .groupBy(contentAnalytics.platform);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get platform analytics:", error);
+    return [];
+  }
+}
+
+// Automation execution logging functions
+export async function logAutomationExecution(userId: number, scheduleId: number, status: 'success' | 'failed' | 'pending', generatedContent?: any, errorMessage?: string) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot log automation execution: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db.insert(automationExecutionLogs).values({
+      userId,
+      scheduleId,
+      status,
+      generatedContent: generatedContent || null,
+      errorMessage: errorMessage || null,
+      executedAt: new Date(),
+    });
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to log automation execution:", error);
+    throw error;
+  }
+}
+
+export async function getAutomationExecutionLogs(userId: number, scheduleId?: number, limit: number = 50) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get execution logs: database not available");
+    return [];
+  }
+
+  try {
+    const conditions = [eq(automationExecutionLogs.userId, userId)];
+    if (scheduleId) {
+      conditions.push(eq(automationExecutionLogs.scheduleId, scheduleId));
+    }
+
+    const result = await db
+      .select()
+      .from(automationExecutionLogs)
+      .where(and(...conditions))
+      .orderBy(desc(automationExecutionLogs.executedAt))
+      .limit(limit);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get execution logs:", error);
+    return [];
+  }
+}
+
+export async function getAutomationExecutionStats(userId: number, days: number = 7) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get execution stats: database not available");
+    return null;
+  }
+
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const result = await db
+      .select({
+        totalExecutions: sql`COUNT(*)`,
+        successfulExecutions: sql`SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END)`,
+        failedExecutions: sql`SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END)`,
+      })
+      .from(automationExecutionLogs)
+      .where(and(
+        eq(automationExecutionLogs.userId, userId),
+        gte(automationExecutionLogs.executedAt, startDate)
+      ));
+
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error("[Database] Failed to get execution stats:", error);
+    return null;
   }
 }

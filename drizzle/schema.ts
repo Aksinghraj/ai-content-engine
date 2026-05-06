@@ -126,3 +126,65 @@ export const usersRelationsUpdated = relations(users, ({ many }) => ({
   tokenUsage: many(tokenUsage),
   automationSchedules: many(automationSchedules),
 }));
+/**
+ * Automation execution logs table.
+ * Tracks when automations run and their results.
+ */
+export const automationExecutionLogs = mysqlTable("automationExecutionLogs", {
+  id: int("id").autoincrement().primaryKey(),
+  scheduleId: int("scheduleId").notNull(),
+  userId: int("userId").notNull(),
+  status: mysqlEnum("status", ["success", "failed", "pending"]).default("pending").notNull(),
+  generatedContent: json("generatedContent"),
+  errorMessage: text("errorMessage"),
+  executedAt: timestamp("executedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AutomationExecutionLog = typeof automationExecutionLogs.$inferSelect;
+export type InsertAutomationExecutionLog = typeof automationExecutionLogs.$inferInsert;
+
+/**
+ * Content performance analytics table.
+ * Tracks engagement metrics for generated content.
+ */
+export const contentAnalytics = mysqlTable("contentAnalytics", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  contentHistoryId: int("contentHistoryId"),
+  platform: varchar("platform", { length: 100 }).notNull(),
+  engagement: int("engagement").default(0).notNull(),
+  reach: int("reach").default(0).notNull(),
+  conversions: int("conversions").default(0).notNull(),
+  clicks: int("clicks").default(0).notNull(),
+  shares: int("shares").default(0).notNull(),
+  comments: int("comments").default(0).notNull(),
+  date: timestamp("date").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ContentAnalytics = typeof contentAnalytics.$inferSelect;
+export type InsertContentAnalytics = typeof contentAnalytics.$inferInsert;
+
+// Relations for new tables
+export const automationExecutionLogsRelations = relations(automationExecutionLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [automationExecutionLogs.userId],
+    references: [users.id],
+  }),
+  schedule: one(automationSchedules, {
+    fields: [automationExecutionLogs.scheduleId],
+    references: [automationSchedules.id],
+  }),
+}));
+
+export const contentAnalyticsRelations = relations(contentAnalytics, ({ one }) => ({
+  user: one(users, {
+    fields: [contentAnalytics.userId],
+    references: [users.id],
+  }),
+  contentHistory: one(contentHistory, {
+    fields: [contentAnalytics.contentHistoryId],
+    references: [contentHistory.id],
+  }),
+}));
