@@ -1,16 +1,16 @@
+import { useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
-import { Zap, Calendar, CheckCircle, AlertCircle, ArrowLeft, Crown, Flame } from "lucide-react";
-import { useLocation } from "wouter";
-import { useEffect } from "react";
+import { Zap, Calendar, CheckCircle, AlertCircle, ArrowLeft, Crown, Flame, Cog, Plus } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
-  const [, navigate] = useLocation();
+  const [, navigate] = useLocation() as any;
   const subscriptionQuery = trpc.subscription.getStatus.useQuery(undefined, {
     enabled: isAuthenticated,
   });
@@ -55,6 +55,29 @@ export default function Dashboard() {
         <div className="mb-12">
           <h2 className="text-3xl font-bold text-white mb-2">Welcome back, {user.name}!</h2>
           <p className="text-slate-400">Manage your subscription and track your usage</p>
+        </div>
+
+        {/* Automation Quick Access */}
+        <div className="mb-12 p-6 rounded-2xl bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/30 backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+                <Cog className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Automation</h3>
+                <p className="text-sm text-slate-300">Schedule content generation automatically</p>
+              </div>
+            </div>
+            <Button
+              onClick={() => navigate("/automations")}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Automation
+            </Button>
+          </div>
+          <p className="text-slate-300 text-sm">Set up automated content generation schedules for any platform. Generate and post content 24/7 without manual effort.</p>
         </div>
 
         {/* Stats Grid */}
