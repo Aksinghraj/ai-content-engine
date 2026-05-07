@@ -22,6 +22,7 @@ import Credits from "./pages/Credits";
 import AutomationManager from "./pages/AutomationManager";
 import ViralScoreGenerator from "./pages/ViralScoreGenerator";
 import ContentRewriter from "./pages/ContentRewriter";
+import RepurposingEngine from "./pages/RepurposingEngine";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -136,6 +137,9 @@ function Router() {
         </Route>
         <Route path={"/rewriter"}>
           {(params) => <ProtectedRoute component={ContentRewriter} {...params} />}
+        </Route>
+        <Route path={"/repurposing"}>
+          {(params) => <ProtectedRoute component={RepurposingEngine} {...params} />}
         </Route>
 
         {/* 404 Route */}
