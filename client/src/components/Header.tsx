@@ -12,6 +12,14 @@ import {
 import { Moon, Sun, Monitor, LogOut, User, Settings, Sparkles, Zap, BarChart3, Cog, Coins } from "lucide-react";
 import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
+import { trpc } from "@/lib/trpc";
+
+// Credit Balance Component
+function CreditBalance() {
+  const { data: balance } = trpc.credits.getBalance.useQuery();
+  const balanceAmount = typeof balance === 'object' ? balance?.balance : balance;
+  return <span>{balanceAmount || 0} credits</span>;
+}
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -65,6 +73,17 @@ export default function Header() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Credit Balance Display */}
+          {isAuthenticated && user && (
+            <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-slate-100 rounded-lg">
+              <Coins className="w-4 h-4 text-yellow-600" />
+              <span className="text-sm font-medium text-slate-900">
+                {/* Credit balance will be fetched from tRPC */}
+                <CreditBalance />
+              </span>
+            </div>
+          )}
 
           {/* User Menu */}
           {isAuthenticated && user ? (
