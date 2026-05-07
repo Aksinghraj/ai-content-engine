@@ -82,6 +82,13 @@ All features have been successfully implemented for the AI Content Engine:
 - [x] Add credit balance display in header
 - [ ] Implement credit usage notifications
 
+## Phase 22: Theme System Fix (Completed)
+- [x] Fix light mode and dark mode theme switching
+- [x] Update HomeNew.tsx to use semantic theme tokens
+- [x] Update Header component to use semantic theme tokens
+- [x] Verify theme switcher works correctly
+- [x] Ensure all UI elements are visible in both light and dark modes
+
 
 ## Phase 19: Stripe Credit Purchase System (Completed)
 - [x] Create tRPC procedures for credit purchases
