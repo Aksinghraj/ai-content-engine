@@ -110,7 +110,7 @@ export const automationRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const result = await updateAutomationSchedule(ctx.user.id, input.id, input);
+        const result = await updateAutomationSchedule(parseInt(input.id), input);
         return {
           success: true,
           message: "Automation updated",
@@ -129,7 +129,7 @@ export const automationRouter = router({
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       try {
-        await deleteAutomationSchedule(ctx.user.id, input.id);
+        await deleteAutomationSchedule(parseInt(input.id));
         return {
           success: true,
           message: "Automation deleted",

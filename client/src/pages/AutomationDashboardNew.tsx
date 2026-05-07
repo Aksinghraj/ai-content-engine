@@ -90,14 +90,14 @@ export default function AutomationDashboardNew() {
 
   const handlePauseResume = (scheduleId: number, currentStatus: boolean) => {
     updateAutomation.mutate({
-      id: scheduleId,
+      id: scheduleId.toString(),
       isActive: !currentStatus,
     });
   };
 
   const handleDelete = (scheduleId: number) => {
     if (confirm("Are you sure you want to delete this automation?")) {
-      deleteAutomation.mutate({ id: scheduleId });
+      deleteAutomation.mutate({ id: scheduleId.toString() });
     }
   };
 

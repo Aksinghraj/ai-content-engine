@@ -94,13 +94,13 @@ export default function Automation() {
 
   const handleToggleSchedule = (id: number, isActive: boolean) => {
     updateMutation.mutate({
-      id,
+      id: id.toString(),
       isActive: !isActive,
     });
   };
 
   const handleDeleteSchedule = (id: number) => {
-    deleteMutation.mutate({ id });
+    deleteMutation.mutate({ id: id.toString() });
   };
 
   const cronExpressions = [

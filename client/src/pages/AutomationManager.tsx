@@ -88,7 +88,7 @@ export default function AutomationManager() {
 
   const handleDeleteAutomation = (id: number) => {
     if (confirm("Are you sure you want to delete this automation?")) {
-      deleteAutomation.mutate({ id });
+      deleteAutomation.mutate({ id: id.toString() });
     }
   };
 
