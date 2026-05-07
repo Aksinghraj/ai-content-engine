@@ -1,13 +1,12 @@
-import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
-import Header from "./components/Header";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
-import Login from "./pages/Login";
+import { useAuth } from "./_core/hooks/useAuth";
 import LoginEnhanced from "./pages/LoginEnhanced";
+import Home from "./pages/Home";
+import LandingPremium from "./pages/LandingPremium";
 import Features from "./pages/Features";
 import Settings from "./pages/Settings";
 import Payments from "./pages/Payments";
@@ -21,39 +20,125 @@ import Analytics from "./pages/Analytics";
 import AutomationDashboardNew from "./pages/AutomationDashboardNew";
 import Credits from "./pages/Credits";
 import AutomationManager from "./pages/AutomationManager";
+import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
+
+// List of public routes that don't require authentication
+const PUBLIC_ROUTES = ["/", "/login", "/landing"];
+
+// Protected Route Wrapper
+function ProtectedRoute({ component: Component, ...rest }: any) {
+  const { user, loading } = useAuth();
+  const [, navigate] = useLocation();
+
+  useEffect(() => {
+    // Redirect to login if not authenticated and not loading
+    if (!loading && !user) {
+      navigate("/login");
+    }
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect via useEffect
+  }
+
+  return <Component {...rest} />;
+}
+
+// Public Route Wrapper
+function PublicRoute({ component: Component, path, ...rest }: any) {
+  const { user, loading } = useAuth();
+  const [, navigate] = useLocation();
+
+  useEffect(() => {
+    // If user is authenticated and tries to access login page, redirect to dashboard
+    if (!loading && user && (path === "/" || path === "/login")) {
+      navigate("/dashboard");
+    }
+  }, [user, loading, navigate, path]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return <Component {...rest} />;
+}
 
 function Router() {
   return (
     <>
       <Switch>
-        <Route path={"/"} component={LoginEnhanced} />
-        <Route path={"/login"} component={LoginEnhanced} />
-        <Route path={"/home"} component={HomeNew} />
-        <Route path={"/features"} component={Features} />
-        <Route path={"/settings"} component={Settings} />
-        <Route path={"/payments"} component={Payments} />
-        <Route path={"/landing"} component={Home} />
-        <Route path={"/generator"} component={Generator} />
-        <Route path={"/pricing"} component={Pricing} />
-        <Route path={"/dashboard"} component={Dashboard} />
-         <Route path={"automation"} component={Automation} />
-        <Route path={"advanced-automation"} component={AdvancedAutomation} />
-        <Route path={"automation-dashboard"} component={AutomationDashboardNew} />
-        <Route path={"analytics"} component={Analytics} />
-        <Route path={"credits"} component={Credits} />
-        <Route path={"automation-manager"} component={AutomationManager} />
-        <Route path={"404"} component={NotFound} />
-        {/* Final fallback route - redirect to login */}
-        <Route component={LoginEnhanced} />
+        {/* Public Routes - No login required */}
+        <Route path={"/"}>
+          {(params) => <PublicRoute component={LoginEnhanced} path="/" {...params} />}
+        </Route>
+        <Route path={"/login"}>
+          {(params) => <PublicRoute component={LoginEnhanced} path="/login" {...params} />}
+        </Route>
+        <Route path={"/landing"} component={LandingPremium} />
+
+        {/* Protected Routes - Login required */}
+        <Route path={"/home"}>
+          {(params) => <ProtectedRoute component={HomeNew} {...params} />}
+        </Route>
+        <Route path={"/dashboard"}>
+          {(params) => <ProtectedRoute component={Dashboard} {...params} />}
+        </Route>
+        <Route path={"/features"}>
+          {(params) => <ProtectedRoute component={Features} {...params} />}
+        </Route>
+        <Route path={"/settings"}>
+          {(params) => <ProtectedRoute component={Settings} {...params} />}
+        </Route>
+        <Route path={"/payments"}>
+          {(params) => <ProtectedRoute component={Payments} {...params} />}
+        </Route>
+        <Route path={"/generator"}>
+          {(params) => <ProtectedRoute component={Generator} {...params} />}
+        </Route>
+        <Route path={"/pricing"}>
+          {(params) => <ProtectedRoute component={Pricing} {...params} />}
+        </Route>
+        <Route path={"/automation"}>
+          {(params) => <ProtectedRoute component={Automation} {...params} />}
+        </Route>
+        <Route path={"/advanced-automation"}>
+          {(params) => <ProtectedRoute component={AdvancedAutomation} {...params} />}
+        </Route>
+        <Route path={"/automation-dashboard"}>
+          {(params) => <ProtectedRoute component={AutomationDashboardNew} {...params} />}
+        </Route>
+        <Route path={"/analytics"}>
+          {(params) => <ProtectedRoute component={Analytics} {...params} />}
+        </Route>
+        <Route path={"/credits"}>
+          {(params) => <ProtectedRoute component={Credits} {...params} />}
+        </Route>
+        <Route path={"/automation-manager"}>
+          {(params) => <ProtectedRoute component={AutomationManager} {...params} />}
+        </Route>
+
+        {/* 404 Route */}
+        <Route path={"/404"} component={NotFound} />
+
+        {/* Fallback - redirect to landing */}
+        <Route component={LandingPremium} />
       </Switch>
     </>
   );
 }
-
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
 
 function App() {
   return (
@@ -63,7 +148,6 @@ function App() {
         switchable
       >
         <TooltipProvider>
-          <Toaster />
           <Router />
         </TooltipProvider>
       </ThemeProvider>
