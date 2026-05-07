@@ -26,6 +26,7 @@ import RepurposingEngine from "./pages/RepurposingEngine";
 import BrandVoice from "./pages/BrandVoice";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import ContentCalendar from "./pages/ContentCalendar";
+import AIAssistant from "./pages/AIAssistant";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -152,6 +153,9 @@ function Router() {
         </Route>
         <Route path={"/content-calendar"}>
           {(params) => <ProtectedRoute component={ContentCalendar} {...params} />}
+        </Route>
+        <Route path={"/ai-assistant"}>
+          {(params) => <ProtectedRoute component={AIAssistant} {...params} />}
         </Route>
 
         {/* 404 Route */}

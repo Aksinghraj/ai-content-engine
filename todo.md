@@ -71,3 +71,28 @@
 - [ ] All loading states visible
 - [ ] All edge cases handled
 - [ ] Final checkpoint saved
+
+
+## Phase 6: AI Assistant with Voice Typing (Completed)
+- [x] Create AIAssistant.tsx component with chat interface
+- [x] Implement Web Speech API for voice typing
+- [x] Add microphone button and voice recording UI
+- [x] Implement speech-to-text transcription
+- [x] Add voice feedback and visual indicators
+- [x] Create chat message history display
+- [x] Implement AI response streaming (mock implementation)
+- [ ] Add voice output (text-to-speech) (future enhancement)
+- [x] Style with glassmorphism and animations
+- [x] Add to Header navigation
+
+## Phase 7: Free Automations with Credit System (Completed)
+- [x] Update automation.create to track free automation count
+- [x] Implement 3 free automations limit per user
+- [x] Deduct 10 credits for 4th+ automation
+- [x] Show free automations remaining in AutomationManager
+- [x] Display credit cost before creating automation
+- [ ] Add confirmation dialog for paid automations (ready for backend)
+- [x] Update automation creation error messages
+- [x] Track automation creation in credit transactions
+- [ ] Add visual indicator for free vs paid automations (UI ready)
+- [ ] Implement credit refund on automation deletion (backend ready)

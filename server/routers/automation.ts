@@ -1,4 +1,3 @@
-import { z } from "zod";
 import {
   createAutomationSchedule,
   getAutomationSchedulesByUserId,
@@ -9,9 +8,9 @@ import {
 } from "../db";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../_core/trpc";
+import { z } from "zod";
 
 export const automationRouter = router({
-  // Create a new automation schedule (3 free for free tier, unlimited for Pro)
   create: protectedProcedure
     .input(
       z.object({
@@ -25,118 +24,121 @@ export const automationRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // Check automation limit for free tier (3 max)
+      const existingSchedules = await getAutomationSchedulesByUserId(ctx.user.id);
+      const automationCount = existingSchedules.length;
+
       if (ctx.user.subscriptionTier === "free") {
-        const existingSchedules = await getAutomationSchedulesByUserId(ctx.user.id);
-        if (existingSchedules.length >= 3) {
+        if (automationCount >= 3) {
           throw new TRPCError({
             code: "FORBIDDEN",
-            message: "Free tier limited to 3 automations. Upgrade to Pro for unlimited automations.",
+            message: "Free tier limited to 3 automations. Upgrade to Pro for unlimited.",
           });
         }
-      } else if (ctx.user.subscriptionTier !== "pro") {
+      } else if (ctx.user.subscriptionTier === "pro") {
+        if (automationCount >= 3) {
+          const hasCredits = await deductCredits(ctx.user.id, 10, `Automation: ${input.name}`);
+          if (!hasCredits) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "Insufficient credits for additional automations.",
+            });
+          }
+        }
+      } else {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Invalid subscription tier",
         });
       }
 
-      // Pro users need credits (10 credits per automation)
-      if (ctx.user.subscriptionTier === "pro") {
-        const hasCredits = await deductCredits(ctx.user.id, 10, `Automation created: ${input.name}`);
-        if (!hasCredits) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "Insufficient credits. You need at least 10 credits to create an automation.",
-          });
-        }
-      }
-
       try {
         const result = await createAutomationSchedule(ctx.user.id, input);
-        const remainingCredits = ctx.user.subscriptionTier === "pro" ? await getUserCredits(ctx.user.id) : null;
+        const remainingCredits = ctx.user.subscriptionTier === "pro" && automationCount >= 3 ? await getUserCredits(ctx.user.id) : null;
         return {
           success: true,
-          message: ctx.user.subscriptionTier === "pro" 
-            ? "Automation schedule created (10 credits deducted)" 
-            : "Automation schedule created",
+          message: ctx.user.subscriptionTier === "pro" && automationCount >= 3
+            ? "Automation created (10 credits deducted)"
+            : "Automation created (free)",
           data: result,
           creditsRemaining: remainingCredits,
+          automationCount: automationCount + 1,
+          freeAutomationsRemaining: Math.max(0, 3 - (automationCount + 1)),
         };
       } catch (error) {
-        console.error("Error creating automation schedule:", error);
+        console.error("Error creating automation:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create automation schedule",
+          message: "Failed to create automation",
         });
       }
     }),
 
-  // Get all automation schedules for the user
   list: protectedProcedure.query(async ({ ctx }) => {
-    // Allow both free and pro users to access automations
     try {
       const schedules = await getAutomationSchedulesByUserId(ctx.user.id);
       const credits = ctx.user.subscriptionTier === "pro" ? await getUserCredits(ctx.user.id) : null;
-      const limit = ctx.user.subscriptionTier === "free" ? 3 : null;
-      
       return {
         success: true,
         data: schedules,
-        credits,
-        limit,
-        count: schedules.length,
+        creditsRemaining: credits,
+        automationCount: schedules.length,
+        freeAutomationsRemaining: Math.max(0, 3 - schedules.length),
+        subscriptionTier: ctx.user.subscriptionTier,
       };
     } catch (error) {
-      console.error("Error fetching automation schedules:", error);
+      console.error("Error fetching automations:", error);
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to fetch automation schedules",
+        message: "Failed to fetch automations",
       });
     }
   }),
 
-  // Update an automation schedule
   update: protectedProcedure
     .input(
       z.object({
-        id: z.number(),
+        id: z.string().min(1),
+        name: z.string().min(1).optional(),
+        niche: z.string().min(1).optional(),
+        targetAudience: z.string().min(1).optional(),
+        platform: z.string().min(1).optional(),
+        goal: z.string().min(1).optional(),
+        contentStyle: z.string().min(1).optional(),
+        cronExpression: z.string().min(1).optional(),
         isActive: z.boolean().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const result = await updateAutomationSchedule(input.id, { isActive: input.isActive });
+        const result = await updateAutomationSchedule(ctx.user.id, input.id, input);
         return {
           success: true,
-          message: "Automation schedule updated",
+          message: "Automation updated",
           data: result,
         };
       } catch (error) {
-        console.error("Error updating automation schedule:", error);
+        console.error("Error updating automation:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update automation schedule",
+          message: "Failed to update automation",
         });
       }
     }),
 
-  // Delete an automation schedule
   delete: protectedProcedure
-    .input(z.object({ id: z.number() }))
+    .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       try {
-        const result = await deleteAutomationSchedule(input.id);
+        await deleteAutomationSchedule(ctx.user.id, input.id);
         return {
           success: true,
-          message: "Automation schedule deleted",
-          data: result,
+          message: "Automation deleted",
         };
       } catch (error) {
-        console.error("Error deleting automation schedule:", error);
+        console.error("Error deleting automation:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to delete automation schedule",
+          message: "Failed to delete automation",
         });
       }
     }),
