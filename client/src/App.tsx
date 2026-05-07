@@ -17,6 +17,7 @@ import Dashboard from "./pages/Dashboard";
 import Automation from "./pages/Automation";
 import AdvancedAutomation from "./pages/AdvancedAutomation";
 import Analytics from "./pages/Analytics";
+import AutomationDashboardNew from "./pages/AutomationDashboardNew";
 
 function Router() {
   return (
@@ -33,6 +34,7 @@ function Router() {
         <Route path={"/dashboard"} component={Dashboard} />
          <Route path={"automation"} component={Automation} />
         <Route path={"advanced-automation"} component={AdvancedAutomation} />
+        <Route path={"automation-dashboard"} component={AutomationDashboardNew} />
         <Route path={"analytics"} component={Analytics} />
         <Route path={"404"} component={NotFound} />
         {/* Final fallback route */}

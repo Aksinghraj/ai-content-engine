@@ -42,3 +42,20 @@ All features have been successfully implemented for the AI Content Engine:
 - Automation execution success/failure tracking
 - Error message logging for failed automations
 - Timestamped execution records
+
+
+## Phase 14: Enhanced Automation Dashboard (Completed)
+- [x] Create comprehensive automation dashboard page
+- [x] Display all scheduled automations with status
+- [x] Show execution history and logs
+- [x] Add pause/resume/delete automation controls
+- [x] Implement real-time execution status updates
+- [x] Add automation creation/editing interface
+- [x] Link automation dashboard in Header navigation
+
+
+## Phase 15: Automation Dashboard Enhancements (Future)
+- [ ] Implement real-time refresh for automation schedules and execution logs (polling or subscriptions)
+- [ ] Build automation create/edit form or modal wired to tRPC
+- [ ] Add user-facing success/error toasts in automation dashboard
+- [ ] Add query error states and retry mechanisms
