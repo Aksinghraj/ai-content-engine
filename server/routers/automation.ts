@@ -11,7 +11,7 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../_core/trpc";
 
 export const automationRouter = router({
-  // Create a new automation schedule (Pro only)
+  // Create a new automation schedule (3 free for free tier, unlimited for Pro)
   create: protectedProcedure
     .input(
       z.object({
@@ -25,29 +25,41 @@ export const automationRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // Check if user is Pro
-      if (ctx.user.subscriptionTier !== "pro") {
+      // Check automation limit for free tier (3 max)
+      if (ctx.user.subscriptionTier === "free") {
+        const existingSchedules = await getAutomationSchedulesByUserId(ctx.user.id);
+        if (existingSchedules.length >= 3) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Free tier limited to 3 automations. Upgrade to Pro for unlimited automations.",
+          });
+        }
+      } else if (ctx.user.subscriptionTier !== "pro") {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "Automation is only available for Pro users",
+          message: "Invalid subscription tier",
         });
       }
 
-      // Check if user has enough credits (10 credits per automation)
-      const hasCredits = await deductUserCredits(ctx.user.id, 10, `Automation created: ${input.name}`);
-      if (!hasCredits) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Insufficient credits. You need at least 10 credits to create an automation.",
-        });
+      // Pro users need credits (10 credits per automation)
+      if (ctx.user.subscriptionTier === "pro") {
+        const hasCredits = await deductUserCredits(ctx.user.id, 10, `Automation created: ${input.name}`);
+        if (!hasCredits) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Insufficient credits. You need at least 10 credits to create an automation.",
+          });
+        }
       }
 
       try {
         const result = await createAutomationSchedule(ctx.user.id, input);
-        const remainingCredits = await getUserCredits(ctx.user.id);
+        const remainingCredits = ctx.user.subscriptionTier === "pro" ? await getUserCredits(ctx.user.id) : null;
         return {
           success: true,
-          message: "Automation schedule created (10 credits deducted)",
+          message: ctx.user.subscriptionTier === "pro" 
+            ? "Automation schedule created (10 credits deducted)" 
+            : "Automation schedule created",
           data: result,
           creditsRemaining: remainingCredits,
         };
@@ -62,21 +74,18 @@ export const automationRouter = router({
 
   // Get all automation schedules for the user
   list: protectedProcedure.query(async ({ ctx }) => {
-    // Check if user is Pro
-    if (ctx.user.subscriptionTier !== "pro") {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "Automation is only available for Pro users",
-      });
-    }
-
+    // Allow both free and pro users to access automations
     try {
       const schedules = await getAutomationSchedulesByUserId(ctx.user.id);
-      const credits = await getUserCredits(ctx.user.id);
+      const credits = ctx.user.subscriptionTier === "pro" ? await getUserCredits(ctx.user.id) : null;
+      const limit = ctx.user.subscriptionTier === "free" ? 3 : null;
+      
       return {
         success: true,
         data: schedules,
         credits,
+        limit,
+        count: schedules.length,
       };
     } catch (error) {
       console.error("Error fetching automation schedules:", error);
@@ -96,14 +105,6 @@ export const automationRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // Check if user is Pro
-      if (ctx.user.subscriptionTier !== "pro") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Automation is only available for Pro users",
-        });
-      }
-
       try {
         const result = await updateAutomationSchedule(input.id, { isActive: input.isActive });
         return {
@@ -124,14 +125,6 @@ export const automationRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      // Check if user is Pro
-      if (ctx.user.subscriptionTier !== "pro") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Automation is only available for Pro users",
-        });
-      }
-
       try {
         const result = await deleteAutomationSchedule(input.id);
         return {

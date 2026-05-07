@@ -107,9 +107,13 @@ export default function AutomationManager() {
 
   const activeCount = automations?.data?.filter(a => a.isActive).length || 0;
   const totalCount = automations?.data?.length || 0;
+  const isFreeUser = user?.subscriptionTier === "free";
+  const automationLimit = isFreeUser ? 3 : null;
+  const isAtLimit = isFreeUser && totalCount >= 3;
+  const createError = createAutomation.error?.message || "";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-12">
@@ -125,51 +129,83 @@ export default function AutomationManager() {
             </div>
             <Button
               onClick={() => setShowCreateForm(!showCreateForm)}
-              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold"
+              disabled={isAtLimit}
+              className={`font-semibold ${
+                isAtLimit
+                  ? "bg-gray-500 cursor-not-allowed"
+                  : "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
+              }`}
             >
               <Plus className="w-4 h-4 mr-2" />
               New Automation
             </Button>
           </div>
 
+          {/* Free Tier Limit Alert */}
+          {isFreeUser && (
+            <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-400 font-semibold mb-1">Free Tier: {totalCount}/3 Automations Used</p>
+                  <p className="text-blue-300 text-sm">You have {3 - totalCount} automation{3 - totalCount !== 1 ? 's' : ''} remaining</p>
+                </div>
+                {isAtLimit && (
+                  <Button
+                    onClick={() => navigate("/payments")}
+                    className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white"
+                  >
+                    Upgrade to Pro
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-            <Card className="border-slate-700 bg-slate-800/50 p-4">
-              <p className="text-slate-400 text-sm mb-1">Total Automations</p>
-              <p className="text-3xl font-bold text-white">{totalCount}</p>
+            <Card className="border-border bg-card/50 p-4">
+              <p className="text-muted-foreground text-sm mb-1">Total Automations</p>
+              <p className="text-3xl font-bold text-foreground">{totalCount}</p>
             </Card>
-            <Card className="border-slate-700 bg-slate-800/50 p-4">
-              <p className="text-slate-400 text-sm mb-1">Active</p>
+            <Card className="border-border bg-card/50 p-4">
+              <p className="text-muted-foreground text-sm mb-1">Active</p>
               <p className="text-3xl font-bold text-green-400">{activeCount}</p>
             </Card>
-            <Card className="border-slate-700 bg-slate-800/50 p-4">
-              <p className="text-slate-400 text-sm mb-1">Paused</p>
+            <Card className="border-border bg-card/50 p-4">
+              <p className="text-muted-foreground text-sm mb-1">Paused</p>
               <p className="text-3xl font-bold text-yellow-400">{totalCount - activeCount}</p>
             </Card>
           </div>
         </div>
 
+        {/* Error Message */}
+        {createError && (
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+            <p className="text-red-400 font-semibold">{createError}</p>
+          </div>
+        )}
+
         {/* Create Form */}
         {showCreateForm && (
-          <Card className="border-slate-700 bg-slate-800/50 backdrop-blur-sm p-8 mb-12">
-            <h2 className="text-2xl font-bold text-white mb-6">Create New Automation</h2>
+          <Card className="border-border bg-card/50 backdrop-blur-sm p-8 mb-12">
+            <h2 className="text-2xl font-bold text-foreground mb-6">Create New Automation</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Automation Name</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">Automation Name</label>
                 <Input
                   placeholder="e.g., Daily Tech Blog"
                   value={newAutomation.name}
                   onChange={(e) => setNewAutomation({ ...newAutomation, name: e.target.value })}
-                  className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-500"
+                  className="bg-background border-border text-foreground placeholder-muted-foreground"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Platform</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">Platform</label>
                 <select
                   value={newAutomation.platform}
                   onChange={(e) => setNewAutomation({ ...newAutomation, platform: e.target.value })}
-                  className="w-full bg-slate-700/50 border border-slate-600 text-white rounded-md p-2"
+                  className="w-full bg-background border border-border text-foreground rounded-md p-2"
                 >
                   <option value="blog">Blog Post</option>
                   <option value="twitter">Twitter</option>
@@ -180,42 +216,42 @@ export default function AutomationManager() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Target Audience</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">Target Audience</label>
                 <Input
                   placeholder="e.g., Developers, Marketers"
                   value={newAutomation.targetAudience}
                   onChange={(e) => setNewAutomation({ ...newAutomation, targetAudience: e.target.value })}
-                  className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-500"
+                  className="bg-background border-border text-foreground placeholder-muted-foreground"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Niche/Industry</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">Niche/Industry</label>
                 <Input
                   placeholder="e.g., Technology, Finance"
                   value={newAutomation.niche}
                   onChange={(e) => setNewAutomation({ ...newAutomation, niche: e.target.value })}
-                  className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-500"
+                  className="bg-background border-border text-foreground placeholder-muted-foreground"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Goal</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">Goal</label>
                 <Input
                   placeholder="e.g., Drive engagement, Generate leads"
                   value={newAutomation.goal}
                   onChange={(e) => setNewAutomation({ ...newAutomation, goal: e.target.value })}
-                  className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-500"
+                  className="bg-background border-border text-foreground placeholder-muted-foreground"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Content Style</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">Content Style</label>
                 <Input
                   placeholder="e.g., Educational, Entertaining"
                   value={newAutomation.contentStyle}
                   onChange={(e) => setNewAutomation({ ...newAutomation, contentStyle: e.target.value })}
-                  className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-500"
+                  className="bg-background border-border text-foreground placeholder-muted-foreground"
                 />
               </div>
             </div>
