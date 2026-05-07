@@ -24,45 +24,16 @@ export const automationRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const existingSchedules = await getAutomationSchedulesByUserId(ctx.user.id);
-      const automationCount = existingSchedules.length;
-
-      if (ctx.user.subscriptionTier === "free") {
-        if (automationCount >= 3) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "Free tier limited to 3 automations. Upgrade to Pro for unlimited.",
-          });
-        }
-      } else if (ctx.user.subscriptionTier === "pro") {
-        if (automationCount >= 3) {
-          const hasCredits = await deductCredits(ctx.user.id, 10, `Automation: ${input.name}`);
-          if (!hasCredits) {
-            throw new TRPCError({
-              code: "FORBIDDEN",
-              message: "Insufficient credits for additional automations.",
-            });
-          }
-        }
-      } else {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Invalid subscription tier",
-        });
-      }
-
       try {
         const result = await createAutomationSchedule(ctx.user.id, input);
-        const remainingCredits = ctx.user.subscriptionTier === "pro" && automationCount >= 3 ? await getUserCredits(ctx.user.id) : null;
+        const existingSchedules = await getAutomationSchedulesByUserId(ctx.user.id);
         return {
           success: true,
-          message: ctx.user.subscriptionTier === "pro" && automationCount >= 3
-            ? "Automation created (10 credits deducted)"
-            : "Automation created (free)",
+          message: "Automation created (free)",
           data: result,
-          creditsRemaining: remainingCredits,
-          automationCount: automationCount + 1,
-          freeAutomationsRemaining: Math.max(0, 3 - (automationCount + 1)),
+          creditsRemaining: null,
+          automationCount: existingSchedules.length,
+          freeAutomationsRemaining: null,
         };
       } catch (error) {
         console.error("Error creating automation:", error);
@@ -76,14 +47,13 @@ export const automationRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
     try {
       const schedules = await getAutomationSchedulesByUserId(ctx.user.id);
-      const credits = ctx.user.subscriptionTier === "pro" ? await getUserCredits(ctx.user.id) : null;
       return {
         success: true,
         data: schedules,
-        creditsRemaining: credits,
+        creditsRemaining: null,
         automationCount: schedules.length,
-        freeAutomationsRemaining: Math.max(0, 3 - schedules.length),
-        subscriptionTier: ctx.user.subscriptionTier,
+        freeAutomationsRemaining: null,
+        subscriptionTier: null,
       };
     } catch (error) {
       console.error("Error fetching automations:", error);

@@ -17,13 +17,7 @@ export const analyticsRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      // Check if user is Pro
-      if (ctx.user.subscriptionTier !== "pro") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Analytics is only available for Pro users",
-        });
-      }
+      // Analytics available for all users (free for all)
 
       try {
         const analytics = await getContentAnalyticsByUserId(ctx.user.id, input.days);
@@ -48,13 +42,7 @@ export const analyticsRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      // Check if user is Pro
-      if (ctx.user.subscriptionTier !== "pro") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Analytics is only available for Pro users",
-        });
-      }
+      // Analytics available for all users (free for all)
 
       try {
         const platformAnalytics = await getAnalyticsByPlatform(ctx.user.id, input.days);
@@ -79,13 +67,7 @@ export const analyticsRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      // Check if user is Pro
-      if (ctx.user.subscriptionTier !== "pro") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Analytics is only available for Pro users",
-        });
-      }
+      // Analytics available for all users (free for all)
 
       try {
         const stats = await getAutomationExecutionStats(ctx.user.id, input.days);
@@ -115,13 +97,7 @@ export const analyticsRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      // Check if user is Pro
-      if (ctx.user.subscriptionTier !== "pro") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Analytics is only available for Pro users",
-        });
-      }
+      // Analytics available for all users (free for all)
 
       try {
         const logs = await getAutomationExecutionLogs(
