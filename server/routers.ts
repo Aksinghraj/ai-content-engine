@@ -12,6 +12,7 @@ import { creditsRouter } from "./routers/credits";
 import { generateAutomationContent, AutomationType } from "./_core/automationGenerators";
 import { eq, desc, and, gte } from "drizzle-orm";
 import { contentGenerationRouter } from "./routers/contentGeneration";
+import { trendingRouter } from "./routers/trending";
 
 export const appRouter = router({
   system: systemRouter,
@@ -30,6 +31,7 @@ export const appRouter = router({
   automation: automationRouter,
   analytics: analyticsRouter,
   credits: creditsRouter,
+  trending: trendingRouter,
   contentRewriter: contentGenerationRouter.contentRewriter,
   contentRepurposer: contentGenerationRouter.contentRepurposer,
   aiAssistant: contentGenerationRouter.aiAssistant,
