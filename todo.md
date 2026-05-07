@@ -76,10 +76,10 @@ All features have been successfully implemented for the AI Content Engine:
 ## Phase 18: Credit System Implementation (In Progress)
 - [x] Design credit system database schema
 - [x] Add database helpers for credit management
-- [ ] Add credit purchase options (Stripe integration)
+- [x] Add credit purchase options (Stripe integration)
 - [ ] Implement credit deduction on content generation
-- [ ] Create credit dashboard and history UI
-- [ ] Add credit balance display in header
+- [ ] Create credit dashboard and history UI (Credits.tsx needs verification)
+- [x] Add credit balance display in header
 - [ ] Implement credit usage notifications
 
 
