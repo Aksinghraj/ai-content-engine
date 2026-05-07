@@ -20,6 +20,7 @@ import Analytics from "./pages/Analytics";
 import AutomationDashboardNew from "./pages/AutomationDashboardNew";
 import Credits from "./pages/Credits";
 import AutomationManager from "./pages/AutomationManager";
+import ViralScoreGenerator from "./pages/ViralScoreGenerator";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -128,6 +129,9 @@ function Router() {
         </Route>
         <Route path={"/automation-manager"}>
           {(params) => <ProtectedRoute component={AutomationManager} {...params} />}
+        </Route>
+        <Route path={"/viral-score"}>
+          {(params) => <ProtectedRoute component={ViralScoreGenerator} {...params} />}
         </Route>
 
         {/* 404 Route */}

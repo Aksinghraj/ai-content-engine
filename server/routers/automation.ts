@@ -4,7 +4,7 @@ import {
   getAutomationSchedulesByUserId,
   updateAutomationSchedule,
   deleteAutomationSchedule,
-  deductUserCredits,
+  deductCredits,
   getUserCredits,
 } from "../db";
 import { TRPCError } from "@trpc/server";
@@ -43,7 +43,7 @@ export const automationRouter = router({
 
       // Pro users need credits (10 credits per automation)
       if (ctx.user.subscriptionTier === "pro") {
-        const hasCredits = await deductUserCredits(ctx.user.id, 10, `Automation created: ${input.name}`);
+        const hasCredits = await deductCredits(ctx.user.id, 10, `Automation created: ${input.name}`);
         if (!hasCredits) {
           throw new TRPCError({
             code: "FORBIDDEN",
