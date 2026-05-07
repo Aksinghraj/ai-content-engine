@@ -159,6 +159,10 @@ export default function Header() {
                 )}
                 {user.subscriptionTier === "free" && (
                   <>
+                    <DropdownMenuItem onClick={() => navigate("/simple-automation")}>
+                      <Zap className="w-4 h-4 mr-2" />
+                      Create Automation (3 Free)
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/credits")}>
                       <Coins className="w-4 h-4 mr-2" />
                       Buy Credits

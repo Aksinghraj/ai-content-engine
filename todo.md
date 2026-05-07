@@ -96,3 +96,16 @@
 - [x] Track automation creation in credit transactions
 - [ ] Add visual indicator for free vs paid automations (UI ready)
 - [ ] Implement credit refund on automation deletion (backend ready)
+
+
+## CRITICAL FIXES REQUIRED (ZERO MISTAKES)
+- [ ] Fix automation features accessibility - users can't access 3 free automations
+- [ ] Add PDF export/download for all generated content
+- [ ] Integrate real LLM API calls for content generation (not mock data)
+- [ ] Add real AI features to Content Rewriter page
+- [ ] Add real AI features to Repurposing Engine page
+- [ ] Add real AI features to Brand Voice training
+- [ ] Verify all features work end-to-end
+- [ ] Test 3 free automations system thoroughly
+- [ ] Test PDF download functionality
+- [ ] Final QA before delivery

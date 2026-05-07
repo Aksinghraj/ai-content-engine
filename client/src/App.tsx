@@ -27,6 +27,7 @@ import BrandVoice from "./pages/BrandVoice";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import ContentCalendar from "./pages/ContentCalendar";
 import AIAssistant from "./pages/AIAssistant";
+import { SimpleAutomation } from "./pages/SimpleAutomation";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -156,6 +157,9 @@ function Router() {
         </Route>
         <Route path={"/ai-assistant"}>
           {(params) => <ProtectedRoute component={AIAssistant} {...params} />}
+        </Route>
+        <Route path={"/simple-automation"}>
+          {(params) => <ProtectedRoute component={SimpleAutomation} {...params} />}
         </Route>
 
         {/* 404 Route */}
