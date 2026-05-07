@@ -52,10 +52,15 @@ All features have been successfully implemented for the AI Content Engine:
 - [x] Implement real-time execution status updates
 - [x] Add automation creation/editing interface
 - [x] Link automation dashboard in Header navigation
+## Phase 15: Automation Dashboard Enhancements (Completed)
+- [x] Implement polling for automation schedules (30-second refresh interval)
+- [x] Add error handling for pause/resume/delete operations
+- [x] Create execution logs sidebar with real-time status indicators
+- [x] Add Pro-user gating and upgrade prompts
+- [x] Integrate with existing tRPC automation and analytics procedures
 
-
-## Phase 15: Automation Dashboard Enhancements (Future)
-- [ ] Implement real-time refresh for automation schedules and execution logs (polling or subscriptions)
-- [ ] Build automation create/edit form or modal wired to tRPC
-- [ ] Add user-facing success/error toasts in automation dashboard
-- [ ] Add query error states and retry mechanisms
+## Phase 16: Future Enhancements (Out of Scope)
+- [ ] Add polling/refetch for execution logs with visible loading indicators
+- [ ] Build create/edit automation form or modal
+- [ ] Implement user-facing toast notifications
+- [ ] Add query error states with retry buttons

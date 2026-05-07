@@ -2,12 +2,13 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Play, Pause, Trash2, Plus, Clock, CheckCircle, AlertCircle, Eye, Loader2 } from "lucide-react";
 
 export default function AutomationDashboardNew() {
   const { user } = useAuth();
   const [selectedSchedule, setSelectedSchedule] = useState<number | null>(null);
+  const [pollInterval, setPollInterval] = useState<NodeJS.Timeout | null>(null);
 
   // Fetch automation schedules
   const { data: schedulesResponse, isLoading: schedulesLoading, refetch: refetchSchedules } = trpc.automation.list.useQuery(
@@ -26,6 +27,9 @@ export default function AutomationDashboardNew() {
     onSuccess: () => {
       refetchSchedules();
     },
+    onError: (error) => {
+      console.error("Error updating automation:", error);
+    },
   });
 
   // Delete automation mutation
@@ -34,7 +38,29 @@ export default function AutomationDashboardNew() {
       refetchSchedules();
       setSelectedSchedule(null);
     },
+    onError: (error) => {
+      console.error("Error deleting automation:", error);
+    },
   });
+
+  // Set up polling for real-time updates
+  useEffect(() => {
+    if (user?.subscriptionTier === "pro") {
+      // Initial fetch
+      refetchSchedules();
+
+      // Set up polling every 30 seconds
+      const interval = setInterval(() => {
+        refetchSchedules();
+      }, 30000);
+
+      setPollInterval(interval);
+
+      return () => {
+        if (interval) clearInterval(interval);
+      };
+    }
+  }, [user?.subscriptionTier]);
 
   if (user?.subscriptionTier !== "pro") {
     return (
