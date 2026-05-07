@@ -101,6 +101,15 @@ export default function Header() {
                   <Settings className="w-4 h-4 mr-2" />
                   Dashboard
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/generator")}>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Generate Content
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/personal-ai")}>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Personal AI
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 {user.subscriptionTier === "pro" && (
                   <>
                     <DropdownMenuItem onClick={() => navigate("/automation")}>
@@ -159,13 +168,33 @@ export default function Header() {
                 )}
                 {user.subscriptionTier === "free" && (
                   <>
-                    <DropdownMenuItem onClick={() => navigate("/simple-automation")}>
+                    <DropdownMenuItem onClick={() => navigate("/automation")}>
                       <Zap className="w-4 h-4 mr-2" />
-                      Create Automation (3 Free)
+                      Automation
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/credits")}>
-                      <Coins className="w-4 h-4 mr-2" />
-                      Buy Credits
+                    <DropdownMenuItem onClick={() => navigate("/viral-score")}>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Viral Score
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/rewriter")}>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Content Rewriter
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/repurposing")}>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Repurposing Engine
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/brand-voice")}>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Brand Voice
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/ai-assistant")}>
+                      <Mic className="w-4 h-4 mr-2" />
+                      AI Assistant
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/analytics-dashboard")}>
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      Analytics
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/pricing")}>
                       <Sparkles className="w-4 h-4 mr-2" />

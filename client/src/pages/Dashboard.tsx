@@ -5,17 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
-import { Zap, Calendar, CheckCircle, AlertCircle, ArrowLeft, Crown, Flame, Cog, Plus } from "lucide-react";
+import { Zap, CheckCircle, AlertCircle, ArrowLeft, Crown, Flame, Cog, Plus, Sparkles, Brain, ArrowRight, Wand2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
-  const [, navigate] = useLocation() as any;
+  const [, navigate] = useLocation();
   const subscriptionQuery = trpc.subscription.getStatus.useQuery(undefined, {
     enabled: isAuthenticated,
-  });
-  const subscriptionDetailsQuery = trpc.subscription.getSubscriptionDetails.useQuery(undefined, {
-    enabled: isAuthenticated && user?.subscriptionTier === "pro",
   });
 
   useEffect(() => {
@@ -29,7 +26,6 @@ export default function Dashboard() {
   }
 
   const status = subscriptionQuery.data;
-  const details = subscriptionDetailsQuery.data;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -52,14 +48,63 @@ export default function Dashboard() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Welcome Section */}
-        <div className="mb-12">
+        <div className="mb-8">
           <h2 className="text-3xl font-bold text-white mb-2">Welcome back, {user.name}!</h2>
           <p className="text-slate-400">Manage your subscription and track your usage</p>
         </div>
 
+        {/* ===== HIGHLIGHTED GENERATE CONTENT CTA ===== */}
+        <div className="mb-8 relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 p-[2px]">
+          <div className="rounded-2xl bg-slate-900/90 backdrop-blur-sm p-8">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-lg shadow-purple-500/30 animate-pulse">
+                  <Sparkles className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white">Generate Content</h3>
+                  <p className="text-slate-300 mt-1">Create viral, engaging content instantly with AI</p>
+                </div>
+              </div>
+              <Button
+                onClick={() => navigate("/generator")}
+                size="lg"
+                className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white font-bold text-lg px-8 py-6 rounded-xl shadow-lg shadow-purple-500/30 transition-all hover:scale-105"
+              >
+                <Wand2 className="w-5 h-5 mr-2" />
+                Generate Now
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* ===== PERSONAL AI SECTION ===== */}
+        <div className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-violet-600/20 to-fuchsia-600/20 border border-violet-500/30 backdrop-blur-sm">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-violet-500/20">
+                <Brain className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Your Personal AI</h3>
+                <p className="text-sm text-slate-300">Chat with your AI that learns your style and helps create content</p>
+              </div>
+            </div>
+            <Button
+              onClick={() => navigate("/personal-ai")}
+              className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-semibold px-6"
+            >
+              <Brain className="w-4 h-4 mr-2" />
+              Chat with AI
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+        </div>
+
         {/* Automation Quick Access */}
-        <div className="mb-12 p-6 rounded-2xl bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/30 backdrop-blur-sm">
-          <div className="flex items-center justify-between mb-4">
+        <div className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/30 backdrop-blur-sm">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
                 <Cog className="w-6 h-6 text-white" />
@@ -77,7 +122,6 @@ export default function Dashboard() {
               Create Automation
             </Button>
           </div>
-          <p className="text-slate-300 text-sm">Set up automated content generation schedules for any platform. Generate and post content 24/7 without manual effort.</p>
         </div>
 
         {/* Stats Grid */}
@@ -182,30 +226,21 @@ export default function Dashboard() {
                     </Button>
                   </>
                 )}
-                {status?.tier === "pro" && details && (
+                {status?.tier === "pro" && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-sm text-slate-400 mb-1">Status</p>
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full bg-green-400" />
-                          <span className="font-semibold text-white capitalize">{details.status}</span>
+                          <span className="font-semibold text-white">Active</span>
                         </div>
                       </div>
                       <div>
-                        <p className="text-sm text-slate-400 mb-1">Status</p>
-                        <p className="font-semibold text-white">Active</p>
+                        <p className="text-sm text-slate-400 mb-1">Renewal</p>
+                        <p className="font-semibold text-white">Monthly</p>
                       </div>
                     </div>
-                    {false && (
-                      <div className="flex items-start gap-3 p-4 bg-yellow-900/20 border border-yellow-700/50 rounded-lg">
-                        <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-semibold text-yellow-200">Subscription Ending</p>
-                          <p className="text-sm text-yellow-300">Your subscription will end soon</p>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
               </CardContent>
@@ -321,10 +356,18 @@ export default function Dashboard() {
               <CardContent className="space-y-2">
                 <Button
                   onClick={() => navigate("/generator")}
-                  variant="outline"
-                  className="w-full border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700"
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold"
                 >
+                  <Sparkles className="w-4 h-4 mr-2" />
                   Generate Content
+                </Button>
+                <Button
+                  onClick={() => navigate("/personal-ai")}
+                  variant="outline"
+                  className="w-full border-violet-500/50 text-violet-300 hover:text-white hover:bg-violet-600/20"
+                >
+                  <Brain className="w-4 h-4 mr-2" />
+                  Personal AI Chat
                 </Button>
                 <Button
                   onClick={() => navigate("/pricing")}
