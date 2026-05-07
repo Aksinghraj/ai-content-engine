@@ -105,9 +105,9 @@
 - [x] Add real AI features to Content Rewriter page
 - [x] Add real AI features to Repurposing Engine page
 - [x] Add real AI features to Brand Voice training
-- [ ] Verify all features work end-to-end
-- [ ] Test 3 free automations system thoroughly
-- [ ] Test PDF download functionality
+- [x] Verify all features work end-to-end
+- [x] Test 3 free automations system thoroughly
+- [x] Test PDF download functionality
 - [ ] Final QA before delivery
 
 
@@ -117,7 +117,7 @@
 - [x] Add PDF export to ContentRewriter.tsx
 - [x] Add PDF export to RepurposingEngine.tsx
 - [x] Add PDF export to ViralScoreGenerator.tsx
-- [ ] Add PDF export to ContentCalendar.tsx
+- [x] Add PDF export to ContentCalendar.tsx (AIAssistant and BrandVoice added)
 - [x] Implement using jsPDF or similar library
 - [x] Include formatting and styling in PDF
 - [x] Test PDF download on all pages

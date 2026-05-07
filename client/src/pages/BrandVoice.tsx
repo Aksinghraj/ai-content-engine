@@ -2,8 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
-import { Sparkles, Save, RefreshCw } from "lucide-react";
+import { Sparkles, Save, RefreshCw, FileText } from "lucide-react";
 import { useState } from "react";
+import { exportToPDF } from "@/lib/pdfExport";
 import { trpc } from "@/lib/trpc";
 
 const TONE_OPTIONS = [
@@ -109,6 +110,54 @@ export default function BrandVoice() {
     setSavedMessage("");
     setError("");
     setGeneratedGuidelines(null);
+  };
+
+  const handleDownloadPDF = () => {
+    if (!generatedGuidelines) return;
+
+    const guidelinesText = `BRAND VOICE GUIDELINES
+${'='.repeat(50)}
+
+Brand Name: ${formData.brandName}
+Tagline: ${formData.tagline || 'N/A'}
+
+MISSION
+${formData.mission}
+
+TARGET AUDIENCE
+${formData.targetAudience}
+
+CORE VALUES
+${formData.keyValues || 'N/A'}
+
+TONE
+${formData.tone.toUpperCase()}
+
+ENERGY LEVEL
+${formData.energyLevel}%
+
+KEYWORDS & PHRASES
+${formData.keywords || 'N/A'}
+
+GENERATED GUIDELINES
+${'-'.repeat(50)}
+
+${generatedGuidelines.summary || ''}
+
+${generatedGuidelines.messagingPillars?.length > 0 ? `MESSAGING PILLARS\n${generatedGuidelines.messagingPillars.map((p: string) => `• ${p}`).join('\n')}\n\n` : ''}
+${generatedGuidelines.toneGuidelines?.do?.length > 0 ? `DO's\n${generatedGuidelines.toneGuidelines.do.map((d: string) => `✓ ${d}`).join('\n')}\n\n` : ''}
+${generatedGuidelines.toneGuidelines?.dont?.length > 0 ? `DON'Ts\n${generatedGuidelines.toneGuidelines.dont.map((d: string) => `✗ ${d}`).join('\n')}\n\n` : ''}`;
+
+    exportToPDF({
+      filename: `brand-voice-guidelines-${Date.now()}.pdf`,
+      title: `${formData.brandName} - Brand Voice Guidelines`,
+      content: guidelinesText,
+      metadata: {
+        author: "AI Content Engine",
+        subject: `${formData.brandName} Brand Voice Guidelines`,
+        keywords: "brand voice, guidelines, brand identity",
+      },
+    });
   };
 
   return (
@@ -303,6 +352,16 @@ export default function BrandVoice() {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Reset
               </Button>
+              {generatedGuidelines && (
+                <Button
+                  onClick={handleDownloadPDF}
+                  variant="outline"
+                  className="flex-1 border-slate-600 text-white hover:bg-slate-800"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Download PDF
+                </Button>
+              )}
             </div>
 
             {error && (

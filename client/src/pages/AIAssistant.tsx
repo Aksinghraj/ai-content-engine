@@ -1,7 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mic, Send, Copy, Trash2, Loader } from "lucide-react";
+import { Mic, Send, Copy, Trash2, Loader, Download, FileText } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { exportToPDF } from "@/lib/pdfExport";
 import { trpc } from "@/lib/trpc";
 
 interface Message {
@@ -147,6 +148,27 @@ export default function AIAssistant() {
     ]);
   };
 
+  const exportChatToPDF = () => {
+    const chatContent = messages
+      .map((msg) => {
+        const role = msg.role === "user" ? "You" : "AI Assistant";
+        const time = msg.timestamp.toLocaleTimeString();
+        return `${role} (${time}):\n${msg.content}`;
+      })
+      .join("\n\n");
+
+    exportToPDF({
+      filename: `chat-export-${Date.now()}.pdf`,
+      title: "AI Assistant Chat Export",
+      content: chatContent,
+      metadata: {
+        author: "AI Content Engine",
+        subject: "Chat Conversation Export",
+        keywords: "chat, AI assistant, conversation",
+      },
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-slate-950 p-4 sm:p-6">
       <div className="max-w-4xl mx-auto h-screen flex flex-col">
@@ -165,6 +187,10 @@ export default function AIAssistant() {
             <Button onClick={clearChat} variant="outline" className="border-slate-600">
               <Trash2 className="w-4 h-4 mr-2" />
               Clear Chat
+            </Button>
+            <Button onClick={exportChatToPDF} variant="outline" className="border-slate-600">
+              <FileText className="w-4 h-4 mr-2" />
+              Export PDF
             </Button>
           </div>
         </div>
