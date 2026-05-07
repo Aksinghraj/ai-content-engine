@@ -1,9 +1,11 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Copy, Download, Sparkles, Clock } from "lucide-react";
+import { Copy, Download, Sparkles, Clock, RefreshCw, FileText } from "lucide-react";
+import { useState } from "react";
+import { trpc } from "@/lib/trpc";
+import { exportToPDF } from "@/lib/pdfExport";
 
 const PLATFORMS = [
   { id: "twitter", name: "Twitter", icon: "𝕏", maxChars: 280, color: "from-blue-400 to-blue-600" },
@@ -28,6 +30,19 @@ export default function RepurposingEngine() {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [isRepurposing, setIsRepurposing] = useState(false);
   const [repurposedContent, setRepurposedContent] = useState<Record<string, string>>({});
+  const [error, setError] = useState("");
+
+  const repurposeMutation = trpc.contentRepurposer.repurpose.useMutation({
+    onSuccess: (data) => {
+      setRepurposedContent(data.repurposedContent);
+      setError("");
+      setIsRepurposing(false);
+    },
+    onError: (err) => {
+      setError(err.message || "Failed to repurpose content");
+      setIsRepurposing(false);
+    },
+  });
 
   const handleTogglePlatform = (platformId: string) => {
     setSelectedPlatforms((prev) =>
@@ -39,22 +54,16 @@ export default function RepurposingEngine() {
     if (!inputContent.trim() || selectedPlatforms.length === 0) return;
 
     setIsRepurposing(true);
+    setError("");
 
-    // Simulate API call
-    setTimeout(() => {
-      const result: Record<string, string> = {};
-
-      selectedPlatforms.forEach((platformId) => {
-        const platform = PLATFORMS.find((p) => p.id === platformId);
-        if (platform) {
-          const baseContent = inputContent.substring(0, platform.maxChars - 50);
-          result[platformId] = `[${platform.name.toUpperCase()}]\n\n${baseContent}...\n\n#ContentMarketing #AI #Growth`;
-        }
+    try {
+      await repurposeMutation.mutateAsync({
+        content: inputContent,
+        platforms: selectedPlatforms as any,
       });
-
-      setRepurposedContent(result);
-      setIsRepurposing(false);
-    }, 2000);
+    } catch (err) {
+      console.error("Repurpose error:", err);
+    }
   };
 
   const handleCopyContent = (platformId: string) => {
@@ -62,6 +71,39 @@ export default function RepurposingEngine() {
     if (content) {
       navigator.clipboard.writeText(content);
     }
+  };
+
+  const handleDownloadPlatform = (platformId: string) => {
+    const content = repurposedContent[platformId];
+    if (!content) return;
+
+    const element = document.createElement("a");
+    const file = new Blob([content], { type: "text/plain" });
+    element.href = URL.createObjectURL(file);
+    element.download = `repurposed-${platformId}.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
+
+  const handleDownloadAllPDF = () => {
+    const allContent = selectedPlatforms
+      .map((platform) => {
+        const platformName = PLATFORMS.find((p) => p.id === platform)?.name || platform;
+        return `${platformName.toUpperCase()}\n${"=".repeat(platformName.length)}\n\n${repurposedContent[platform] || ""}\n\n`;
+      })
+      .join("\n");
+
+    exportToPDF({
+      filename: `repurposed-all-${Date.now()}.pdf`,
+      title: "Multi-Platform Repurposed Content",
+      content: allContent,
+      metadata: {
+        author: "AI Content Engine",
+        subject: "Multi-Platform Repurposed Content",
+        keywords: "content repurposing, multi-platform, AI generated",
+      },
+    });
   };
 
   return (
@@ -103,12 +145,10 @@ export default function RepurposingEngine() {
                     <Checkbox
                       checked={selectedPlatforms.includes(platform.id)}
                       onCheckedChange={() => handleTogglePlatform(platform.id)}
-                      className="w-4 h-4"
+                      className="border-slate-600"
                     />
-                    <label className="flex-1 cursor-pointer">
-                      <span className="font-medium">{platform.name}</span>
-                      <span className="text-xs text-slate-500 ml-2">({platform.maxChars} chars)</span>
-                    </label>
+                    <span className="text-sm text-slate-300">{platform.name}</span>
+                    <span className="text-xs text-slate-500 ml-auto">{platform.maxChars} chars</span>
                   </div>
                 ))}
               </div>
@@ -120,86 +160,112 @@ export default function RepurposingEngine() {
               disabled={isRepurposing || !inputContent.trim() || selectedPlatforms.length === 0}
               className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3"
             >
-              {isRepurposing ? "Repurposing..." : "Repurpose Content"}
+              {isRepurposing ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Repurposing...
+                </>
+              ) : (
+                "Repurpose Content"
+              )}
             </Button>
+
+            {/* Error Message */}
+            {error && (
+              <Card className="bg-red-900/20 border-red-700 p-4">
+                <p className="text-red-300 text-sm">{error}</p>
+              </Card>
+            )}
+
+            {/* Tips Card */}
+            <Card className="bg-blue-900/20 border-blue-700 p-4">
+              <p className="text-blue-300 text-sm">
+                💡 <strong>Tip:</strong> Each repurposing adapts your content for platform-specific best practices, character limits, and engagement patterns.
+              </p>
+            </Card>
           </div>
 
           {/* Output Section */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-6">
             {Object.keys(repurposedContent).length > 0 ? (
-              repurposedContent &&
-              selectedPlatforms.map((platformId) => {
-                const platform = PLATFORMS.find((p) => p.id === platformId);
-                const content = repurposedContent[platformId];
+              <>
+                {/* Download All Button */}
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleDownloadAllPDF}
+                    className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold"
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Download All as PDF
+                  </Button>
+                </div>
 
-                if (!platform || !content) return null;
+                {/* Platform Cards */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  {selectedPlatforms.map((platformId) => {
+                    const platform = PLATFORMS.find((p) => p.id === platformId);
+                    const content = repurposedContent[platformId];
 
-                return (
-                  <Card key={platformId} className="bg-slate-900/50 border-slate-700 backdrop-blur-md p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-white">{platform.name}</h3>
-                        <div className="flex items-center gap-2 mt-2 text-xs text-slate-400">
+                    if (!platform || !content) return null;
+
+                    return (
+                      <Card key={platformId} className="bg-slate-900/50 border-slate-700 backdrop-blur-md p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <h3 className="text-lg font-semibold text-white">{platform.name}</h3>
+                            <p className="text-xs text-slate-500">
+                              {content.length} / {platform.maxChars} characters
+                            </p>
+                          </div>
+                          <span className="text-2xl">{platform.icon}</span>
+                        </div>
+
+                        <div className="bg-slate-800 rounded-lg p-3 mb-4 max-h-48 overflow-y-auto">
+                          <p className="text-white text-sm whitespace-pre-wrap">{content}</p>
+                        </div>
+
+                        {/* Optimal Time */}
+                        <div className="flex items-center gap-2 mb-4 text-xs text-slate-400">
                           <Clock className="w-3 h-3" />
                           <span>Best time: {OPTIMAL_TIMES[platformId as keyof typeof OPTIMAL_TIMES]}</span>
                         </div>
-                      </div>
-                      <div className="text-sm text-slate-400">
-                        {content.length}/{platform.maxChars}
-                      </div>
-                    </div>
 
-                    <div className="bg-slate-800 rounded-lg p-4 mb-4 max-h-40 overflow-y-auto">
-                      <p className="text-white text-sm whitespace-pre-wrap">{content}</p>
-                    </div>
-
-                    {content.length > platform.maxChars && (
-                      <p className="text-xs text-red-400 mb-3">⚠️ Content exceeds character limit</p>
-                    )}
-
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => handleCopyContent(platformId)}
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 border-slate-600 text-white hover:bg-slate-800"
-                      >
-                        <Copy className="w-3 h-3 mr-2" />
-                        Copy
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 border-slate-600 text-white hover:bg-slate-800"
-                      >
-                        <Download className="w-3 h-3 mr-2" />
-                        Download
-                      </Button>
-                    </div>
-                  </Card>
-                );
-              })
+                        {/* Action Buttons */}
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleCopyContent(platformId)}
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 border-slate-600 text-white hover:bg-slate-800"
+                          >
+                            <Copy className="w-3 h-3 mr-1" />
+                            Copy
+                          </Button>
+                          <Button
+                            onClick={() => handleDownloadPlatform(platformId)}
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 border-slate-600 text-white hover:bg-slate-800"
+                          >
+                            <Download className="w-3 h-3 mr-1" />
+                            TXT
+                          </Button>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </>
             ) : (
               <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-md p-12 flex items-center justify-center min-h-96">
                 <div className="text-center">
-                  <Sparkles className="w-16 h-16 text-slate-600 mx-auto mb-4 opacity-50" />
+                  <Sparkles className="w-12 h-12 text-slate-600 mx-auto mb-4" />
                   <p className="text-slate-400">
-                    Select platforms and click "Repurpose Content" to generate platform-specific versions
+                    {isRepurposing ? "Repurposing your content..." : "Repurposed content will appear here"}
                   </p>
                 </div>
               </Card>
             )}
-
-            {/* Tips */}
-            <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-md p-6">
-              <h3 className="font-semibold mb-3">💡 Repurposing Tips</h3>
-              <ul className="space-y-2 text-sm text-slate-400">
-                <li>• Each platform has optimal posting times for maximum engagement</li>
-                <li>• Content is automatically adjusted for platform-specific character limits</li>
-                <li>• Hashtags are added based on platform best practices</li>
-                <li>• Each repurposing costs 3 credits</li>
-              </ul>
-            </Card>
           </div>
         </div>
       </div>

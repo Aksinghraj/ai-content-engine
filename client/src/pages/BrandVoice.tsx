@@ -1,9 +1,10 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Sparkles, Save, RefreshCw } from "lucide-react";
+import { useState } from "react";
+import { trpc } from "@/lib/trpc";
 
 const TONE_OPTIONS = [
   { value: "formal", label: "Formal", description: "Professional and structured" },
@@ -29,6 +30,22 @@ export default function BrandVoice() {
 
   const [isSaving, setIsSaving] = useState(false);
   const [savedMessage, setSavedMessage] = useState("");
+  const [error, setError] = useState("");
+  const [generatedGuidelines, setGeneratedGuidelines] = useState<any>(null);
+
+  const generateMutation = trpc.brandVoice.generate.useMutation({
+    onSuccess: (data) => {
+      setGeneratedGuidelines(data.guidelines);
+      setSavedMessage("Brand voice guidelines generated successfully!");
+      setError("");
+      setIsSaving(false);
+      setTimeout(() => setSavedMessage(""), 3000);
+    },
+    onError: (err) => {
+      setError(err.message || "Failed to generate brand voice guidelines");
+      setIsSaving(false);
+    },
+  });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -44,13 +61,36 @@ export default function BrandVoice() {
   };
 
   const handleSave = async () => {
+    if (!formData.brandName.trim() || !formData.mission.trim() || !formData.targetAudience.trim()) {
+      setError("Please fill in Brand Name, Mission, and Target Audience");
+      return;
+    }
+
     setIsSaving(true);
-    // Simulate API call
-    setTimeout(() => {
-      setSavedMessage("Brand voice profile saved successfully!");
-      setIsSaving(false);
-      setTimeout(() => setSavedMessage(""), 3000);
-    }, 1500);
+    setError("");
+
+    try {
+      const keywordsList = formData.keywords
+        .split(",")
+        .map((k) => k.trim())
+        .filter((k) => k);
+
+      const valuesList = formData.keyValues
+        .split(",")
+        .map((v) => v.trim())
+        .filter((v) => v);
+
+      await generateMutation.mutateAsync({
+        brandName: formData.brandName,
+        mission: formData.mission,
+        targetAudience: formData.targetAudience,
+        tone: formData.tone,
+        values: valuesList,
+        keywords: keywordsList,
+      });
+    } catch (err) {
+      console.error("Save error:", err);
+    }
   };
 
   const handleReset = () => {
@@ -67,6 +107,8 @@ export default function BrandVoice() {
       exampleContent: "",
     });
     setSavedMessage("");
+    setError("");
+    setGeneratedGuidelines(null);
   };
 
   return (
@@ -89,7 +131,7 @@ export default function BrandVoice() {
               <h2 className="text-xl font-semibold mb-4">Brand Basics</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Brand Name</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Brand Name *</label>
                   <input
                     type="text"
                     name="brandName"
@@ -111,7 +153,7 @@ export default function BrandVoice() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Mission Statement</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Mission Statement *</label>
                   <Textarea
                     name="mission"
                     value={formData.mission}
@@ -128,7 +170,7 @@ export default function BrandVoice() {
               <h2 className="text-xl font-semibold mb-4">Audience & Values</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Target Audience</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Target Audience *</label>
                   <Textarea
                     name="targetAudience"
                     value={formData.targetAudience}
@@ -143,7 +185,7 @@ export default function BrandVoice() {
                     name="keyValues"
                     value={formData.keyValues}
                     onChange={handleInputChange}
-                    placeholder="e.g., Innovation, Authenticity, Empowerment"
+                    placeholder="e.g., Innovation, Authenticity, Empowerment (comma-separated)"
                     className="bg-slate-800 border-slate-700 text-white placeholder-slate-500 min-h-20 resize-none"
                   />
                 </div>
@@ -209,7 +251,7 @@ export default function BrandVoice() {
                     name="keywords"
                     value={formData.keywords}
                     onChange={handleInputChange}
-                    placeholder="e.g., 'game-changing', 'cutting-edge', 'next-level'..."
+                    placeholder="e.g., 'game-changing', 'cutting-edge', 'next-level' (comma-separated)"
                     className="bg-slate-800 border-slate-700 text-white placeholder-slate-500 min-h-20 resize-none"
                   />
                 </div>
@@ -241,8 +283,17 @@ export default function BrandVoice() {
                 disabled={isSaving}
                 className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3"
               >
-                <Save className="w-4 h-4 mr-2" />
-                {isSaving ? "Saving..." : "Save Brand Voice"}
+                {isSaving ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Generate Brand Voice
+                  </>
+                )}
               </Button>
               <Button
                 onClick={handleReset}
@@ -253,6 +304,12 @@ export default function BrandVoice() {
                 Reset
               </Button>
             </div>
+
+            {error && (
+              <Card className="bg-red-900/20 border-red-700 p-4">
+                <p className="text-red-300 text-sm">{error}</p>
+              </Card>
+            )}
 
             {savedMessage && (
               <div className="bg-green-500/10 border border-green-500/50 rounded-lg p-4 text-green-400 text-sm">
@@ -299,11 +356,32 @@ export default function BrandVoice() {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-slate-700">
-                  <p className="text-slate-400 text-xs">
-                    This profile will be used to generate content that matches your unique brand voice across all platforms.
-                  </p>
-                </div>
+                {generatedGuidelines && (
+                  <div className="pt-4 border-t border-slate-700">
+                    <div className="mb-3">
+                      <div className="text-slate-400 text-xs mb-1">Summary</div>
+                      <p className="text-white text-xs leading-relaxed">{generatedGuidelines.summary}</p>
+                    </div>
+                    {generatedGuidelines.messagingPillars && generatedGuidelines.messagingPillars.length > 0 && (
+                      <div>
+                        <div className="text-slate-400 text-xs mb-1">Messaging Pillars</div>
+                        <ul className="text-white text-xs space-y-1">
+                          {generatedGuidelines.messagingPillars.slice(0, 3).map((pillar: string, idx: number) => (
+                            <li key={idx}>• {pillar}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {!generatedGuidelines && (
+                  <div className="pt-4 border-t border-slate-700">
+                    <p className="text-slate-400 text-xs">
+                      This profile will be used to generate content that matches your unique brand voice across all platforms.
+                    </p>
+                  </div>
+                )}
               </div>
             </Card>
           </div>

@@ -1,19 +1,20 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
-import { Copy, RefreshCw, Download, Sparkles } from "lucide-react";
+import { Copy, RefreshCw, Download, Sparkles, FileText } from "lucide-react";
+import { useState } from "react";
+import { exportToPDF } from "@/lib/pdfExport";
 
 const REWRITE_STYLES = [
   { id: "professional", label: "Professional", description: "Formal and business-appropriate" },
   { id: "casual", label: "Casual", description: "Friendly and conversational" },
-  { id: "academic", label: "Academic", description: "Research-focused and detailed" },
-  { id: "seo", label: "SEO-Optimized", description: "Search engine friendly" },
+  { id: "academic", label: "Academic", description: "Scholarly and detailed" },
+  { id: "seo", label: "SEO", description: "Optimized for search engines" },
   { id: "viral", label: "Viral", description: "Engaging and shareable" },
-  { id: "minimalist", label: "Minimalist", description: "Concise and direct" },
+  { id: "minimalist", label: "Minimalist", description: "Concise and impactful" },
   { id: "storytelling", label: "Storytelling", description: "Narrative-driven" },
-  { id: "technical", label: "Technical", description: "Detailed and precise" },
+  { id: "technical", label: "Technical", description: "Precise and detailed" },
 ];
 
 export default function ContentRewriter() {
@@ -22,28 +23,35 @@ export default function ContentRewriter() {
   const [rewrittenContent, setRewrittenContent] = useState("");
   const [isRewriting, setIsRewriting] = useState(false);
   const [toneLevel, setToneLevel] = useState(50);
+  const [error, setError] = useState("");
+
+  const rewriteMutation = trpc.contentRewriter.rewrite.useMutation({
+    onSuccess: (data) => {
+      setRewrittenContent(data.rewrittenContent);
+      setError("");
+      setIsRewriting(false);
+    },
+    onError: (err) => {
+      setError(err.message || "Failed to rewrite content");
+      setIsRewriting(false);
+    },
+  });
 
   const handleRewrite = async () => {
     if (!inputContent.trim() || !selectedStyle) return;
 
     setIsRewriting(true);
-    // Simulate API call - in production, this would call a real tRPC procedure
-    setTimeout(() => {
-      const styleDescriptions: Record<string, string> = {
-        professional: "This content has been rewritten in a professional and formal tone, suitable for business communications and corporate settings.",
-        casual: "This content has been rewritten in a casual and friendly tone, perfect for social media and informal conversations.",
-        academic: "This content has been rewritten in an academic style with proper citations and detailed explanations.",
-        seo: "This content has been optimized for search engines with relevant keywords and meta descriptions.",
-        viral: "This content has been rewritten to be more engaging and shareable on social media platforms.",
-        minimalist: "This content has been condensed to its essential points while maintaining clarity.",
-        storytelling: "This content has been rewritten as a narrative with a compelling story arc.",
-        technical: "This content has been written with technical precision and detailed specifications.",
-      };
+    setError("");
 
-      const rewritten = `[${selectedStyle.toUpperCase()} VERSION]\n\n${inputContent}\n\n---\n\n${styleDescriptions[selectedStyle] || "Content rewritten successfully."}`;
-      setRewrittenContent(rewritten);
-      setIsRewriting(false);
-    }, 1500);
+    try {
+      await rewriteMutation.mutateAsync({
+        content: inputContent,
+        style: selectedStyle as any,
+        toneLevel,
+      });
+    } catch (err) {
+      console.error("Rewrite error:", err);
+    }
   };
 
   const handleCopy = () => {
@@ -58,6 +66,19 @@ export default function ContentRewriter() {
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
+  };
+
+  const handleDownloadPDF = () => {
+    exportToPDF({
+      filename: `rewritten-${selectedStyle}-${Date.now()}.pdf`,
+      title: `Content Rewritten - ${selectedStyle.toUpperCase()} Style`,
+      content: rewrittenContent,
+      metadata: {
+        author: "AI Content Engine",
+        subject: `Content Rewritten in ${selectedStyle} Style`,
+        keywords: "content rewriting, AI generated",
+      },
+    });
   };
 
   return (
@@ -136,8 +157,22 @@ export default function ContentRewriter() {
               disabled={isRewriting || !inputContent.trim()}
               className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3"
             >
-              {isRewriting ? "Rewriting..." : "Rewrite Content"}
+              {isRewriting ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Rewriting...
+                </>
+              ) : (
+                "Rewrite Content"
+              )}
             </Button>
+
+            {/* Error Message */}
+            {error && (
+              <Card className="bg-red-900/20 border-red-700 p-4">
+                <p className="text-red-300 text-sm">{error}</p>
+              </Card>
+            )}
           </div>
 
           {/* Output Section */}
@@ -155,7 +190,7 @@ export default function ContentRewriter() {
                   </div>
                 </Card>
 
-                <div className="flex gap-3">
+                <div className="flex gap-2">
                   <Button
                     onClick={handleCopy}
                     variant="outline"
@@ -170,7 +205,15 @@ export default function ContentRewriter() {
                     className="flex-1 border-slate-600 text-white hover:bg-slate-800"
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    Download
+                    TXT
+                  </Button>
+                  <Button
+                    onClick={handleDownloadPDF}
+                    variant="outline"
+                    className="flex-1 border-slate-600 text-white hover:bg-slate-800"
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    PDF
                   </Button>
                   <Button
                     onClick={() => setRewrittenContent("")}
@@ -185,24 +228,13 @@ export default function ContentRewriter() {
             ) : (
               <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-md p-12 flex items-center justify-center min-h-96">
                 <div className="text-center">
-                  <Sparkles className="w-16 h-16 text-slate-600 mx-auto mb-4 opacity-50" />
+                  <Sparkles className="w-12 h-12 text-slate-600 mx-auto mb-4" />
                   <p className="text-slate-400">
-                    Paste content and select a style to see the rewritten version here
+                    {isRewriting ? "Rewriting your content..." : "Rewritten content will appear here"}
                   </p>
                 </div>
               </Card>
             )}
-
-            {/* Info Card */}
-            <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-md p-6">
-              <h3 className="font-semibold mb-3">💡 Tips for Best Results</h3>
-              <ul className="space-y-2 text-sm text-slate-400">
-                <li>• Paste content between 50-5000 characters for optimal results</li>
-                <li>• Use the tone slider to adjust intensity</li>
-                <li>• Try different styles to find the best fit</li>
-                <li>• Each rewrite costs 5 credits</li>
-              </ul>
-            </Card>
           </div>
         </div>
       </div>

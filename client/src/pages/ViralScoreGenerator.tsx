@@ -1,47 +1,94 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import ViralScoreCard from "@/components/ViralScoreCard";
-import { Sparkles, Copy, Download } from "lucide-react";
+import { Sparkles, Copy, Download, RefreshCw, FileText } from "lucide-react";
+import { useState } from "react";
+import { trpc } from "@/lib/trpc";
+import { exportToPDF } from "@/lib/pdfExport";
 
 export default function ViralScoreGenerator() {
   const [contentInput, setContentInput] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [scoreData, setScoreData] = useState<any>(null);
+  const [error, setError] = useState("");
+
+  const analyzeMutation = trpc.viralScore.analyze.useMutation({
+    onSuccess: (data) => {
+      setScoreData(data.analysis);
+      setError("");
+      setIsAnalyzing(false);
+    },
+    onError: (err) => {
+      setError(err.message || "Failed to analyze content");
+      setIsAnalyzing(false);
+    },
+  });
 
   const handleAnalyze = async () => {
     if (!contentInput.trim()) return;
 
     setIsAnalyzing(true);
+    setError("");
 
-    // Simulate API call with realistic score generation
-    setTimeout(() => {
-      const scores = {
-        viralScore: Math.floor(Math.random() * 40) + 60,
-        engagementPrediction: Math.floor(Math.random() * 40) + 60,
-        hookStrength: Math.floor(Math.random() * 40) + 60,
-        emotionalImpact: Math.floor(Math.random() * 40) + 60,
-        ctrPrediction: Math.floor(Math.random() * 8) + 2,
-      };
-      setScoreData(scores);
-      setIsAnalyzing(false);
-    }, 2000);
+    try {
+      await analyzeMutation.mutateAsync({
+        content: contentInput,
+        platform: "general",
+      });
+    } catch (err) {
+      console.error("Analysis error:", err);
+    }
   };
 
   const handleCopyScore = () => {
+    if (!scoreData) return;
+
     const scoreText = `Viral Score: ${scoreData.viralScore}/100
-Engagement: ${scoreData.engagementPrediction}/100
+Engagement Prediction: ${scoreData.engagementPrediction}/100
 Hook Strength: ${scoreData.hookStrength}/100
 Emotional Impact: ${scoreData.emotionalImpact}/100
-CTR Prediction: ${scoreData.ctrPrediction}%`;
+CTR Prediction: ${scoreData.ctrPrediction}%
+
+Recommendations:
+${(scoreData.recommendations || []).map((rec: string) => `• ${rec}`).join("\n")}`;
+
     navigator.clipboard.writeText(scoreText);
   };
 
+  const handleDownloadPDF = () => {
+    if (!scoreData) return;
+
+    const scoreText = `VIRAL SCORE ANALYSIS
+${"=".repeat(40)}
+
+Overall Viral Score: ${scoreData.viralScore}/100
+Engagement Prediction: ${scoreData.engagementPrediction}/100
+Hook Strength: ${scoreData.hookStrength}/100
+Emotional Impact: ${scoreData.emotionalImpact}/100
+CTR Prediction: ${scoreData.ctrPrediction}%
+
+CONTENT ANALYZED:
+${contentInput}
+
+RECOMMENDATIONS:
+${(scoreData.recommendations || []).map((rec: string) => `• ${rec}`).join("\n")}`;
+
+    exportToPDF({
+      filename: `viral-score-${Date.now()}.pdf`,
+      title: "Viral Score Analysis Report",
+      content: scoreText,
+      metadata: {
+        author: "AI Content Engine",
+        subject: "Viral Score Analysis",
+        keywords: "viral score, content analysis, AI generated",
+      },
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <div className="min-h-screen bg-gradient-to-br from-background to-slate-950 p-4 sm:p-6">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-12">
           <div className="flex items-center gap-3 mb-4">
@@ -69,11 +116,25 @@ CTR Prediction: ${scoreData.ctrPrediction}%`;
               <Button
                 onClick={handleAnalyze}
                 disabled={isAnalyzing || !contentInput.trim()}
-                className="w-full mt-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                className="w-full mt-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold"
               >
-                {isAnalyzing ? "Analyzing..." : "Analyze Viral Potential"}
+                {isAnalyzing ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  "Analyze Viral Potential"
+                )}
               </Button>
             </Card>
+
+            {/* Error Message */}
+            {error && (
+              <Card className="bg-red-900/20 border-red-700 p-4">
+                <p className="text-red-300 text-sm">{error}</p>
+              </Card>
+            )}
 
             {/* Quick Tips */}
             <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-md p-6">
@@ -103,11 +164,12 @@ CTR Prediction: ${scoreData.ctrPrediction}%`;
                     Copy Score
                   </Button>
                   <Button
+                    onClick={handleDownloadPDF}
                     variant="outline"
                     className="flex-1 border-slate-600 text-white hover:bg-slate-800"
                   >
-                    <Download className="w-4 h-4 mr-2" />
-                    Export
+                    <FileText className="w-4 h-4 mr-2" />
+                    PDF
                   </Button>
                 </div>
               </div>
@@ -116,7 +178,7 @@ CTR Prediction: ${scoreData.ctrPrediction}%`;
                 <div className="text-center">
                   <Sparkles className="w-16 h-16 text-slate-600 mx-auto mb-4 opacity-50" />
                   <p className="text-slate-400">
-                    Paste your content and click "Analyze Viral Potential" to get started
+                    {isAnalyzing ? "Analyzing your content..." : 'Paste your content and click "Analyze Viral Potential" to get started'}
                   </p>
                 </div>
               </Card>

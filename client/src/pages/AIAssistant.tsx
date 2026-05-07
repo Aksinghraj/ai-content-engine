@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mic, Send, Volume2, Copy, Trash2, Loader } from "lucide-react";
+import { Mic, Send, Copy, Trash2, Loader } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { trpc } from "@/lib/trpc";
 
 interface Message {
   id: string;
@@ -24,6 +25,29 @@ export default function AIAssistant() {
   const [isLoading, setIsLoading] = useState(false);
   const recognitionRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const chatMutation = trpc.aiAssistant.chat.useMutation({
+    onSuccess: (data) => {
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: data.message,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+      setIsLoading(false);
+    },
+    onError: (err) => {
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: `Error: ${err.message || "Failed to process your message"}`,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      setIsLoading(false);
+    },
+  });
 
   // Initialize Web Speech API
   useEffect(() => {
@@ -78,7 +102,7 @@ export default function AIAssistant() {
   };
 
   const sendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isLoading) return;
 
     // Add user message
     const userMessage: Message = {
@@ -92,35 +116,20 @@ export default function AIAssistant() {
     setInput("");
     setIsLoading(true);
 
-    // Simulate AI response (in production, call your API)
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: generateAIResponse(input),
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-      setIsLoading(false);
-    }, 1000);
-  };
+    // Get conversation history for context
+    const conversationHistory = messages.map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
 
-  const generateAIResponse = (userInput: string): string => {
-    const responses: Record<string, string> = {
-      hello: "Hello! How can I assist you with your content creation today?",
-      help: "I can help you with:\n• Writing and rewriting content\n• Generating viral hooks and captions\n• Creating content for multiple platforms\n• Brainstorming content ideas\n• Analyzing content performance\n• Managing your content calendar",
-      content: "I can help you create engaging content across all platforms. What type of content would you like to create?",
-      viral: "To create viral content, focus on:\n• Strong emotional hooks\n• Relatable topics\n• Clear value proposition\n• Authentic voice\n• Call-to-action",
-      default: "That's interesting! Tell me more about what you'd like to create or how I can help you.",
-    };
-
-    const lowerInput = userInput.toLowerCase();
-    for (const [key, response] of Object.entries(responses)) {
-      if (lowerInput.includes(key)) {
-        return response;
-      }
+    try {
+      await chatMutation.mutateAsync({
+        message: userMessage.content,
+        conversationHistory,
+      });
+    } catch (err) {
+      console.error("Chat error:", err);
     }
-    return responses.default;
   };
 
   const copyMessage = (content: string) => {
@@ -179,7 +188,7 @@ export default function AIAssistant() {
                     {message.role === "assistant" && (
                       <button
                         onClick={() => copyMessage(message.content)}
-                        className="opacity-70 hover:opacity-100 transition-opacity"
+                        className="opacity-50 hover:opacity-100 transition-opacity"
                       >
                         <Copy className="w-3 h-3" />
                       </button>
@@ -190,11 +199,8 @@ export default function AIAssistant() {
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-slate-800 text-slate-100 px-4 py-3 rounded-lg rounded-bl-none border border-slate-700">
-                  <div className="flex items-center gap-2">
-                    <Loader className="w-4 h-4 animate-spin" />
-                    <span className="text-sm">AI is thinking...</span>
-                  </div>
+                <div className="bg-slate-800 text-slate-100 rounded-lg rounded-bl-none border border-slate-700 px-4 py-3">
+                  <Loader className="w-4 h-4 animate-spin" />
                 </div>
               </div>
             )}
@@ -202,49 +208,29 @@ export default function AIAssistant() {
           </div>
 
           {/* Input Area */}
-          <div className="border-t border-slate-700 pt-4">
-            {isListening && (
-              <div className="mb-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                <div className="flex items-center gap-2 text-red-400">
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                  <span className="text-sm">Listening...</span>
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-                placeholder="Type or use voice typing..."
-                className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              />
-
-              <Button
-                onClick={startVoiceTyping}
-                className={`${
-                  isListening
-                    ? "bg-red-600 hover:bg-red-700"
-                    : "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                } text-white`}
-              >
-                <Mic className="w-4 h-4" />
-              </Button>
-
-              <Button
-                onClick={sendMessage}
-                disabled={!input.trim() || isLoading}
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white disabled:opacity-50"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
-            </div>
-
-            <p className="text-xs text-slate-500 mt-2">
-              💡 Tip: Use voice typing for hands-free interaction. Click the microphone button to start.
-            </p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+              placeholder="Type your message or use voice typing..."
+              className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+            />
+            <Button
+              onClick={startVoiceTyping}
+              variant="outline"
+              className={`border-slate-600 ${isListening ? "bg-red-600 border-red-600" : ""}`}
+            >
+              <Mic className={`w-4 h-4 ${isListening ? "text-white" : ""}`} />
+            </Button>
+            <Button
+              onClick={sendMessage}
+              disabled={!input.trim() || isLoading}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
           </div>
         </Card>
       </div>
