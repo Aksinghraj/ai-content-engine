@@ -7,6 +7,7 @@ import Header from "./components/Header";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
+import LoginEnhanced from "./pages/LoginEnhanced";
 import Features from "./pages/Features";
 import Settings from "./pages/Settings";
 import Payments from "./pages/Payments";
@@ -18,12 +19,14 @@ import Automation from "./pages/Automation";
 import AdvancedAutomation from "./pages/AdvancedAutomation";
 import Analytics from "./pages/Analytics";
 import AutomationDashboardNew from "./pages/AutomationDashboardNew";
+import Credits from "./pages/Credits";
+import AutomationManager from "./pages/AutomationManager";
 
 function Router() {
   return (
     <>
       <Switch>
-        <Route path={"/login"} component={Login} />
+        <Route path={"/login"} component={LoginEnhanced} />
         <Route path={"/home"} component={HomeNew} />
         <Route path={"/features"} component={Features} />
         <Route path={"/settings"} component={Settings} />
@@ -36,9 +39,11 @@ function Router() {
         <Route path={"advanced-automation"} component={AdvancedAutomation} />
         <Route path={"automation-dashboard"} component={AutomationDashboardNew} />
         <Route path={"analytics"} component={Analytics} />
+        <Route path={"credits"} component={Credits} />
+        <Route path={"automation-manager"} component={AutomationManager} />
         <Route path={"404"} component={NotFound} />
-        {/* Final fallback route */}
-        <Route component={NotFound} />
+        {/* Final fallback route - redirect to login */}
+        <Route component={LoginEnhanced} />
       </Switch>
     </>
   );

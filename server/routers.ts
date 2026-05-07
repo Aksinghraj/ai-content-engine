@@ -8,6 +8,7 @@ import { generateContentPackage } from "./_core/contentGenerator";
 import { subscriptionRouter } from "./routers/subscription";
 import { automationRouter } from "./routers/automation";
 import { analyticsRouter } from "./routers/analytics";
+import { creditsRouter } from "./routers/credits";
 import { generateAutomationContent, AutomationType } from "./_core/automationGenerators";
 import { eq, desc, and, gte } from "drizzle-orm";
 
@@ -27,6 +28,7 @@ export const appRouter = router({
   subscription: subscriptionRouter,
   automation: automationRouter,
   analytics: analyticsRouter,
+  credits: creditsRouter,
 
   automationGenerators: router({
     generateBlog: protectedProcedure

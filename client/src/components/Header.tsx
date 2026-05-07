@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Moon, Sun, Monitor, LogOut, User, Settings, Sparkles, Zap, BarChart3, Cog } from "lucide-react";
+import { Moon, Sun, Monitor, LogOut, User, Settings, Sparkles, Zap, BarChart3, Cog, Coins } from "lucide-react";
 import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
 
@@ -100,13 +100,27 @@ export default function Header() {
                       <BarChart3 className="w-4 h-4 mr-2" />
                       Analytics
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/automation-manager")}>
+                      <Zap className="w-4 h-4 mr-2" />
+                      Automation Manager
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/credits")}>
+                      <Coins className="w-4 h-4 mr-2" />
+                      Credits
+                    </DropdownMenuItem>
                   </>
                 )}
                 {user.subscriptionTier === "free" && (
-                  <DropdownMenuItem onClick={() => navigate("/pricing")}>
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Upgrade to Pro
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuItem onClick={() => navigate("/credits")}>
+                      <Coins className="w-4 h-4 mr-2" />
+                      Buy Credits
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/pricing")}>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Upgrade to Pro
+                    </DropdownMenuItem>
+                  </>
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>

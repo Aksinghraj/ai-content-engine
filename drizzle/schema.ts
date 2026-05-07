@@ -188,3 +188,101 @@ export const contentAnalyticsRelations = relations(contentAnalytics, ({ one }) =
     references: [contentHistory.id],
   }),
 }));
+
+
+/**
+ * Password reset tokens table.
+ * Stores temporary tokens for password reset functionality.
+ */
+export const passwordResetTokens = mysqlTable("passwordResetTokens", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  token: varchar("token", { length: 255 }).notNull().unique(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type InsertPasswordResetToken = typeof passwordResetTokens.$inferInsert;
+
+/**
+ * User credits table.
+ * Tracks credit balance and transactions for Pro users.
+ */
+export const userCredits = mysqlTable("userCredits", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  balance: int("balance").default(0).notNull(),
+  totalPurchased: int("totalPurchased").default(0).notNull(),
+  totalUsed: int("totalUsed").default(0).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type UserCredit = typeof userCredits.$inferSelect;
+export type InsertUserCredit = typeof userCredits.$inferInsert;
+
+/**
+ * Credit transactions table.
+ * Logs all credit purchases and usage.
+ */
+export const creditTransactions = mysqlTable("creditTransactions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  type: mysqlEnum("type", ["purchase", "usage", "refund"]).notNull(),
+  amount: int("amount").notNull(),
+  description: text("description"),
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
+  relatedContentId: int("relatedContentId"), // For usage transactions, link to content generation
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CreditTransaction = typeof creditTransactions.$inferSelect;
+export type InsertCreditTransaction = typeof creditTransactions.$inferInsert;
+
+/**
+ * Credit packages table.
+ * Defines available credit purchase options.
+ */
+export const creditPackages = mysqlTable("creditPackages", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  credits: int("credits").notNull(),
+  priceInCents: int("priceInCents").notNull(), // Price in cents for Stripe
+  stripePriceId: varchar("stripePriceId", { length: 255 }).notNull().unique(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CreditPackage = typeof creditPackages.$inferSelect;
+export type InsertCreditPackage = typeof creditPackages.$inferInsert;
+
+// Relations for credit system tables
+export const passwordResetTokensRelations = relations(passwordResetTokens, ({ one }) => ({
+  user: one(users, {
+    fields: [passwordResetTokens.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userCreditsRelations = relations(userCredits, ({ one }) => ({
+  user: one(users, {
+    fields: [userCredits.userId],
+    references: [users.id],
+  }),
+}));
+
+export const creditTransactionsRelations = relations(creditTransactions, ({ one }) => ({
+  user: one(users, {
+    fields: [creditTransactions.userId],
+    references: [users.id],
+  }),
+  content: one(contentHistory, {
+    fields: [creditTransactions.relatedContentId],
+    references: [contentHistory.id],
+  }),
+}));
+
+export const creditPackagesRelations = relations(creditPackages, ({ many }) => ({
+  transactions: many(creditTransactions),
+}));

@@ -1,6 +1,6 @@
 
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, contentHistory, InsertContentHistory, tokenUsage, automationSchedules, automationExecutionLogs, contentAnalytics } from "../drizzle/schema";
+import { InsertUser, users, contentHistory, InsertContentHistory, tokenUsage, automationSchedules, automationExecutionLogs, contentAnalytics, userCredits, creditTransactions, creditPackages, passwordResetTokens } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { eq, desc, and, gte, sql } from "drizzle-orm";
 
@@ -518,6 +518,201 @@ export async function getAutomationExecutionStats(userId: number, days: number =
     return result.length > 0 ? result[0] : null;
   } catch (error) {
     console.error("[Database] Failed to get execution stats:", error);
+    return null;
+  }
+}
+
+
+// ============================================================================
+// Credit System Helpers
+// ============================================================================
+
+export async function getUserCredits(userId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get user credits: database not available");
+    return null;
+  }
+  try {
+    const result = await db.select().from(userCredits).where(eq(userCredits.userId, userId)).limit(1);
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error("[Database] Failed to get user credits:", error);
+    return null;
+  }
+}
+
+export async function initializeUserCredits(userId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot initialize user credits: database not available");
+    return null;
+  }
+  try {
+    const result = await db.insert(userCredits).values({
+      userId,
+      balance: 0,
+      totalPurchased: 0,
+      totalUsed: 0,
+    });
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to initialize user credits:", error);
+    return null;
+  }
+}
+
+export async function addCredits(userId: number, amount: number, description: string, stripePaymentIntentId?: string) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot add credits: database not available");
+    return null;
+  }
+  try {
+    // Update user credits balance
+    await db.update(userCredits)
+      .set({
+        balance: sql`balance + ${amount}`,
+        totalPurchased: sql`totalPurchased + ${amount}`,
+      })
+      .where(eq(userCredits.userId, userId));
+
+    // Log transaction
+    const result = await db.insert(creditTransactions).values({
+      userId,
+      type: "purchase",
+      amount,
+      description,
+      stripePaymentIntentId,
+    });
+
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to add credits:", error);
+    return null;
+  }
+}
+
+export async function deductCredits(userId: number, amount: number, description: string, relatedContentId?: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot deduct credits: database not available");
+    return null;
+  }
+  try {
+    // Update user credits balance
+    await db.update(userCredits)
+      .set({
+        balance: sql`balance - ${amount}`,
+        totalUsed: sql`totalUsed + ${amount}`,
+      })
+      .where(eq(userCredits.userId, userId));
+
+    // Log transaction
+    const result = await db.insert(creditTransactions).values({
+      userId,
+      type: "usage",
+      amount,
+      description,
+      relatedContentId,
+    });
+
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to deduct credits:", error);
+    return null;
+  }
+}
+
+export async function getCreditTransactions(userId: number, limit: number = 50) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get credit transactions: database not available");
+    return [];
+  }
+  try {
+    const result = await db.select().from(creditTransactions).where(eq(creditTransactions.userId, userId)).orderBy(desc(creditTransactions.createdAt)).limit(limit);
+    return result || [];
+  } catch (error) {
+    console.error("[Database] Failed to get credit transactions:", error);
+    return [];
+  }
+}
+
+export async function getCreditPackages() {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get credit packages: database not available");
+    return [];
+  }
+  try {
+    const result = await db.select().from(creditPackages).where(eq(creditPackages.isActive, true));
+    return result || [];
+  } catch (error) {
+    console.error("[Database] Failed to get credit packages:", error);
+    return [];
+  }
+}
+
+// ============================================================================
+// Password Reset Helpers
+// ============================================================================
+
+export async function createPasswordResetToken(userId: number, token: string, expiresAt: Date) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot create password reset token: database not available");
+    return null;
+  }
+  try {
+    const result = await db.insert(passwordResetTokens).values({
+      userId,
+      token,
+      expiresAt,
+    });
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to create password reset token:", error);
+    return null;
+  }
+}
+
+export async function verifyPasswordResetToken(token: string) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot verify password reset token: database not available");
+    return null;
+  }
+  try {
+    const result = await db.select().from(passwordResetTokens).where(eq(passwordResetTokens.token, token)).limit(1);
+
+    if (result.length === 0) return null;
+
+    const resetToken = result[0];
+    // Check if token is expired
+    if (new Date() > resetToken.expiresAt) {
+      return null;
+    }
+
+    return resetToken;
+  } catch (error) {
+    console.error("[Database] Failed to verify password reset token:", error);
+    return null;
+  }
+}
+
+export async function deletePasswordResetToken(token: string) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot delete password reset token: database not available");
+    return null;
+  }
+  try {
+    const result = await db.delete(passwordResetTokens)
+      .where(eq(passwordResetTokens.token, token));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to delete password reset token:", error);
     return null;
   }
 }

@@ -64,3 +64,47 @@ All features have been successfully implemented for the AI Content Engine:
 - [ ] Build create/edit automation form or modal
 - [ ] Implement user-facing toast notifications
 - [ ] Add query error states with retry buttons
+
+
+## Phase 17: Enhanced Login Dashboard with Forgot Password (Completed)
+- [x] Create enhanced login page with forgot password modal
+- [x] Design password reset email template
+- [x] Implement forgot password backend with token generation
+- [x] Add password reset verification flow
+- [x] Set login dashboard as initial landing page
+
+## Phase 18: Credit System Implementation (In Progress)
+- [x] Design credit system database schema
+- [x] Add database helpers for credit management
+- [ ] Add credit purchase options (Stripe integration)
+- [ ] Implement credit deduction on content generation
+- [ ] Create credit dashboard and history UI
+- [ ] Add credit balance display in header
+- [ ] Implement credit usage notifications
+
+
+## Phase 19: Stripe Credit Purchase System (Completed)
+- [x] Create tRPC procedures for credit purchases
+- [x] Implement Stripe checkout session creation
+- [x] Add Stripe webhook handlers for payment success (foundation)
+- [x] Create credit purchase UI component (Credits.tsx)
+- [x] Add credit balance display in header
+
+## Phase 20: New Automation Management Dashboard (Completed)
+- [x] Create dedicated automation management page (AutomationManager.tsx)
+- [x] Add automation creation form/modal
+- [x] Display active automations with detailed status
+- [x] Add pause/resume/delete/edit controls
+- [x] Show execution history and logs
+- [x] Add real-time polling for updates
+- [x] Link in main navigation for easy access
+
+
+## Phase 21: Implementation Gaps & Polish
+- [ ] Implement Stripe webhook endpoint at /api/stripe/webhook with signature verification
+- [ ] Fetch and display current user's credit balance in Header
+- [ ] Add edit action and edit form for existing automations
+- [ ] Add real execution-logs query and render actual log fields
+- [ ] Enable polling/refetchInterval for automation schedules and execution logs
+- [ ] Seed or define real credit packages in database
+- [ ] Add credit deduction logic to content generation procedures
