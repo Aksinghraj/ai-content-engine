@@ -135,6 +135,10 @@ export default function Header() {
                       <Sparkles className="w-4 h-4 mr-2" />
                       Repurposing Engine
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/brand-voice")}>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Brand Voice
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/credits")}>
                       <Coins className="w-4 h-4 mr-2" />
                       Credits
