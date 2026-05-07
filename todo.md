@@ -100,14 +100,16 @@ All features have been successfully implemented for the AI Content Engine:
 - [x] Link in main navigation for easy access
 
 
-## Phase 21: Implementation Gaps & Polish (Future Enhancement)
-- [ ] Implement Stripe webhook endpoint at /api/stripe/webhook with signature verification
-- [ ] Fetch and display current user's credit balance in Header
-- [ ] Add edit action and edit form for existing automations
-- [ ] Add real execution-logs query and render actual log fields
-- [ ] Enable polling/refetchInterval for automation schedules and execution logs
-- [ ] Seed or define real credit packages in database
-- [ ] Add credit deduction logic to content generation procedures
+## Phase 21: Credit System Integration with Automation (In Progress)
+- [ ] Add credit deduction to automation creation (10 credits per automation)
+- [ ] Add credit deduction to automation execution (5 credits per execution)
+- [ ] Create credit check middleware for automation procedures
+- [ ] Update AutomationManager to display credit costs
+- [ ] Add credit balance check before automation actions
+- [ ] Create unified automation dashboard accessible from main header
+- [ ] Add credit balance display in Header component
+- [ ] Implement credit purchase flow integration
+- [ ] Add credit usage notifications and warnings
 
 ## Summary of Completed Implementation
 

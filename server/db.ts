@@ -716,3 +716,82 @@ export async function deletePasswordResetToken(token: string) {
     return null;
   }
 }
+
+
+// Credit System Helpers
+export async function deductUserCredits(userId: number, amount: number, description: string): Promise<boolean> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot deduct credits: database not available");
+    return false;
+  }
+
+  try {
+    // Get current user credits
+    const userCredit = await db.select().from(userCredits).where(eq(userCredits.userId, userId)).limit(1);
+    
+    if (userCredit.length === 0 || userCredit[0].balance < amount) {
+      return false; // Insufficient credits
+    }
+
+    // Deduct credits
+    await db.update(userCredits)
+      .set({ balance: userCredit[0].balance - amount })
+      .where(eq(userCredits.userId, userId));
+
+    // Log transaction
+    await db.insert(creditTransactions).values({
+      userId,
+      type: "usage",
+      amount,
+      description,
+      createdAt: new Date(),
+    });
+
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to deduct credits:", error);
+    return false;
+  }
+}
+
+export async function addUserCredits(userId: number, amount: number, description: string): Promise<boolean> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot add credits: database not available");
+    return false;
+  }
+
+  try {
+    // Get current user credits
+    const userCredit = await db.select().from(userCredits).where(eq(userCredits.userId, userId)).limit(1);
+    
+    if (userCredit.length === 0) {
+      // Create new credit record
+      await db.insert(userCredits).values({
+        userId,
+        balance: amount,
+      });
+    } else {
+      // Update existing credits
+      await db.update(userCredits)
+        .set({ balance: userCredit[0].balance + amount })
+        .where(eq(userCredits.userId, userId));
+    }
+
+    // Log transaction
+    await db.insert(creditTransactions).values({
+      userId,
+      type: "purchase",
+      amount,
+      description,
+      createdAt: new Date(),
+    });
+
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to add credits:", error);
+    return false;
+  }
+}
+

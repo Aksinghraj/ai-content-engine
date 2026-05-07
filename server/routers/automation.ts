@@ -1,12 +1,14 @@
-import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import {
   createAutomationSchedule,
   getAutomationSchedulesByUserId,
   updateAutomationSchedule,
   deleteAutomationSchedule,
+  deductUserCredits,
+  getUserCredits,
 } from "../db";
 import { TRPCError } from "@trpc/server";
+import { protectedProcedure, router } from "../_core/trpc";
 
 export const automationRouter = router({
   // Create a new automation schedule (Pro only)
@@ -31,12 +33,23 @@ export const automationRouter = router({
         });
       }
 
+      // Check if user has enough credits (10 credits per automation)
+      const hasCredits = await deductUserCredits(ctx.user.id, 10, `Automation created: ${input.name}`);
+      if (!hasCredits) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Insufficient credits. You need at least 10 credits to create an automation.",
+        });
+      }
+
       try {
         const result = await createAutomationSchedule(ctx.user.id, input);
+        const remainingCredits = await getUserCredits(ctx.user.id);
         return {
           success: true,
-          message: "Automation schedule created",
+          message: "Automation schedule created (10 credits deducted)",
           data: result,
+          creditsRemaining: remainingCredits,
         };
       } catch (error) {
         console.error("Error creating automation schedule:", error);
@@ -59,9 +72,11 @@ export const automationRouter = router({
 
     try {
       const schedules = await getAutomationSchedulesByUserId(ctx.user.id);
+      const credits = await getUserCredits(ctx.user.id);
       return {
         success: true,
         data: schedules,
+        credits,
       };
     } catch (error) {
       console.error("Error fetching automation schedules:", error);
@@ -78,8 +93,6 @@ export const automationRouter = router({
       z.object({
         id: z.number(),
         isActive: z.boolean().optional(),
-        name: z.string().optional(),
-        cronExpression: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -92,12 +105,7 @@ export const automationRouter = router({
       }
 
       try {
-        const updates: any = {};
-        if (input.isActive !== undefined) updates.isActive = input.isActive;
-        if (input.name) updates.name = input.name;
-        if (input.cronExpression) updates.cronExpression = input.cronExpression;
-
-        const result = await updateAutomationSchedule(input.id, updates);
+        const result = await updateAutomationSchedule(input.id, { isActive: input.isActive });
         return {
           success: true,
           message: "Automation schedule updated",

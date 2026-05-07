@@ -26,12 +26,13 @@ function Router() {
   return (
     <>
       <Switch>
+        <Route path={"/"} component={LoginEnhanced} />
         <Route path={"/login"} component={LoginEnhanced} />
         <Route path={"/home"} component={HomeNew} />
         <Route path={"/features"} component={Features} />
         <Route path={"/settings"} component={Settings} />
         <Route path={"/payments"} component={Payments} />
-        <Route path={"/"} component={Home} />
+        <Route path={"/landing"} component={Home} />
         <Route path={"/generator"} component={Generator} />
         <Route path={"/pricing"} component={Pricing} />
         <Route path={"/dashboard"} component={Dashboard} />
