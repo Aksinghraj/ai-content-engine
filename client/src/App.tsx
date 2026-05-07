@@ -7,6 +7,7 @@ import { useAuth } from "./_core/hooks/useAuth";
 import LoginEnhanced from "./pages/LoginEnhanced";
 import Home from "./pages/Home";
 import LandingPremium from "./pages/LandingPremium";
+import LandingPage from "./pages/LandingPage";
 import Features from "./pages/Features";
 import Settings from "./pages/Settings";
 import Payments from "./pages/Payments";
@@ -95,7 +96,8 @@ function Router() {
         <Route path={"/login"}>
           {(params) => <PublicRoute component={LoginEnhanced} path="/login" {...params} />}
         </Route>
-        <Route path={"/landing"} component={LandingPremium} />
+        <Route path={"/landing"} component={LandingPage} />
+        <Route path={"/landing-premium"} component={LandingPremium} />
 
         {/* Protected Routes - Login required */}
         <Route path={"/home"}>

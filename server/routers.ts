@@ -13,6 +13,17 @@ import { generateAutomationContent, AutomationType } from "./_core/automationGen
 import { eq, desc, and, gte } from "drizzle-orm";
 import { contentGenerationRouter } from "./routers/contentGeneration";
 import { trendingRouter } from "./routers/trending";
+import { aiFeatureRouter } from "./routers/aiFeatures";
+import { seoToolsRouter } from "./routers/seoTools";
+import { multimodalRouter } from "./routers/multimodal";
+import { workflowRouter } from "./routers/workflow";
+import { publishingRouter } from "./routers/publishing";
+import { personalizationRouter } from "./routers/personalization";
+import { monetizationRouter } from "./routers/monetization";
+import { securityRouter } from "./routers/security";
+import { aiAgentsRouter } from "./routers/aiAgents";
+import { templatesRouter } from "./routers/templates";
+import { communityRouter } from "./routers/community";
 
 export const appRouter = router({
   system: systemRouter,
@@ -32,6 +43,17 @@ export const appRouter = router({
   analytics: analyticsRouter,
   credits: creditsRouter,
   trending: trendingRouter,
+  aiFeatures: aiFeatureRouter,
+  seoTools: seoToolsRouter,
+  multimodal: multimodalRouter,
+  workflow: workflowRouter,
+  publishing: publishingRouter,
+  personalization: personalizationRouter,
+  monetization: monetizationRouter,
+  security: securityRouter,
+  aiAgents: aiAgentsRouter,
+  templates: templatesRouter,
+  community: communityRouter,
   contentRewriter: contentGenerationRouter.contentRewriter,
   contentRepurposer: contentGenerationRouter.contentRepurposer,
   aiAssistant: contentGenerationRouter.aiAssistant,
