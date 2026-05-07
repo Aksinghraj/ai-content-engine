@@ -24,6 +24,8 @@ import ViralScoreGenerator from "./pages/ViralScoreGenerator";
 import ContentRewriter from "./pages/ContentRewriter";
 import RepurposingEngine from "./pages/RepurposingEngine";
 import BrandVoice from "./pages/BrandVoice";
+import AnalyticsDashboard from "./pages/AnalyticsDashboard";
+import ContentCalendar from "./pages/ContentCalendar";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -144,6 +146,12 @@ function Router() {
         </Route>
         <Route path={"/brand-voice"}>
           {(params) => <ProtectedRoute component={BrandVoice} {...params} />}
+        </Route>
+        <Route path={"/analytics-dashboard"}>
+          {(params) => <ProtectedRoute component={AnalyticsDashboard} {...params} />}
+        </Route>
+        <Route path={"/content-calendar"}>
+          {(params) => <ProtectedRoute component={ContentCalendar} {...params} />}
         </Route>
 
         {/* 404 Route */}

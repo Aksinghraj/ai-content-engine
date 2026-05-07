@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Moon, Sun, Monitor, LogOut, User, Settings, Sparkles, Zap, BarChart3, Cog, Coins } from "lucide-react";
+import { Moon, Sun, Monitor, LogOut, User, Settings, Sparkles, Zap, BarChart3, Cog, Coins, Calendar } from "lucide-react";
 import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
@@ -138,6 +138,14 @@ export default function Header() {
                     <DropdownMenuItem onClick={() => navigate("/brand-voice")}>
                       <Sparkles className="w-4 h-4 mr-2" />
                       Brand Voice
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/analytics-dashboard")}>
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      Analytics Dashboard
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/content-calendar")}>
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Content Calendar
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/credits")}>
                       <Coins className="w-4 h-4 mr-2" />
