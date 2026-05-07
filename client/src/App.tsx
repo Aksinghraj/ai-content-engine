@@ -21,6 +21,7 @@ import AutomationDashboardNew from "./pages/AutomationDashboardNew";
 import Credits from "./pages/Credits";
 import AutomationManager from "./pages/AutomationManager";
 import ViralScoreGenerator from "./pages/ViralScoreGenerator";
+import ContentRewriter from "./pages/ContentRewriter";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -132,6 +133,9 @@ function Router() {
         </Route>
         <Route path={"/viral-score"}>
           {(params) => <ProtectedRoute component={ViralScoreGenerator} {...params} />}
+        </Route>
+        <Route path={"/rewriter"}>
+          {(params) => <ProtectedRoute component={ContentRewriter} {...params} />}
         </Route>
 
         {/* 404 Route */}

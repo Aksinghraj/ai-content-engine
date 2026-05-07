@@ -123,6 +123,14 @@ export default function Header() {
                       <Zap className="w-4 h-4 mr-2" />
                       Automation Manager
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/viral-score")}>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Viral Score
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/rewriter")}>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Content Rewriter
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/credits")}>
                       <Coins className="w-4 h-4 mr-2" />
                       Credits
