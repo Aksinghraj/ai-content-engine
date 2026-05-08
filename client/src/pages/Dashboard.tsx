@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
-import { Zap, CheckCircle, AlertCircle, ArrowLeft, Crown, Flame, Cog, Plus, Sparkles, Brain, ArrowRight, Wand2 } from "lucide-react";
+import { Zap, CheckCircle, AlertCircle, ArrowLeft, Crown, Flame, Cog, Plus, Sparkles, Brain, ArrowRight, Wand2, Play } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 export default function Dashboard() {
@@ -143,6 +143,29 @@ export default function Dashboard() {
             >
               <Plus className="w-4 h-4 mr-2" />
               Create Automation
+            </Button>
+          </div>
+        </div>
+
+        {/* Demo Videos Section */}
+        <div className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-cyan-600/20 to-teal-600/20 border border-cyan-500/30 backdrop-blur-sm">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center">
+                <Play className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Watch Demo Videos</h3>
+                <p className="text-sm text-slate-300">Learn how to use AI Content Engine - Available in 10+ languages</p>
+              </div>
+            </div>
+            <Button
+              onClick={() => navigate("/demo-videos")}
+              className="bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-700 hover:to-teal-700 text-white font-semibold"
+            >
+              <Play className="w-4 h-4 mr-2" />
+              Watch Demo
+              <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
         </div>
