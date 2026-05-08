@@ -36,6 +36,13 @@
       "when": 1778142274824,
       "tag": "0004_absurd_terror",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1778237202685,
+      "tag": "0005_fixed_james_howlett",
+      "breakpoints": true
     }
   ]
 }

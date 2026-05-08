@@ -26,6 +26,7 @@ import { templatesRouter } from "./routers/templates";
 import { communityRouter } from "./routers/community";
 import { socialOAuthRouter } from "./routers/socialOAuth";
 import { oauthFlowRouter } from "./routers/oauthFlow";
+import { socialMediaRouter } from "./routers/socialMedia";
 
 export const appRouter = router({
   system: systemRouter,
@@ -58,6 +59,7 @@ export const appRouter = router({
   community: communityRouter,
   socialOAuth: socialOAuthRouter,
   oauthFlow: oauthFlowRouter,
+  socialMedia: socialMediaRouter,
   contentRewriter: contentGenerationRouter.contentRewriter,
   contentRepurposer: contentGenerationRouter.contentRepurposer,
   aiAssistant: contentGenerationRouter.aiAssistant,

@@ -286,3 +286,72 @@ export const creditTransactionsRelations = relations(creditTransactions, ({ one 
 export const creditPackagesRelations = relations(creditPackages, ({ many }) => ({
   transactions: many(creditTransactions),
 }));
+
+
+/**
+ * Social Media Connections table.
+ * Stores OAuth tokens and connection info for social media platforms.
+ */
+export const socialConnections = mysqlTable("socialConnections", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  platform: varchar("platform", { length: 50 }).notNull(), // instagram, twitter, linkedin, facebook, youtube, tiktok
+  username: varchar("username", { length: 255 }).notNull(),
+  accessToken: text("accessToken").notNull(),
+  refreshToken: text("refreshToken"),
+  tokenExpiresAt: timestamp("tokenExpiresAt"),
+  platformUserId: varchar("platformUserId", { length: 255 }).notNull(),
+  isConnected: boolean("isConnected").default(true).notNull(),
+  autoPost: boolean("autoPost").default(false).notNull(),
+  autoReply: boolean("autoReply").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SocialConnection = typeof socialConnections.$inferSelect;
+export type InsertSocialConnection = typeof socialConnections.$inferInsert;
+
+/**
+ * Scheduled Posts table.
+ * Stores posts scheduled for publishing to social media.
+ */
+export const scheduledPosts = mysqlTable("scheduledPosts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  socialConnectionId: int("socialConnectionId").notNull(),
+  platform: varchar("platform", { length: 50 }).notNull(),
+  content: text("content").notNull(),
+  mediaUrl: varchar("mediaUrl", { length: 2048 }),
+  mediaType: mysqlEnum("mediaType", ["image", "video"]),
+  mediaKey: varchar("mediaKey", { length: 255 }), // S3 storage key
+  scheduledAt: timestamp("scheduledAt").notNull(),
+  publishedAt: timestamp("publishedAt"),
+  status: mysqlEnum("status", ["pending", "published", "failed"]).default("pending").notNull(),
+  errorMessage: text("errorMessage"),
+  platformPostId: varchar("platformPostId", { length: 255 }), // ID from platform after publishing
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ScheduledPost = typeof scheduledPosts.$inferSelect;
+export type InsertScheduledPost = typeof scheduledPosts.$inferInsert;
+
+// Relations for social media tables
+export const socialConnectionsRelations = relations(socialConnections, ({ one, many }) => ({
+  user: one(users, {
+    fields: [socialConnections.userId],
+    references: [users.id],
+  }),
+  scheduledPosts: many(scheduledPosts),
+}));
+
+export const scheduledPostsRelations = relations(scheduledPosts, ({ one }) => ({
+  user: one(users, {
+    fields: [scheduledPosts.userId],
+    references: [users.id],
+  }),
+  socialConnection: one(socialConnections, {
+    fields: [scheduledPosts.socialConnectionId],
+    references: [socialConnections.id],
+  }),
+}));

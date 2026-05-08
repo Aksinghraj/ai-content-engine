@@ -33,27 +33,8 @@ import {
   MessageCircle,
   Clock,
   TrendingUp,
+  Trash2,
 } from "lucide-react";
-
-interface ConnectedAccount {
-  id: string;
-  platform: string;
-  username: string;
-  connected: boolean;
-  autoPost: boolean;
-  autoReply: boolean;
-  accessToken?: string;
-}
-
-interface ScheduledPost {
-  id: string;
-  platform: string;
-  content: string;
-  mediaUrl?: string;
-  mediaType?: "image" | "video";
-  scheduledAt: string;
-  status: "pending" | "posted" | "failed";
-}
 
 const PLATFORMS = [
   { id: "instagram", name: "Instagram", icon: Instagram, color: "from-pink-500 to-purple-500" },
@@ -66,18 +47,6 @@ const PLATFORMS = [
 
 export default function SocialAutomationV2() {
   const [, navigate] = useLocation();
-  const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>(
-    PLATFORMS.map(p => ({
-      id: p.id,
-      platform: p.id,
-      username: "",
-      connected: false,
-      autoPost: false,
-      autoReply: false,
-    }))
-  );
-
-  const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([]);
   const [postContent, setPostContent] = useState("");
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [scheduleTime, setScheduleTime] = useState("");
@@ -85,7 +54,15 @@ export default function SocialAutomationV2() {
   const [mediaPreview, setMediaPreview] = useState<string>("");
   const [mediaType, setMediaType] = useState<"image" | "video">("image");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
+  // tRPC queries and mutations
+  const connectionsQuery = trpc.socialMedia.getConnections.useQuery();
+  const scheduledPostsQuery = trpc.socialMedia.getScheduledPosts.useQuery();
+  const uploadMediaMutation = trpc.socialMedia.uploadMedia.useMutation();
+  const schedulePostMutation = trpc.socialMedia.schedulePost.useMutation();
+  const disconnectMutation = trpc.socialMedia.disconnect.useMutation();
+  const deletePostMutation = trpc.socialMedia.deletePost.useMutation();
   const chatMutation = trpc.aiAssistant.chat.useMutation();
 
   // Check for OAuth callback params
@@ -104,35 +81,22 @@ export default function SocialAutomationV2() {
     }
 
     if (success && platform && username && token) {
-      setConnectedAccounts(prev =>
-        prev.map(acc =>
-          acc.platform === platform
-            ? {
-                ...acc,
-                connected: true,
-                username,
-                accessToken: token,
-              }
-            : acc
-        )
-      );
+      // Save connection to database
+      // This would be called by the backend after OAuth
       toast.success(`${PLATFORMS.find(p => p.id === platform)?.name} connected!`);
       window.history.replaceState({}, document.title, "/social-automation");
+      connectionsQuery.refetch();
     }
   }, []);
 
   const handleConnect = (platformId: string) => {
-    const platform = PLATFORMS.find(p => p.id === platformId);
     const redirectUri = `${window.location.origin}/auth/${platformId}/callback`;
     const state = Math.random().toString(36).substring(2, 15);
-    
-    // Store state in sessionStorage for verification
+
     sessionStorage.setItem(`oauth_state_${platformId}`, state);
 
-    // Build OAuth URL
     const oauthUrl = `https://api.${platformId}.com/oauth/authorize?client_id=mock_${platformId}_dev&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=user_profile&state=${state}`;
 
-    // Open OAuth login in new window
     const width = 500;
     const height = 600;
     const left = window.screenX + (window.outerWidth - width) / 2;
@@ -145,29 +109,25 @@ export default function SocialAutomationV2() {
     );
   };
 
-  const handleDisconnect = (platformId: string) => {
-    const platform = PLATFORMS.find(p => p.id === platformId);
-    setConnectedAccounts(prev =>
-      prev.map(acc =>
-        acc.platform === platformId
-          ? { ...acc, connected: false, username: "", autoPost: false, autoReply: false, accessToken: undefined }
-          : acc
-      )
-    );
-    toast.success(`${platform?.name} disconnected`);
+  const handleDisconnect = async (connectionId: number) => {
+    try {
+      await disconnectMutation.mutateAsync({ connectionId });
+      toast.success("Account disconnected");
+      connectionsQuery.refetch();
+    } catch (error) {
+      toast.error("Failed to disconnect account");
+    }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size (max 100MB)
     if (file.size > 100 * 1024 * 1024) {
       toast.error("File size must be less than 100MB");
       return;
     }
 
-    // Validate file type
     const validImageTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
     const validVideoTypes = ["video/mp4", "video/quicktime", "video/webm", "video/x-msvideo"];
     const allValidTypes = [...validImageTypes, ...validVideoTypes];
@@ -180,7 +140,6 @@ export default function SocialAutomationV2() {
     setSelectedFile(file);
     setMediaType(validImageTypes.includes(file.type) ? "image" : "video");
 
-    // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setMediaPreview(reader.result as string);
@@ -212,7 +171,7 @@ export default function SocialAutomationV2() {
     }
   };
 
-  const handleSchedulePost = () => {
+  const handleSchedulePost = async () => {
     if (!postContent.trim()) {
       toast.error("Please enter post content");
       return;
@@ -228,30 +187,73 @@ export default function SocialAutomationV2() {
       return;
     }
 
-    selectedPlatforms.forEach(platform => {
-      const newPost: ScheduledPost = {
-        id: Math.random().toString(36).substr(2, 9),
-        platform,
-        content: postContent,
-        mediaUrl: mediaPreview,
-        mediaType,
-        scheduledAt: scheduleTime,
-        status: "pending",
-      };
-      setScheduledPosts(prev => [...prev, newPost]);
-    });
+    try {
+      setIsUploading(true);
 
-    toast.success("Posts scheduled successfully!");
-    setPostContent("");
-    setScheduleTime("");
-    setSelectedPlatforms([]);
-    setSelectedFile(null);
-    setMediaPreview("");
+      // Upload media if selected
+      let mediaUrl = "";
+      let mediaKey = "";
+
+      if (selectedFile && mediaPreview) {
+        const base64Data = mediaPreview.split(",")[1];
+        const uploadResult = await uploadMediaMutation.mutateAsync({
+          filename: selectedFile.name,
+          fileData: base64Data,
+          mediaType,
+        });
+
+        mediaUrl = uploadResult.url;
+        mediaKey = uploadResult.key;
+      }
+
+      // Schedule posts for each selected platform
+      for (const platform of selectedPlatforms) {
+        const connection = connectionsQuery.data?.find(c => c.platform === platform);
+        if (!connection) {
+          toast.error(`${platform} account not connected`);
+          continue;
+        }
+
+        await schedulePostMutation.mutateAsync({
+          socialConnectionId: connection.id,
+          platform,
+          content: postContent,
+          scheduledAt: new Date(scheduleTime),
+          mediaUrl,
+          mediaType: mediaType as "image" | "video",
+          mediaKey,
+        });
+      }
+
+      toast.success("Posts scheduled successfully!");
+      setPostContent("");
+      setScheduleTime("");
+      setSelectedPlatforms([]);
+      setSelectedFile(null);
+      setMediaPreview("");
+      scheduledPostsQuery.refetch();
+    } catch (error) {
+      toast.error("Failed to schedule post");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
-  const connectedCount = connectedAccounts.filter(a => a.connected).length;
-  const autoPostCount = connectedAccounts.filter(a => a.autoPost).length;
-  const autoReplyCount = connectedAccounts.filter(a => a.autoReply).length;
+  const handleDeletePost = async (postId: number) => {
+    try {
+      await deletePostMutation.mutateAsync({ postId });
+      toast.success("Post deleted");
+      scheduledPostsQuery.refetch();
+    } catch (error) {
+      toast.error("Failed to delete post");
+    }
+  };
+
+  const connections = connectionsQuery.data || [];
+  const scheduledPosts = scheduledPostsQuery.data || [];
+  const connectedCount = connections.filter(c => c.isConnected).length;
+  const autoPostCount = connections.filter(c => c.autoPost).length;
+  const autoReplyCount = connections.filter(c => c.autoReply).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
@@ -339,61 +341,78 @@ export default function SocialAutomationV2() {
 
           {/* Connected Accounts Tab */}
           <TabsContent value="accounts" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {PLATFORMS.map(platform => {
-                const account = connectedAccounts.find(a => a.platform === platform.id);
-                const Icon = platform.icon;
+            {connectionsQuery.isLoading ? (
+              <Card className="bg-slate-800 border-slate-700">
+                <CardContent className="pt-12 pb-12 text-center">
+                  <Loader2 size={32} className="mx-auto text-gray-600 mb-4 animate-spin" />
+                  <p className="text-gray-400">Loading accounts...</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {PLATFORMS.map(platform => {
+                  const connection = connections.find(c => c.platform === platform.id);
+                  const Icon = platform.icon;
 
-                return (
-                  <Card key={platform.id} className="bg-slate-800 border-slate-700 overflow-hidden">
-                    <div className={`h-2 bg-gradient-to-r ${platform.color}`} />
-                    <CardContent className="pt-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`p-3 rounded-lg bg-gradient-to-br ${platform.color}`}>
-                            <Icon className="text-white" size={24} />
+                  return (
+                    <Card key={platform.id} className="bg-slate-800 border-slate-700 overflow-hidden">
+                      <div className={`h-2 bg-gradient-to-r ${platform.color}`} />
+                      <CardContent className="pt-6">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`p-3 rounded-lg bg-gradient-to-br ${platform.color}`}>
+                              <Icon className="text-white" size={24} />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-white">{platform.name}</h3>
+                              {connection?.isConnected && (
+                                <p className="text-sm text-gray-400">@{connection.username}</p>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-white">{platform.name}</h3>
-                            {account?.connected && (
-                              <p className="text-sm text-gray-400">@{account.username}</p>
-                            )}
-                          </div>
+                          {connection?.isConnected ? (
+                            <Badge className="bg-green-500/20 text-green-400">
+                              <CheckCircle2 size={14} className="mr-1" />
+                              Connected
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-red-500/20 text-red-400">
+                              <XCircle size={14} className="mr-1" />
+                              Not Connected
+                            </Badge>
+                          )}
                         </div>
-                        {account?.connected ? (
-                          <Badge className="bg-green-500/20 text-green-400">
-                            <CheckCircle2 size={14} className="mr-1" />
-                            Connected
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-red-500/20 text-red-400">
-                            <XCircle size={14} className="mr-1" />
-                            Not Connected
-                          </Badge>
-                        )}
-                      </div>
 
-                      {account?.connected ? (
-                        <Button
-                          onClick={() => handleDisconnect(platform.id)}
-                          variant="outline"
-                          className="w-full text-red-400 border-red-500/50 hover:bg-red-500/10"
-                        >
-                          Disconnect
-                        </Button>
-                      ) : (
-                        <Button
-                          onClick={() => handleConnect(platform.id)}
-                          className={`w-full bg-gradient-to-r ${platform.color} text-white hover:opacity-90`}
-                        >
-                          Connect {platform.name}
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+                        {connection?.isConnected ? (
+                          <Button
+                            onClick={() => handleDisconnect(connection.id)}
+                            variant="outline"
+                            className="w-full text-red-400 border-red-500/50 hover:bg-red-500/10"
+                            disabled={disconnectMutation.isPending}
+                          >
+                            {disconnectMutation.isPending ? (
+                              <>
+                                <Loader2 size={18} className="mr-2 animate-spin" />
+                                Disconnecting...
+                              </>
+                            ) : (
+                              "Disconnect"
+                            )}
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={() => handleConnect(platform.id)}
+                            className={`w-full bg-gradient-to-r ${platform.color} text-white hover:opacity-90`}
+                          >
+                            Connect {platform.name}
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
           </TabsContent>
 
           {/* Create Post Tab */}
@@ -524,11 +543,20 @@ export default function SocialAutomationV2() {
                   </Button>
                   <Button
                     onClick={handleSchedulePost}
-                    disabled={!postContent.trim() || selectedPlatforms.length === 0 || !scheduleTime}
+                    disabled={!postContent.trim() || selectedPlatforms.length === 0 || !scheduleTime || isUploading}
                     className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white"
                   >
-                    <Calendar size={18} className="mr-2" />
-                    Schedule Post
+                    {isUploading ? (
+                      <>
+                        <Loader2 size={18} className="mr-2 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Calendar size={18} className="mr-2" />
+                        Schedule Post
+                      </>
+                    )}
                   </Button>
                 </div>
               </CardContent>
@@ -537,7 +565,14 @@ export default function SocialAutomationV2() {
 
           {/* Scheduled Posts Tab */}
           <TabsContent value="scheduled" className="space-y-4">
-            {scheduledPosts.length === 0 ? (
+            {scheduledPostsQuery.isLoading ? (
+              <Card className="bg-slate-800 border-slate-700">
+                <CardContent className="pt-12 pb-12 text-center">
+                  <Loader2 size={32} className="mx-auto text-gray-600 mb-4 animate-spin" />
+                  <p className="text-gray-400">Loading posts...</p>
+                </CardContent>
+              </Card>
+            ) : scheduledPosts.length === 0 ? (
               <Card className="bg-slate-800 border-slate-700">
                 <CardContent className="pt-12 pb-12 text-center">
                   <Calendar size={48} className="mx-auto text-gray-600 mb-4" />
@@ -575,9 +610,28 @@ export default function SocialAutomationV2() {
                             {new Date(post.scheduledAt).toLocaleString()}
                           </div>
                         </div>
-                        <Badge className={post.status === "pending" ? "bg-yellow-500/20 text-yellow-400" : "bg-green-500/20 text-green-400"}>
-                          {post.status}
-                        </Badge>
+                        <div className="flex flex-col items-end gap-2">
+                          <Badge
+                            className={
+                              post.status === "pending"
+                                ? "bg-yellow-500/20 text-yellow-400"
+                                : post.status === "published"
+                                  ? "bg-green-500/20 text-green-400"
+                                  : "bg-red-500/20 text-red-400"
+                            }
+                          >
+                            {post.status}
+                          </Badge>
+                          <Button
+                            onClick={() => handleDeletePost(post.id)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-400 hover:text-red-300"
+                            disabled={deletePostMutation.isPending}
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>

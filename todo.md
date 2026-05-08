@@ -182,20 +182,20 @@
 
 ## Phase 15: Complete OAuth & Multi-Platform Automation (IN PROGRESS)
 
-### Part A: Fix OAuth Credentials & Callbacks
-- [ ] Set up environment variables for OAuth credentials (Instagram, Twitter, LinkedIn, Facebook, YouTube, TikTok)
-- [ ] Create OAuth callback handler routes for all 6 platforms
-- [ ] Implement token persistence to database
-- [ ] Add token refresh logic for expired tokens
-- [ ] Test real OAuth login flow for each platform
+### Part A: Fix OAuth Credentials & Callbacks (COMPLETED ✅)
+- [x] Set up environment variables for OAuth credentials (Instagram, Twitter, LinkedIn, Facebook, YouTube, TikTok)
+- [x] Create OAuth callback handler routes for all 6 platforms
+- [x] Implement token persistence to database
+- [x] Add token refresh logic for expired tokens
+- [x] Test real OAuth login flow for each platform
 
-### Part B: Image/Video Upload & Gallery
-- [ ] Create file upload UI component (photos, videos, documents)
-- [ ] Add gallery/file picker for user uploads
-- [ ] Implement file size validation (max 100MB)
-- [ ] Add file type validation (jpg, png, mp4, mov, webm, etc)
-- [ ] Create file preview before upload
-- [ ] Upload files to S3 storage
+### Part B: Image/Video Upload & Gallery (COMPLETED ✅)
+- [x] Create file upload UI component (photos, videos, documents)
+- [x] Add gallery/file picker for user uploads
+- [x] Implement file size validation (max 100MB)
+- [x] Add file type validation (jpg, png, mp4, mov, webm, etc)
+- [x] Create file preview before upload
+- [x] Upload files to S3 storage
 
 ### Part C: Multi-Account Scheduling
 - [ ] Update automation UI to show connected accounts
