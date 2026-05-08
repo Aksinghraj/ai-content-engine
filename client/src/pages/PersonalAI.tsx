@@ -2,19 +2,26 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AIChatBox, Message } from "@/components/AIChatBox";
 import { useLocation } from "wouter";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import {
   Brain,
   ArrowLeft,
   Sparkles,
-  MessageSquare,
-  Lightbulb,
-  Wand2,
-  Zap,
+  Mic,
+  Send,
+  Loader2,
 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Streamdown } from "streamdown";
+import { toast } from "sonner";
+
+interface Message {
+  role: "system" | "user" | "assistant";
+  content: string;
+}
 
 export default function PersonalAI() {
   const { user, isAuthenticated } = useAuth();
@@ -40,6 +47,12 @@ Be conversational, helpful, and thorough. Provide detailed, actionable answers. 
     },
   ]);
 
+  const [input, setInput] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   const chatMutation = trpc.aiAssistant.chat.useMutation({
     onSuccess: (response: { success: boolean; message: string }) => {
       setMessages((prev) => [
@@ -61,12 +74,84 @@ Be conversational, helpful, and thorough. Provide detailed, actionable answers. 
     },
   });
 
+  // Filter out system messages for display
+  const displayMessages = messages.filter((msg) => msg.role !== "system");
+
+  // Initialize Web Speech API for voice typing
+  useEffect(() => {
+    const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = "en-US";
+
+      recognitionRef.current.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognitionRef.current.onresult = (event: any) => {
+        let interimTranscript = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            setInput((prev) => prev + transcript);
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error("Speech recognition error:", event.error);
+        toast.error(`Voice typing error: ${event.error}`);
+        setIsListening(false);
+      };
+    } else {
+      console.warn("Web Speech API not supported in this browser");
+    }
+  }, []);
+
+  // Auto-scroll to latest message
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      const scrollElement = scrollAreaRef.current.querySelector("[data-radix-scroll-area-viewport]");
+      if (scrollElement) {
+        scrollElement.scrollTop = scrollElement.scrollHeight;
+      }
+    }
+  }, [displayMessages]);
+
+  const startVoiceTyping = () => {
+    if (!recognitionRef.current) {
+      toast.error("Voice typing not supported in your browser");
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      recognitionRef.current.start();
+    }
+  };
+
   const handleSendMessage = (content: string) => {
+    if (!content.trim()) {
+      toast.error("Please enter a message");
+      return;
+    }
+
     const newMessages: Message[] = [
       ...messages,
       { role: "user", content },
     ];
     setMessages(newMessages);
+    setInput("");
 
     const conversationHistory = newMessages
       .filter((m) => m.role !== "system")
@@ -95,7 +180,7 @@ Be conversational, helpful, and thorough. Provide detailed, actionable answers. 
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
       <div className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-slate-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -120,79 +205,105 @@ Be conversational, helpful, and thorough. Provide detailed, actionable answers. 
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid lg:grid-cols-4 gap-6">
-          {/* Left Sidebar - AI Capabilities */}
-          <div className="lg:col-span-1 space-y-4">
-            <Card className="border-slate-700 bg-slate-800/50 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-white text-sm flex items-center gap-2">
-                  <Lightbulb className="w-4 h-4 text-yellow-400" />
-                  What I Can Do
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-start gap-2">
-                  <Wand2 className="w-4 h-4 text-violet-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-xs text-slate-300">Generate content in your unique voice</span>
+      {/* Main Chat Container - Centered */}
+      <main className="flex items-center justify-center min-h-[calc(100vh-120px)] p-4">
+        <div className="w-full max-w-4xl">
+          <Card className="border-slate-700 bg-slate-800/50 backdrop-blur-sm shadow-2xl h-[calc(100vh-200px)] flex flex-col">
+            {/* Messages Area */}
+            <CardContent className="flex-1 p-4 overflow-hidden">
+              <ScrollArea className="h-full pr-4" ref={scrollAreaRef}>
+                <div className="space-y-4">
+                  {displayMessages.length === 0 ? (
+                    <div className="flex items-center justify-center h-full text-center">
+                      <div className="space-y-4">
+                        <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-full flex items-center justify-center mx-auto">
+                          <Brain className="w-8 h-8 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-white mb-2">Welcome, {user.name}!</h3>
+                          <p className="text-slate-400 max-w-sm mx-auto">
+                            I'm your Personal AI. Ask me anything about content creation, marketing, coding, or any topic. I'm here to help!
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    displayMessages.map((message, index) => (
+                      <div
+                        key={index}
+                        className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                      >
+                        <div
+                          className={`max-w-xs lg:max-w-md xl:max-w-lg px-4 py-3 rounded-lg ${
+                            message.role === "user"
+                              ? "bg-violet-600 text-white rounded-br-none"
+                              : "bg-slate-700 text-slate-100 rounded-bl-none"
+                          }`}
+                        >
+                          {message.role === "assistant" ? (
+                            <Streamdown>{message.content}</Streamdown>
+                          ) : (
+                            <p className="text-sm">{message.content}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                  {chatMutation.isPending && (
+                    <div className="flex justify-start">
+                      <div className="bg-slate-700 text-slate-100 px-4 py-3 rounded-lg rounded-bl-none flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span className="text-sm">Thinking...</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-start gap-2">
-                  <MessageSquare className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-xs text-slate-300">Brainstorm viral content ideas</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Zap className="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-xs text-slate-300">Optimize for engagement & SEO</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Sparkles className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-xs text-slate-300">Learn your brand voice over time</span>
-                </div>
-              </CardContent>
-            </Card>
+              </ScrollArea>
+            </CardContent>
 
-            <Card className="border-slate-700 bg-gradient-to-br from-violet-900/20 to-fuchsia-900/20 backdrop-blur-sm border-violet-500/30">
-              <CardContent className="pt-6">
-                <div className="text-center space-y-2">
-                  <Brain className="w-8 h-8 text-violet-400 mx-auto" />
-                  <p className="text-sm font-semibold text-white">Personal Memory</p>
-                  <p className="text-xs text-slate-400">
-                    The more you chat, the better I understand your style and preferences.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Input Area */}
+            <div className="border-t border-slate-700 p-4 space-y-3">
+              <div className="flex gap-2">
+                <Textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage(input);
+                    }
+                  }}
+                  placeholder="Ask me anything... (Shift+Enter for new line)"
+                  className="bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none"
+                  rows={3}
+                  disabled={chatMutation.isPending}
+                />
+              </div>
 
-            <Button
-              onClick={() => navigate("/generator")}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold"
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              Generate Content
-            </Button>
-          </div>
+              <div className="flex gap-2 justify-between">
+                <Button
+                  onClick={startVoiceTyping}
+                  variant={isListening ? "default" : "outline"}
+                  size="sm"
+                  className={isListening ? "bg-red-600 hover:bg-red-700" : ""}
+                  disabled={chatMutation.isPending}
+                >
+                  <Mic className="w-4 h-4 mr-2" />
+                  {isListening ? "Listening..." : "Voice"}
+                </Button>
 
-          {/* Main Chat Area */}
-          <div className="lg:col-span-3 flex flex-col h-full">
-            <div className="flex-1 min-h-0">
-              <AIChatBox
-                messages={messages}
-                onSendMessage={handleSendMessage}
-                isLoading={chatMutation.isPending}
-                placeholder="Ask me anything about content creation, marketing, coding, or anything else..."
-                height="calc(100vh - 200px)"
-                emptyStateMessage={`Hi ${user.name}! I'm your Personal AI. Ask me to help with content ideas, writing, strategy, or anything else.`}
-                suggestedPrompts={[
-                  "Generate 5 viral content ideas for my niche",
-                  "Help me write a LinkedIn post about AI tools",
-                  "Create a content strategy for this week",
-                  "Rewrite this in a more engaging tone",
-                  "What's trending in content creation right now?",
-                  "Help me brainstorm hooks for my next video",
-                ]}
-              />
+                <Button
+                  onClick={() => handleSendMessage(input)}
+                  disabled={!input.trim() || chatMutation.isPending}
+                  className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white"
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  Send
+                </Button>
+              </div>
             </div>
-          </div>
+          </Card>
         </div>
       </main>
     </div>

@@ -26,6 +26,16 @@ export function OAuthLoginModal({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Platform-specific forgot password URLs
+  const forgotPasswordUrls: Record<string, string> = {
+    instagram: "https://www.instagram.com/accounts/password/reset/",
+    twitter: "https://twitter.com/i/flow/password_reset",
+    linkedin: "https://www.linkedin.com/uas/login?session_redirect=/psettings/change-password",
+    facebook: "https://www.facebook.com/login/identify/?ctx=recover",
+    youtube: "https://accounts.google.com/signin/recovery",
+    tiktok: "https://www.tiktok.com/login/phone_or_email/forgot_password",
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -119,7 +129,7 @@ export function OAuthLoginModal({
           {/* Forgot Password */}
           <div className="text-right">
             <a
-              href={`https://${platform}.com/forgot-password`}
+              href={forgotPasswordUrls[platform as keyof typeof forgotPasswordUrls] || `https://${platform}.com/forgot-password`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-purple-400 hover:text-purple-300 transition"

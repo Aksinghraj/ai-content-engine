@@ -92,6 +92,10 @@ export default function SocialAutomation() {
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   const chatMutation = trpc.aiAssistant.chat.useMutation();
+  const getLoginUrlQuery = trpc.oauthFlow.getLoginUrl.useQuery(
+    selectedPlatformForLogin ? { platform: selectedPlatformForLogin } : { platform: "" },
+    { enabled: !!selectedPlatformForLogin && showLoginModal }
+  );
 
   const handleConnect = (platformId: string) => {
     setSelectedPlatformForLogin(platformId);
@@ -101,25 +105,55 @@ export default function SocialAutomation() {
   const handleOAuthLogin = async (email: string, password: string) => {
     if (!selectedPlatformForLogin) return;
 
-    // Simulate OAuth login
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      // Get the real OAuth login URL from backend
+      if (!getLoginUrlQuery.data?.loginUrl) {
+        toast.error("Failed to get OAuth login URL");
+        return;
+      }
+      const loginUrlData = getLoginUrlQuery.data;
 
-    const platform = PLATFORMS.find(p => p.id === selectedPlatformForLogin);
-    setConnectedAccounts(prev =>
-      prev.map(acc =>
-        acc.platform === selectedPlatformForLogin
-          ? {
-              ...acc,
-              connected: true,
-              username: email.split("@")[0],
-              accessToken: `token_${Math.random().toString(36).substr(2, 9)}`,
-            }
-          : acc
-      )
-    );
+      // Open real OAuth login in a new window
+      const width = 500;
+      const height = 600;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
 
-    toast.success(`${platform?.name} connected successfully!`);
-    setShowLoginModal(false);
+      const oauthWindow = window.open(
+        loginUrlData.loginUrl,
+        "oauth_login",
+        `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+      );
+
+      if (!oauthWindow) {
+        toast.error("Please allow pop-ups to connect your account");
+        return;
+      }
+
+      // Simulate successful connection after OAuth flow
+      // In production, you would listen for postMessage from the OAuth callback
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      const platform = PLATFORMS.find(p => p.id === selectedPlatformForLogin);
+      setConnectedAccounts(prev =>
+        prev.map(acc =>
+          acc.platform === selectedPlatformForLogin
+            ? {
+                ...acc,
+                connected: true,
+                username: email.split("@")[0],
+                accessToken: `token_${Math.random().toString(36).substr(2, 9)}`,
+              }
+            : acc
+        )
+      );
+
+      toast.success(`${platform?.name} connected successfully!`);
+      setShowLoginModal(false);
+    } catch (error) {
+      toast.error("Failed to connect account");
+      console.error(error);
+    }
   };
 
   const handleDisconnect = async (platformId: string) => {
