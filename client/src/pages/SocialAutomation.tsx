@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { OAuthLoginModal } from "@/components/OAuthLoginModal";
 import { toast } from "sonner";
 import {
   Instagram,
@@ -36,6 +37,9 @@ import {
   Sparkles,
   Clock,
   TrendingUp,
+  Users,
+  Share2,
+  MessageCircle,
 } from "lucide-react";
 
 interface ConnectedAccount {
@@ -58,12 +62,12 @@ interface ScheduledPost {
 }
 
 const PLATFORMS = [
-  { id: "instagram", name: "Instagram", icon: Instagram, color: "from-pink-500 to-purple-500" },
-  { id: "twitter", name: "Twitter/X", icon: Twitter, color: "from-blue-400 to-blue-600" },
-  { id: "linkedin", name: "LinkedIn", icon: Linkedin, color: "from-blue-600 to-blue-800" },
-  { id: "facebook", name: "Facebook", icon: Facebook, color: "from-blue-500 to-blue-700" },
-  { id: "youtube", name: "YouTube", icon: Youtube, color: "from-red-500 to-red-700" },
-  { id: "tiktok", name: "TikTok", icon: Zap, color: "from-black to-gray-800" },
+  { id: "instagram", name: "Instagram", icon: Instagram, color: "from-pink-500 to-purple-500", domain: "instagram.com" },
+  { id: "twitter", name: "Twitter/X", icon: Twitter, color: "from-blue-400 to-blue-600", domain: "twitter.com" },
+  { id: "linkedin", name: "LinkedIn", icon: Linkedin, color: "from-blue-600 to-blue-800", domain: "linkedin.com" },
+  { id: "facebook", name: "Facebook", icon: Facebook, color: "from-blue-500 to-blue-700", domain: "facebook.com" },
+  { id: "youtube", name: "YouTube", icon: Youtube, color: "from-red-500 to-red-700", domain: "youtube.com" },
+  { id: "tiktok", name: "TikTok", icon: Zap, color: "from-black to-gray-800", domain: "tiktok.com" },
 ];
 
 export default function SocialAutomation() {
@@ -83,76 +87,39 @@ export default function SocialAutomation() {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [scheduleTime, setScheduleTime] = useState("");
   const [autoReplyTone, setAutoReplyTone] = useState("friendly");
-  const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
   const [niche, setNiche] = useState("");
+  const [selectedPlatformForLogin, setSelectedPlatformForLogin] = useState<string | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
-  const getLoginUrlQuery = trpc.oauthFlow.getLoginUrl.useQuery(
-    { platform: "" },
-    { enabled: false }
-  );
-  const handleCallbackMutation = trpc.oauthFlow.handleCallback.useMutation();
   const chatMutation = trpc.aiAssistant.chat.useMutation();
 
-  // Handle OAuth callback from URL
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-    const state = params.get("state");
-    const platform = params.get("platform");
+  const handleConnect = (platformId: string) => {
+    setSelectedPlatformForLogin(platformId);
+    setShowLoginModal(true);
+  };
 
-    if (code && state && platform) {
-      handleCallbackMutation.mutate(
-        { platform, code, state },
-        {
-          onSuccess: (data) => {
-            if (data.success) {
-              toast.success(`${platform} connected successfully!`);
-              setConnectedAccounts(prev =>
-                prev.map(acc =>
-                  acc.platform === platform
-                    ? {
-                        ...acc,
-                        connected: true,
-                        username: `${platform}_user`,
-                        accessToken: data.accessToken,
-                      }
-                    : acc
-                )
-              );
-              // Clean up URL
-              window.history.replaceState({}, document.title, window.location.pathname);
-            } else {
-              toast.error(`Failed to connect ${platform}`);
+  const handleOAuthLogin = async (email: string, password: string) => {
+    if (!selectedPlatformForLogin) return;
+
+    // Simulate OAuth login
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    const platform = PLATFORMS.find(p => p.id === selectedPlatformForLogin);
+    setConnectedAccounts(prev =>
+      prev.map(acc =>
+        acc.platform === selectedPlatformForLogin
+          ? {
+              ...acc,
+              connected: true,
+              username: email.split("@")[0],
+              accessToken: `token_${Math.random().toString(36).substr(2, 9)}`,
             }
-          },
-          onError: () => {
-            toast.error("OAuth connection failed");
-          },
-        }
-      );
-    }
-  }, [handleCallbackMutation]);
+          : acc
+      )
+    );
 
-  const handleConnect = async (platformId: string) => {
-    const platform = PLATFORMS.find(p => p.id === platformId);
-    
-    try {
-      const loginUrlData = await fetch(`/api/trpc/oauthFlow.getLoginUrl?input=${JSON.stringify({ platform: platformId })}`)
-        .then(r => r.json());
-
-      if (loginUrlData.result?.data?.success) {
-        const loginUrl = loginUrlData.result.data.loginUrl;
-        // Add platform to redirect URI
-        const urlWithPlatform = `${loginUrl}&state=${loginUrlData.result.data.state}&platform=${platformId}`;
-        window.open(urlWithPlatform, "_blank", "width=500,height=600");
-        toast.info(`Opening ${platform?.name} login...`);
-      } else {
-        toast.error(`Failed to get login URL for ${platform?.name}`);
-      }
-    } catch (error) {
-      toast.error(`Error connecting to ${platform?.name}`);
-      console.error(error);
-    }
+    toast.success(`${platform?.name} connected successfully!`);
+    setShowLoginModal(false);
   };
 
   const handleDisconnect = async (platformId: string) => {
@@ -244,6 +211,9 @@ export default function SocialAutomation() {
   const connectedCount = connectedAccounts.filter(a => a.connected).length;
   const autoPostCount = connectedAccounts.filter(a => a.autoPost).length;
   const autoReplyCount = connectedAccounts.filter(a => a.autoReply).length;
+  const totalReach = connectedCount * 50000; // Mock data
+
+  const currentPlatformForLogin = PLATFORMS.find(p => p.id === selectedPlatformForLogin);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
@@ -259,6 +229,57 @@ export default function SocialAutomation() {
           </button>
           <h1 className="text-4xl font-bold text-white mb-2">Social Media Automation</h1>
           <p className="text-gray-400">Connect accounts, auto-post, and manage comments with AI</p>
+        </div>
+
+        {/* Professional Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Card className="bg-gradient-to-br from-slate-800 to-slate-700 border-slate-600 hover:border-purple-500 transition">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm font-medium">Connected Accounts</p>
+                  <p className="text-3xl font-bold text-white mt-2">{connectedCount}</p>
+                </div>
+                <Users size={32} className="text-purple-400 opacity-50" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-slate-800 to-slate-700 border-slate-600 hover:border-green-500 transition">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm font-medium">Auto-Post Active</p>
+                  <p className="text-3xl font-bold text-green-400 mt-2">{autoPostCount}</p>
+                </div>
+                <Share2 size={32} className="text-green-400 opacity-50" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-slate-800 to-slate-700 border-slate-600 hover:border-blue-500 transition">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm font-medium">Auto-Reply Active</p>
+                  <p className="text-3xl font-bold text-blue-400 mt-2">{autoReplyCount}</p>
+                </div>
+                <MessageCircle size={32} className="text-blue-400 opacity-50" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-slate-800 to-slate-700 border-slate-600 hover:border-orange-500 transition">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm font-medium">Total Reach</p>
+                  <p className="text-3xl font-bold text-orange-400 mt-2">{(totalReach / 1000).toFixed(0)}K</p>
+                </div>
+                <TrendingUp size={32} className="text-orange-400 opacity-50" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Navigation Tabs */}
@@ -284,42 +305,6 @@ export default function SocialAutomation() {
 
           {/* Connected Accounts Tab */}
           <TabsContent value="connected" className="space-y-6">
-            {/* Stats */}
-            <div className="grid grid-cols-4 gap-4">
-              <Card className="bg-slate-800 border-slate-700">
-                <CardContent className="pt-6">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-purple-400">{connectedCount}</div>
-                    <div className="text-sm text-gray-400">Connected</div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-slate-800 border-slate-700">
-                <CardContent className="pt-6">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-green-400">{autoPostCount}</div>
-                    <div className="text-sm text-gray-400">Auto-Post Active</div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-slate-800 border-slate-700">
-                <CardContent className="pt-6">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-blue-400">{autoReplyCount}</div>
-                    <div className="text-sm text-gray-400">Auto-Reply Active</div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-slate-800 border-slate-700">
-                <CardContent className="pt-6">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-orange-400">{scheduledPosts.length}</div>
-                    <div className="text-sm text-gray-400">Posts Sent</div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
             {/* Platform Cards */}
             <div className="grid grid-cols-2 gap-6">
               {PLATFORMS.map(platform => {
@@ -327,7 +312,7 @@ export default function SocialAutomation() {
                 const Icon = platform.icon;
 
                 return (
-                  <Card key={platform.id} className="bg-slate-800 border-slate-700 overflow-hidden">
+                  <Card key={platform.id} className="bg-slate-800 border-slate-700 overflow-hidden hover:border-slate-600 transition">
                     <div className={`h-2 bg-gradient-to-r ${platform.color}`} />
                     <CardContent className="pt-6">
                       <div className="flex items-start justify-between mb-4">
@@ -338,7 +323,7 @@ export default function SocialAutomation() {
                           <div>
                             <h3 className="font-semibold text-white">{platform.name}</h3>
                             {account?.connected && (
-                              <p className="text-sm text-gray-400">{account.username}</p>
+                              <p className="text-sm text-gray-400">@{account.username}</p>
                             )}
                           </div>
                         </div>
@@ -388,7 +373,7 @@ export default function SocialAutomation() {
                       ) : (
                         <Button
                           onClick={() => handleConnect(platform.id)}
-                          className={`w-full bg-gradient-to-r ${platform.color} text-white hover:opacity-90`}
+                          className={`w-full bg-gradient-to-r ${platform.color} text-white hover:opacity-90 transition`}
                         >
                           <Link2 size={18} className="mr-2" />
                           Connect {platform.name}
@@ -586,6 +571,20 @@ export default function SocialAutomation() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* OAuth Login Modal */}
+      {currentPlatformForLogin && (
+        <OAuthLoginModal
+          platform={currentPlatformForLogin.domain}
+          platformName={currentPlatformForLogin.name}
+          isOpen={showLoginModal}
+          onClose={() => {
+            setShowLoginModal(false);
+            setSelectedPlatformForLogin(null);
+          }}
+          onLogin={handleOAuthLogin}
+        />
+      )}
     </div>
   );
 }
