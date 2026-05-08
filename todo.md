@@ -178,3 +178,56 @@
 - [x] Center Personal AI chat interface
 - [x] Add voice typing support to Personal AI
 - [x] Test all fixes with NO ERRORS
+
+
+## Phase 15: Complete OAuth & Multi-Platform Automation (IN PROGRESS)
+
+### Part A: Fix OAuth Credentials & Callbacks
+- [ ] Set up environment variables for OAuth credentials (Instagram, Twitter, LinkedIn, Facebook, YouTube, TikTok)
+- [ ] Create OAuth callback handler routes for all 6 platforms
+- [ ] Implement token persistence to database
+- [ ] Add token refresh logic for expired tokens
+- [ ] Test real OAuth login flow for each platform
+
+### Part B: Image/Video Upload & Gallery
+- [ ] Create file upload UI component (photos, videos, documents)
+- [ ] Add gallery/file picker for user uploads
+- [ ] Implement file size validation (max 100MB)
+- [ ] Add file type validation (jpg, png, mp4, mov, webm, etc)
+- [ ] Create file preview before upload
+- [ ] Upload files to S3 storage
+
+### Part C: Multi-Account Scheduling
+- [ ] Update automation UI to show connected accounts
+- [ ] Add account selection checkboxes for posting
+- [ ] Implement multi-account post scheduling
+- [ ] Create schedule time picker for all platforms
+- [ ] Add post content editor (text + media)
+- [ ] Implement bulk scheduling to multiple accounts
+
+### Part D: AI Content + User Uploads
+- [ ] Add toggle: "Generate with AI" vs "Upload from Gallery"
+- [ ] If AI: Generate image/video based on prompt
+- [ ] If Upload: Let user pick from gallery
+- [ ] Store media reference in scheduled post
+- [ ] Support both generated and uploaded media in same post
+
+### Part E: Social Media API Integration
+- [ ] Implement Instagram posting API
+- [ ] Implement Twitter/X posting API
+- [ ] Implement LinkedIn posting API
+- [ ] Implement Facebook posting API
+- [ ] Implement YouTube posting API
+- [ ] Implement TikTok posting API
+- [ ] Add error handling for failed posts
+- [ ] Add retry logic for failed posts
+
+### Part F: End-to-End Testing
+- [ ] Test OAuth login for each platform
+- [ ] Test image upload and preview
+- [ ] Test video upload and preview
+- [ ] Test multi-account selection
+- [ ] Test scheduled post creation
+- [ ] Test post publishing at scheduled time
+- [ ] Test AI-generated content posting
+- [ ] Test user-uploaded content posting

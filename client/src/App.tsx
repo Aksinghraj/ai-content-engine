@@ -29,7 +29,7 @@ import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import ContentCalendar from "./pages/ContentCalendar";
 import AIAssistant from "./pages/AIAssistant";
 import PersonalAI from "./pages/PersonalAI";
-import SocialAutomation from "./pages/SocialAutomation";
+import SocialAutomationV2 from "./pages/SocialAutomationV2";
 import { SimpleAutomation } from "./pages/SimpleAutomation";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
@@ -169,7 +169,7 @@ function Router() {
           {(params) => <ProtectedRoute component={SimpleAutomation} {...params} />}
         </Route>
         <Route path={"/social-automation"}>
-          {(params) => <ProtectedRoute component={SocialAutomation} {...params} />}
+          {(params) => <ProtectedRoute component={SocialAutomationV2} {...params} />}
         </Route>
 
         {/* 404 Route */}

@@ -10,6 +10,46 @@ function getQueryParam(req: Request, key: string): string | undefined {
 }
 
 export function registerOAuthRoutes(app: Express) {
+  // Social Media OAuth Callbacks for Instagram, Twitter, LinkedIn, Facebook, YouTube, TikTok
+  const platforms = ["instagram", "twitter", "linkedin", "facebook", "youtube", "tiktok"];
+  
+  platforms.forEach((platform) => {
+    app.get(`/auth/${platform}/callback`, async (req: Request, res: Response) => {
+      try {
+        const { code, state, error } = req.query;
+
+        if (error) {
+          const errorMsg = typeof error === "string" ? error : "Unknown error";
+          return res.redirect(
+            `/social-automation?error=${encodeURIComponent(errorMsg)}&platform=${platform}`
+          );
+        }
+
+        if (!code || !state) {
+          return res.redirect(
+            `/social-automation?error=${encodeURIComponent("Missing authorization code")}&platform=${platform}`
+          );
+        }
+
+        // Generate mock tokens for development
+        // In production, exchange code for real access token from platform
+        const mockAccessToken = `${platform}_token_${Math.random().toString(36).substr(2, 9)}`;
+        const mockUsername = `${platform}_user_${Math.random().toString(36).substr(2, 5)}`;
+
+        // Redirect back to social automation page with success params
+        return res.redirect(
+          `/social-automation?platform=${platform}&success=true&username=${encodeURIComponent(mockUsername)}&token=${encodeURIComponent(mockAccessToken)}`
+        );
+      } catch (error) {
+        console.error(`${platform} OAuth callback error:`, error);
+        return res.redirect(
+          `/social-automation?error=${encodeURIComponent("OAuth callback failed")}&platform=${platform}`
+        );
+      }
+    });
+  });
+
+  // Manus OAuth Callback
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
