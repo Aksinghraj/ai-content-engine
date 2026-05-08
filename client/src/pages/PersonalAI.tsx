@@ -173,23 +173,25 @@ Be conversational, helpful, and thorough. Provide detailed, actionable answers. 
           </div>
 
           {/* Main Chat Area */}
-          <div className="lg:col-span-3">
-            <AIChatBox
-              messages={messages}
-              onSendMessage={handleSendMessage}
-              isLoading={chatMutation.isPending}
-              placeholder="Ask me anything about content creation..."
-              height="calc(100vh - 180px)"
-              emptyStateMessage={`Hi ${user.name}! I'm your Personal AI. Ask me to help with content ideas, writing, strategy, or anything else.`}
-              suggestedPrompts={[
-                "Generate 5 viral content ideas for my niche",
-                "Help me write a LinkedIn post about AI tools",
-                "Create a content strategy for this week",
-                "Rewrite this in a more engaging tone",
-                "What's trending in content creation right now?",
-                "Help me brainstorm hooks for my next video",
-              ]}
-            />
+          <div className="lg:col-span-3 flex flex-col h-full">
+            <div className="flex-1 min-h-0">
+              <AIChatBox
+                messages={messages}
+                onSendMessage={handleSendMessage}
+                isLoading={chatMutation.isPending}
+                placeholder="Ask me anything about content creation, marketing, coding, or anything else..."
+                height="calc(100vh - 200px)"
+                emptyStateMessage={`Hi ${user.name}! I'm your Personal AI. Ask me to help with content ideas, writing, strategy, or anything else.`}
+                suggestedPrompts={[
+                  "Generate 5 viral content ideas for my niche",
+                  "Help me write a LinkedIn post about AI tools",
+                  "Create a content strategy for this week",
+                  "Rewrite this in a more engaging tone",
+                  "What's trending in content creation right now?",
+                  "Help me brainstorm hooks for my next video",
+                ]}
+              />
+            </div>
           </div>
         </div>
       </main>

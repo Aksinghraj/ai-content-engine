@@ -90,30 +90,33 @@ export default function SocialAutomation() {
 
   const chatMutation = trpc.aiAssistant.chat.useMutation();
 
-  const handleConnect = (platformId: string) => {
-    // Simulate OAuth connection flow
+  const getAccountsQuery = trpc.socialOAuth.getConnectedAccounts.useQuery();
+  const disconnectMutation = trpc.socialOAuth.disconnectAccount.useMutation();
+  const publishPostMutation = trpc.socialOAuth.publishPost.useMutation();
+
+  const handleConnect = async (platformId: string) => {
     const platform = PLATFORMS.find(p => p.id === platformId);
     toast.info(`Connecting to ${platform?.name}... Opening authorization window.`);
     
-    // Simulate successful connection after delay
-    setTimeout(() => {
-      setConnectedAccounts(prev => prev.map(acc => 
-        acc.platform === platformId 
-          ? { ...acc, connected: true, username: `@${user?.name || "user"}_${platformId}` }
-          : acc
-      ));
+    try {
+      // Simulate OAuth connection - in production, this would open a real OAuth flow
       toast.success(`${platform?.name} connected successfully!`);
-    }, 2000);
+      setTimeout(() => {
+        getAccountsQuery.refetch();
+      }, 1000);
+    } catch (error) {
+      toast.error(`Failed to connect ${platform?.name}`);
+    }
   };
 
-  const handleDisconnect = (platformId: string) => {
+  const handleDisconnect = async (platformId: string) => {
     const platform = PLATFORMS.find(p => p.id === platformId);
+    toast.success(`${platform?.name} disconnected.`);
     setConnectedAccounts(prev => prev.map(acc => 
       acc.platform === platformId 
         ? { ...acc, connected: false, username: "", autoPost: false, autoReply: false }
         : acc
     ));
-    toast.success(`${platform?.name} disconnected.`);
   };
 
   const toggleAutoPost = (platformId: string) => {
