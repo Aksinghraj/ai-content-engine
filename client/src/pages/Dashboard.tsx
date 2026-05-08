@@ -102,6 +102,29 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* ===== SOCIAL MEDIA AUTOMATION ===== */}
+        <div className="mb-8 relative overflow-hidden rounded-2xl bg-gradient-to-r from-pink-600/20 via-orange-600/20 to-yellow-600/20 border border-pink-500/30 backdrop-blur-sm p-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-pink-500 via-orange-500 to-yellow-500 flex items-center justify-center shadow-lg shadow-orange-500/20">
+                <Zap className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Social Media Automation</h3>
+                <p className="text-sm text-slate-300">Connect accounts, auto-post, and reply to comments with AI</p>
+              </div>
+            </div>
+            <Button
+              onClick={() => navigate("/social-automation")}
+              className="bg-gradient-to-r from-pink-500 via-orange-500 to-yellow-500 hover:from-pink-600 hover:via-orange-600 hover:to-yellow-600 text-white font-semibold px-6"
+            >
+              <Zap className="w-4 h-4 mr-2" />
+              Manage Social Accounts
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+        </div>
+
         {/* Automation Quick Access */}
         <div className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/30 backdrop-blur-sm">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -110,7 +133,7 @@ export default function Dashboard() {
                 <Cog className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">Automation</h3>
+                <h3 className="text-xl font-bold text-white">Content Automation</h3>
                 <p className="text-sm text-slate-300">Schedule content generation automatically</p>
               </div>
             </div>

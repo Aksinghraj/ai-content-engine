@@ -81,8 +81,19 @@ const PLATFORMS = ["Instagram", "YouTube", "LinkedIn", "Twitter", "TikTok", "Fac
 const GOALS = ["Growth", "Engagement", "Sales", "Authority", "Brand Awareness"];
 const STYLES = ["Educational", "Entertaining", "Storytelling", "Bold", "Inspirational", "Humorous"];
 const VIDEO_LENGTHS = [
-  { code: "short", name: "Short Form (30-45s)" },
-  { code: "long", name: "Long Form (2-5 min)" },
+  { code: "15s", name: "Ultra Short (15 seconds)" },
+  { code: "30s", name: "Short (30 seconds)" },
+  { code: "60s", name: "Standard (60 seconds)" },
+  { code: "90s", name: "Extended (90 seconds)" },
+  { code: "3min", name: "Long Form (3 minutes)" },
+  { code: "5min", name: "Deep Dive (5 minutes)" },
+];
+const SCRIPT_LENGTHS = [
+  { code: "brief", name: "Brief (~50 words)" },
+  { code: "short", name: "Short (~100-150 words)" },
+  { code: "medium", name: "Medium (~200-300 words)" },
+  { code: "long", name: "Long (~400-600 words)" },
+  { code: "extended", name: "Extended (~800-1200 words)" },
 ];
 const LANGUAGES = [
   { code: "en", name: "English" },
@@ -109,7 +120,12 @@ export default function Generator() {
     goal: "",
     contentStyle: "",
     language: "hinglish",
-    videoLength: "short",
+    videoLength: "60s",
+    scriptLength: "medium",
+  });
+  const [trendingTopics, setTrendingTopics] = useState<string[]>([]);
+  const trendingQuery = trpc.trending.getTrendingTopics.useQuery({ limit: 8 }, {
+    enabled: isAuthenticated,
   });
 
   const [generatedContent, setGeneratedContent] = useState<ContentPackage | null>(null);
@@ -146,7 +162,10 @@ export default function Generator() {
     }, 300);
 
     try {
-      const result = await generateMutation.mutateAsync(formData);
+      const result = await generateMutation.mutateAsync({
+            ...formData,
+            trendingTopics: trendingTopics.length > 0 ? trendingTopics : undefined,
+          });
       setGeneratedContent(result);
       setProgress(100);
       toast.success("Content generated successfully!");
@@ -260,7 +279,8 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
       goal: item.goal,
       contentStyle: item.contentStyle,
       language: "hinglish",
-      videoLength: "short",
+      videoLength: "60s",
+      scriptLength: "medium",
     });
   };
 
@@ -390,6 +410,60 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
                       </SelectContent>
                     </Select>
                   </div>
+
+                  <div>
+                    <Label className="text-slate-300">Script Length</Label>
+                    <Select value={formData.scriptLength} onValueChange={(value) => setFormData({ ...formData, scriptLength: value })}>
+                      <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                        <SelectValue placeholder="Select script length" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-700">
+                        {SCRIPT_LENGTHS.map((s) => (
+                          <SelectItem key={s.code} value={s.code}>
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Trending Topics */}
+                  {trendingQuery.data?.data && trendingQuery.data.data.length > 0 && (
+                    <div>
+                      <Label className="text-slate-300 flex items-center gap-2">
+                        <Flame className="w-3 h-3 text-orange-400" />
+                        Trending Now
+                      </Label>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {trendingQuery.data.data.slice(0, 6).map((topic: any, i: number) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => {
+                              const topicTitle = topic.title || topic;
+                              setTrendingTopics(prev => 
+                                prev.includes(topicTitle) 
+                                  ? prev.filter(t => t !== topicTitle)
+                                  : [...prev, topicTitle]
+                              );
+                            }}
+                            className={`text-xs px-2 py-1 rounded-full border transition-all ${
+                              trendingTopics.includes(topic.title || topic)
+                                ? 'bg-purple-600 border-purple-500 text-white'
+                                : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:border-purple-500/50'
+                            }`}
+                          >
+                            {topic.title || topic}
+                          </button>
+                        ))}
+                      </div>
+                      {trendingTopics.length > 0 && (
+                        <p className="text-xs text-purple-400 mt-1">
+                          {trendingTopics.length} trend(s) selected - content will follow these topics
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   <div>
                     <Label className="text-slate-300">Language</Label>

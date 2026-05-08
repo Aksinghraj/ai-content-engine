@@ -7,6 +7,9 @@ interface ContentGenerationInput {
   goal: string;
   contentStyle: string;
   language?: string;
+  videoLength?: string;
+  scriptLength?: string;
+  trendingTopics?: string[];
 }
 
 interface GeneratedContent {
@@ -49,7 +52,7 @@ export async function generateContentPackage(
     const messages: Message[] = [
       {
         role: "system",
-        content: "You are an expert social media content strategist. Generate high-engagement, viral-worthy content packages. Always respond with valid JSON.",
+        content: "You are an expert social media content strategist who stays on top of current trends. Generate high-engagement, viral-worthy content packages that incorporate trending topics and current cultural moments. Always respond with valid JSON.",
       },
       {
         role: "user",
@@ -205,11 +208,52 @@ function getDetailedLanguageInstructions(language: string): string {
   return instructions[language] || instructions["en"];
 }
 
+function getVideoLengthInstructions(videoLength: string): string {
+  const instructions: Record<string, string> = {
+    "15s": "Make the script exactly 15 seconds when read aloud (about 35-40 words). Ultra-short, punchy, one key message.",
+    "30s": "Make the script exactly 30 seconds when read aloud (about 75-80 words). Quick hook, one main point, strong CTA.",
+    "60s": "Make the script exactly 60 seconds when read aloud (about 150-160 words). Hook, 2-3 key points, engaging CTA.",
+    "90s": "Make the script exactly 90 seconds when read aloud (about 225-240 words). Hook, detailed content with 3-4 points, memorable ending.",
+    "3min": "Make the script exactly 3 minutes when read aloud (about 450-480 words). Full storytelling arc with hook, problem, solution, examples, and CTA.",
+    "5min": "Make the script exactly 5 minutes when read aloud (about 750-800 words). Comprehensive deep-dive with hook, multiple sections, examples, and strong conclusion.",
+    "short": "Make the script 30-45 seconds when read aloud (about 75-100 words). Quick, punchy, high-energy.",
+    "long": "Make the script 2-5 minutes when read aloud (about 300-750 words). Detailed, storytelling-driven, comprehensive.",
+  };
+  return instructions[videoLength] || instructions["60s"];
+}
+
+function getScriptLengthInstructions(scriptLength: string): string {
+  const instructions: Record<string, string> = {
+    "brief": "Keep the script brief and concise - maximum 50 words total. One hook, one point, one CTA.",
+    "short": "Keep the script short - about 100-150 words. Quick hook, 1-2 main points, brief CTA.",
+    "medium": "Make the script medium length - about 200-300 words. Proper structure with hook, 3 main points, and engaging CTA.",
+    "long": "Make the script long and detailed - about 400-600 words. Full narrative with hook, multiple sections, examples, transitions, and powerful conclusion.",
+    "extended": "Make the script extended/comprehensive - about 800-1200 words. Deep-dive content with storytelling, multiple examples, data points, and thorough conclusion.",
+  };
+  return instructions[scriptLength] || instructions["medium"];
+}
+
 function buildContentPrompt(input: ContentGenerationInput): string {
   const languageCode = input.language || "en";
   const languageName = getLanguageName(languageCode);
   const languageInstructions = getDetailedLanguageInstructions(languageCode);
-  
+  const videoLengthInstructions = getVideoLengthInstructions(input.videoLength || "60s");
+  const scriptLengthInstructions = getScriptLengthInstructions(input.scriptLength || "medium");
+
+  // Build trending topics section
+  let trendingSection = "";
+  if (input.trendingTopics && input.trendingTopics.length > 0) {
+    trendingSection = `
+CURRENT TRENDING TOPICS IN THIS NICHE:
+${input.trendingTopics.map((t, i) => `${i + 1}. ${t}`).join("\n")}
+
+CRITICAL: You MUST incorporate these trending topics into your content ideas, hooks, and scripts. Make the content feel current and timely by referencing these trends. Blend the user's niche with what's trending right now to maximize virality and relevance.`;
+  } else {
+    trendingSection = `
+TRENDING CONTENT STRATEGY:
+Since you are an expert in the "${input.niche}" niche, generate content that references current cultural moments, viral formats, and trending topics in this space. Think about what's currently popular and viral in this niche and create content that rides those trends.`;
+  }
+
   return `Generate a complete, high-engagement content package in ${languageName}.
 
 Content Details:
@@ -218,28 +262,36 @@ Content Details:
 - Platform: ${input.platform}
 - Goal: ${input.goal}
 - Content Style: ${input.contentStyle}
+- Video Length: ${input.videoLength || "60s"}
+- Script Length: ${input.scriptLength || "medium"}
 
 ${languageInstructions}
 
-CRITICAL INSTRUCTION: Generate EVERY SINGLE piece of content (all viral ideas, hooks, scripts, captions, hashtags, carousel slides, tweets, LinkedIn posts, YouTube descriptions, and tips) ENTIRELY in ${languageName}. Do NOT use English. Do NOT mix languages. Everything must be in ${languageName}.
+VIDEO/SCRIPT LENGTH REQUIREMENTS:
+${videoLengthInstructions}
+${scriptLengthInstructions}
+
+${trendingSection}
+
+CRITICAL INSTRUCTION: Generate EVERY SINGLE piece of content (all viral ideas, hooks, scripts, captions, hashtags, carousel slides, tweets, LinkedIn posts, YouTube descriptions, and tips) ENTIRELY in ${languageName}. Do NOT use English unless the language is English or Hinglish. Everything must be in ${languageName}.
 
 Return a JSON object with this exact structure:
 {
   "viralIdeas": ["idea1", "idea2", ..., "idea10"],
   "bestIdea": {
-    "idea": "The #1 most viral idea",
-    "rationale": "Why this will perform well"
+    "idea": "The #1 most viral idea incorporating current trends",
+    "rationale": "Why this will perform well given current trends"
   },
   "hooks": ["hook1", "hook2", "hook3", "hook4", "hook5"],
   "script": {
-    "hook": "First 3 seconds hook",
-    "mainContent": "Fast-paced valuable content",
-    "ending": "CTA or twist"
+    "hook": "First 3 seconds hook that references trending topic",
+    "mainContent": "Main content following the video/script length requirements",
+    "ending": "CTA or twist ending"
   },
-  "caption": "Strong opening line with value and relatability",
+  "caption": "Strong opening line with value, relatability, and trend reference",
   "hashtags": ["tag1", "tag2", ..., "tag20"],
   "carousel": {
-    "slide1": "Hook slide",
+    "slide1": "Hook slide referencing trend",
     "slides2to6": ["slide2", "slide3", "slide4", "slide5", "slide6"],
     "slide7": "CTA slide"
   },
@@ -249,20 +301,21 @@ Return a JSON object with this exact structure:
     "youtubeShorts": "YouTube Shorts description"
   },
   "optimizationTips": {
-    "bestPostingTime": "Best time to post",
+    "bestPostingTime": "Best time to post for maximum reach",
     "suggestedVisuals": ["visual1", "visual2", "visual3"],
     "engagementTricks": ["trick1", "trick2", "trick3"]
   }
 }
 
 RULES:
-- Avoid generic or overused content
+- INCORPORATE TRENDING TOPICS into at least 50% of your ideas and content
+- Avoid generic or overused content - make it feel CURRENT and TIMELY
 - Make everything practical and ready-to-post
 - Focus on HIGH ENGAGEMENT and VIRALITY
 - Keep language simple and human-like
 - Ensure all arrays have the exact number of items specified
 - Make hooks max 12 words each, starting with attention-grabbing first 3 words
-- Make script under 45 seconds when read aloud
+- Follow the VIDEO/SCRIPT LENGTH requirements exactly
 - REMEMBER: ALL content must be in ${languageName}`;
 }
 

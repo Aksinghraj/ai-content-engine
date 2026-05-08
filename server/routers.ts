@@ -167,18 +167,13 @@ export const appRouter = router({
           goal: z.string().min(1),
           contentStyle: z.string().min(1),
           language: z.string().optional().default("en"),
+          videoLength: z.string().optional().default("60s"),
+          scriptLength: z.string().optional().default("medium"),
+          trendingTopics: z.array(z.string()).optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
         const user = ctx.user;
-        
-        // Check if user can generate content (free tier limit)
-        if (user.subscriptionTier === "free") {
-          const todayUsage = await getTodayTokenUsage(user.id);
-          if (todayUsage >= 5) {
-            throw new Error("Daily limit of 5 generations reached. Upgrade to Pro for unlimited access.");
-          }
-        }
         
         // Generate content
         const generatedContent = await generateContentPackage(input);
