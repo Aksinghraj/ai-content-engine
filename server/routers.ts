@@ -25,6 +25,7 @@ import { aiAgentsRouter } from "./routers/aiAgents";
 import { templatesRouter } from "./routers/templates";
 import { communityRouter } from "./routers/community";
 import { socialOAuthRouter } from "./routers/socialOAuth";
+import { oauthFlowRouter } from "./routers/oauthFlow";
 
 export const appRouter = router({
   system: systemRouter,
@@ -56,6 +57,7 @@ export const appRouter = router({
   templates: templatesRouter,
   community: communityRouter,
   socialOAuth: socialOAuthRouter,
+  oauthFlow: oauthFlowRouter,
   contentRewriter: contentGenerationRouter.contentRewriter,
   contentRepurposer: contentGenerationRouter.contentRepurposer,
   aiAssistant: contentGenerationRouter.aiAssistant,
