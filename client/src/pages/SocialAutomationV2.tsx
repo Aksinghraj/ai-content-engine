@@ -64,6 +64,7 @@ export default function SocialAutomationV2() {
   const disconnectMutation = trpc.socialMedia.disconnect.useMutation();
   const deletePostMutation = trpc.socialMedia.deletePost.useMutation();
   const chatMutation = trpc.aiAssistant.chat.useMutation();
+  const saveConnectionMutation = trpc.socialMedia.saveConnection.useMutation();
 
   // Check for OAuth callback params
   useEffect(() => {
@@ -82,10 +83,26 @@ export default function SocialAutomationV2() {
 
     if (success && platform && username && token) {
       // Save connection to database
-      // This would be called by the backend after OAuth
-      toast.success(`${PLATFORMS.find(p => p.id === platform)?.name} connected!`);
-      window.history.replaceState({}, document.title, "/social-automation");
-      connectionsQuery.refetch();
+      saveConnectionMutation.mutate(
+        {
+          platform,
+          username,
+          accessToken: token,
+          platformUserId: `${platform}_${Math.random().toString(36).substr(2, 9)}`,
+        },
+        {
+          onSuccess: () => {
+            const platformName = PLATFORMS.find(p => p.id === platform)?.name;
+            toast.success(`${platformName} connected successfully!`);
+            window.history.replaceState({}, document.title, "/social-automation");
+            setTimeout(() => connectionsQuery.refetch(), 500);
+          },
+          onError: (error) => {
+            toast.error("Failed to save connection");
+            console.error(error);
+          },
+        }
+      );
     }
   }, []);
 
@@ -95,7 +112,12 @@ export default function SocialAutomationV2() {
 
     sessionStorage.setItem(`oauth_state_${platformId}`, state);
 
-    const oauthUrl = `https://api.${platformId}.com/oauth/authorize?client_id=mock_${platformId}_dev&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=user_profile&state=${state}`;
+    // Generate mock credentials for development
+    const mockUsername = `${platformId}_user_${Math.random().toString(36).substr(2, 5)}`;
+    const mockToken = `${platformId}_token_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Create callback URL with mock data
+    const callbackUrl = `${redirectUri}?platform=${platformId}&success=true&username=${encodeURIComponent(mockUsername)}&token=${encodeURIComponent(mockToken)}&state=${state}`;
 
     const width = 500;
     const height = 600;
@@ -103,7 +125,7 @@ export default function SocialAutomationV2() {
     const top = window.screenY + (window.outerHeight - height) / 2;
 
     window.open(
-      oauthUrl,
+      callbackUrl,
       "oauth_login",
       `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
     );

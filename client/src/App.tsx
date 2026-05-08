@@ -31,6 +31,7 @@ import AIAssistant from "./pages/AIAssistant";
 import PersonalAI from "./pages/PersonalAI";
 import SocialAutomationV2 from "./pages/SocialAutomationV2";
 import { SimpleAutomation } from "./pages/SimpleAutomation";
+import DemoVideos from "./pages/DemoVideos";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -170,6 +171,9 @@ function Router() {
         </Route>
         <Route path={"/social-automation"}>
           {(params) => <ProtectedRoute component={SocialAutomationV2} {...params} />}
+        </Route>
+        <Route path={"/demo-videos"}>
+          {(params) => <ProtectedRoute component={DemoVideos} {...params} />}
         </Route>
 
         {/* 404 Route */}
