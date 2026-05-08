@@ -12,8 +12,8 @@ export default function DemoVideos() {
       id: "full",
       title: "Complete App Walkthrough",
       description: "See all features of AI Content Engine in one comprehensive demo",
-      video: "/manus-storage/demo-full_75710a4f.mp4",
-      duration: "30 seconds",
+      video: "/manus-storage/demo-video-final_a4ae8d52.mp4",
+      duration: "6 seconds",
       features: ["Dashboard", "Content Generation", "Personal AI", "Social Automation", "Scheduling", "Analytics"],
     },
   ];
@@ -47,7 +47,7 @@ export default function DemoVideos() {
             <CardContent className="space-y-6">
               {/* Video Player */}
               <VideoPlayer
-                src="/manus-storage/demo-full_75710a4f.mp4"
+                src="/manus-storage/demo-video-final_a4ae8d52.mp4"
                 title="AI Content Engine - Complete Demo"
                 defaultLanguage="en"
                 autoPlay={false}
