@@ -239,3 +239,87 @@
 - [x] Include all features: Dashboard, Content Generation, Personal AI, Social Automation, Scheduling
 - [x] Add professional narration and audio
 - [x] Languages included: English, Hindi/Hinglish, Spanish, French, German, Portuguese, Japanese, Chinese, Arabic, Russian
+
+
+## Phase 17: Enterprise Social Media Automation (IN PROGRESS)
+
+### Part A: Nuelink MCP Integration
+- [ ] Setup Custom MCP connection for Nuelink in manus-config
+- [ ] Configure HTTP transport with Nuelink API endpoint
+- [ ] Add Authorization header with Nuelink API token
+- [ ] Test MCP connection and verify platform access (YouTube, Instagram, LinkedIn, Facebook, TikTok)
+- [ ] Create MCP router procedures for content publishing
+
+### Part B: Secure OAuth 2.0 with Token Management
+- [ ] Implement OAuth 2.0 flow with Nuelink as provider
+- [ ] Add access token and refresh token storage to database
+- [ ] Implement token refresh logic before expiration
+- [ ] Add error handling for expired tokens
+- [ ] Create UI prompt for reconnection when tokens expire
+- [ ] Add token validation on every API call
+
+### Part C: Platform-Specific Content Formatting Agent
+- [ ] Create formatting rules for YouTube (long-form video metadata)
+- [ ] Create formatting rules for TikTok (short-form, hashtags, trending sounds)
+- [ ] Create formatting rules for Instagram (captions, hashtags, visual-first)
+- [ ] Create formatting rules for Facebook (community engagement, longer captions)
+- [ ] Create formatting rules for LinkedIn (professional, thought-leadership)
+- [ ] Build agent that adapts single content to all platforms
+
+### Part D: Bi-Directional Webhooks
+- [ ] Setup webhook endpoints for Nuelink events (comments, DMs, engagement)
+- [ ] Implement webhook signature verification
+- [ ] Create database schema for storing engagement events
+- [ ] Build real-time notification system for new comments/DMs
+- [ ] Add webhook retry logic and error handling
+- [ ] Create dashboard widget showing real-time engagement
+
+### Part E: Intent-Driven Auto-Reply System
+- [ ] Create knowledge base storage for user-uploaded content
+- [ ] Build intent detection model (question, praise, support issue, spam)
+- [ ] Implement contextual reply generation based on intent
+- [ ] Add guardrails for response quality and brand voice
+- [ ] Create auto-reply toggle per platform
+- [ ] Build reply history and analytics
+
+### Part F: Cross-Platform Repurposing Engine
+- [ ] Implement YouTube video URL processing
+- [ ] Add video transcription integration
+- [ ] Create content slicing logic (chapters, highlights, quotes)
+- [ ] Build LinkedIn thought-leadership post generator
+- [ ] Build Facebook update generator
+- [ ] Build TikTok script generator
+- [ ] Add automatic scheduling for repurposed content
+
+### Part G: Sentiment Analysis & Human Escalation
+- [ ] Implement sentiment analysis for incoming comments
+- [ ] Create escalation rules for negative sentiment
+- [ ] Build flag system for complex customer service issues
+- [ ] Create escalation dashboard for manual review
+- [ ] Add notification system for escalated items
+- [ ] Implement sentiment tracking analytics
+
+### Part H: Unified ROI Analytics Dashboard
+- [ ] Create analytics aggregation from all platforms
+- [ ] Build video views tracking
+- [ ] Build engagement rate metrics
+- [ ] Build auto-reply success rate tracking
+- [ ] Create cross-platform comparison view
+- [ ] Build ROI calculation and reporting
+- [ ] Add export functionality for analytics
+
+### Part I: Testing & Error Handling
+- [ ] Test Nuelink MCP connection
+- [ ] Test OAuth token refresh flow
+- [ ] Test platform-specific formatting for all 5 platforms
+- [ ] Test webhook delivery and retry logic
+- [ ] Test auto-reply generation with various intents
+- [ ] Test video repurposing pipeline end-to-end
+- [ ] Test sentiment analysis accuracy
+- [ ] Test dashboard with real data
+
+### Part J: Deployment
+- [ ] Deploy all new features to production
+- [ ] Setup monitoring and alerting
+- [ ] Create user documentation
+- [ ] Setup support channels for issues

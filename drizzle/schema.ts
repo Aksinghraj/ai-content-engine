@@ -1,4 +1,4 @@
-import { int, json, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean } from "drizzle-orm/mysql-core";
+import { int, json, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, decimal, date } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
 
 /**
@@ -353,5 +353,185 @@ export const scheduledPostsRelations = relations(scheduledPosts, ({ one }) => ({
   socialConnection: one(socialConnections, {
     fields: [scheduledPosts.socialConnectionId],
     references: [socialConnections.id],
+  }),
+}));
+
+
+/**
+ * Engagement Events table.
+ * Stores real-time comments, DMs, and engagement from social media platforms.
+ */
+export const engagementEvents = mysqlTable("engagementEvents", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  socialConnectionId: int("socialConnectionId").notNull(),
+  platform: varchar("platform", { length: 50 }).notNull(),
+  eventType: mysqlEnum("eventType", ["comment", "dm", "like", "share", "mention"]).notNull(),
+  authorName: varchar("authorName", { length: 255 }).notNull(),
+  authorId: varchar("authorId", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  sentiment: mysqlEnum("sentiment", ["positive", "neutral", "negative"]).notNull(),
+  sentimentScore: decimal("sentimentScore", { precision: 3, scale: 2 }).notNull().default("0.50"), // 0.00 to 1.00
+  intent: mysqlEnum("intent", ["question", "praise", "support_issue", "spam", "other"]).notNull(),
+  postId: varchar("postId", { length: 255 }), // Reference to original post
+  isEscalated: boolean("isEscalated").default(false).notNull(),
+  escalationReason: varchar("escalationReason", { length: 255 }),
+  autoReplyGenerated: text("autoReplyGenerated"),
+  autoReplySent: boolean("autoReplySent").default(false).notNull(),
+  manualReviewNotes: text("manualReviewNotes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type EngagementEvent = typeof engagementEvents.$inferSelect;
+export type InsertEngagementEvent = typeof engagementEvents.$inferInsert;
+
+/**
+ * Knowledge Base table.
+ * Stores user-uploaded knowledge for auto-reply generation.
+ */
+export const knowledgeBase = mysqlTable("knowledgeBase", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  category: varchar("category", { length: 100 }), // FAQ, Product Info, Brand Guidelines, etc.
+  tags: varchar("tags", { length: 500 }), // Comma-separated tags
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type KnowledgeBase = typeof knowledgeBase.$inferSelect;
+export type InsertKnowledgeBase = typeof knowledgeBase.$inferInsert;
+
+/**
+ * Auto-Reply Rules table.
+ * Stores rules for intent-driven auto-replies.
+ */
+export const autoReplyRules = mysqlTable("autoReplyRules", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  intent: mysqlEnum("intent", ["question", "praise", "support_issue", "spam", "other"]).notNull(),
+  platform: varchar("platform", { length: 50 }), // null = all platforms
+  replyTemplate: text("replyTemplate").notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AutoReplyRule = typeof autoReplyRules.$inferSelect;
+export type InsertAutoReplyRule = typeof autoReplyRules.$inferInsert;
+
+/**
+ * Repurposed Content table.
+ * Stores cross-platform repurposed content from source videos.
+ */
+export const repurposedContent = mysqlTable("repurposedContent", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  sourceUrl: varchar("sourceUrl", { length: 2048 }).notNull(), // YouTube URL
+  sourceType: mysqlEnum("sourceType", ["youtube_video", "article", "podcast"]).notNull(),
+  transcription: text("transcription"),
+  linkedinPost: text("linkedinPost"),
+  facebookPost: text("facebookPost"),
+  tiktokScript: text("tiktokScript"),
+  instagramCaption: text("instagramCaption"),
+  youtubeDescription: text("youtubeDescription"),
+  generatedAt: timestamp("generatedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type RepurposedContent = typeof repurposedContent.$inferSelect;
+export type InsertRepurposedContent = typeof repurposedContent.$inferInsert;
+
+/**
+ * Platform Analytics table.
+ * Stores aggregated analytics from all platforms.
+ */
+export const platformAnalytics = mysqlTable("platformAnalytics", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  socialConnectionId: int("socialConnectionId").notNull(),
+  platform: varchar("platform", { length: 50 }).notNull(),
+  date: date("date").notNull(),
+  views: int("views").default(0).notNull(),
+  engagementCount: int("engagementCount").default(0).notNull(),
+  engagementRate: decimal("engagementRate", { precision: 5, scale: 2 }).notNull().default("0.00"),
+  autoRepliesGenerated: int("autoRepliesGenerated").default(0).notNull(),
+  autoRepliesSent: int("autoRepliesSent").default(0).notNull(),
+  autoReplySuccessRate: decimal("autoReplySuccessRate", { precision: 5, scale: 2 }).notNull().default("0.00"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PlatformAnalytics = typeof platformAnalytics.$inferSelect;
+export type InsertPlatformAnalytics = typeof platformAnalytics.$inferInsert;
+
+/**
+ * Nuelink Integration table.
+ * Stores Nuelink API credentials and configuration.
+ */
+export const neulinkIntegration = mysqlTable("neulinkIntegration", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  apiToken: text("apiToken").notNull(), // Encrypted
+  isActive: boolean("isActive").default(true).notNull(),
+  lastSyncedAt: timestamp("lastSyncedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type NeulinkIntegration = typeof neulinkIntegration.$inferSelect;
+export type InsertNeulinkIntegration = typeof neulinkIntegration.$inferInsert;
+
+// Relations for enterprise tables
+export const engagementEventsRelations = relations(engagementEvents, ({ one }) => ({
+  user: one(users, {
+    fields: [engagementEvents.userId],
+    references: [users.id],
+  }),
+  socialConnection: one(socialConnections, {
+    fields: [engagementEvents.socialConnectionId],
+    references: [socialConnections.id],
+  }),
+}));
+
+export const knowledgeBaseRelations = relations(knowledgeBase, ({ one }) => ({
+  user: one(users, {
+    fields: [knowledgeBase.userId],
+    references: [users.id],
+  }),
+}));
+
+export const autoReplyRulesRelations = relations(autoReplyRules, ({ one }) => ({
+  user: one(users, {
+    fields: [autoReplyRules.userId],
+    references: [users.id],
+  }),
+}));
+
+export const repurposedContentRelations = relations(repurposedContent, ({ one }) => ({
+  user: one(users, {
+    fields: [repurposedContent.userId],
+    references: [users.id],
+  }),
+}));
+
+export const platformAnalyticsRelations = relations(platformAnalytics, ({ one }) => ({
+  user: one(users, {
+    fields: [platformAnalytics.userId],
+    references: [users.id],
+  }),
+  socialConnection: one(socialConnections, {
+    fields: [platformAnalytics.socialConnectionId],
+    references: [socialConnections.id],
+  }),
+}));
+
+export const neulinkIntegrationRelations = relations(neulinkIntegration, ({ one }) => ({
+  user: one(users, {
+    fields: [neulinkIntegration.userId],
+    references: [users.id],
   }),
 }));

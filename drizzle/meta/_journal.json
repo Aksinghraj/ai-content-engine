@@ -43,6 +43,13 @@
       "when": 1778237202685,
       "tag": "0005_fixed_james_howlett",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1778310504987,
+      "tag": "0006_curious_enchantress",
+      "breakpoints": true
     }
   ]
 }
