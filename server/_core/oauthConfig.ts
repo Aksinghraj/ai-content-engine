@@ -81,3 +81,8 @@ export function getOAuthUrl(platform: string, state: string): string {
 export function generateOAuthState(): string {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
+
+export function getRedirectUri(platform: string): string {
+  const baseUrl = process.env.FRONTEND_URL || "https://aicontent-femeuybh.manus.space";
+  return `${baseUrl}/auth/${platform}/callback`;
+}

@@ -29,7 +29,7 @@ import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import ContentCalendar from "./pages/ContentCalendar";
 import AIAssistant from "./pages/AIAssistant";
 import PersonalAI from "./pages/PersonalAI";
-import SocialAutomationV2 from "./pages/SocialAutomationV2";
+import SocialAutomationV3 from "./pages/SocialAutomationV3";
 import { SimpleAutomation } from "./pages/SimpleAutomation";
 import DemoVideos from "./pages/DemoVideos";
 import { Loader2 } from "lucide-react";
@@ -168,9 +168,8 @@ function Router() {
         </Route>
         <Route path={"/simple-automation"}>
           {(params) => <ProtectedRoute component={SimpleAutomation} {...params} />}
-        </Route>
-        <Route path={"/social-automation"}>
-          {(params) => <ProtectedRoute component={SocialAutomationV2} {...params} />}
+        </Route>        <Route path={"/social-automation"}>
+          {(params) => <ProtectedRoute component={SocialAutomationV3} {...params} />}
         </Route>
         <Route path={"/demo-videos"}>
           {(params) => <ProtectedRoute component={DemoVideos} {...params} />}
