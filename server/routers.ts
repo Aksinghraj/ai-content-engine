@@ -28,6 +28,7 @@ import { socialOAuthRouter } from "./routers/socialOAuth";
 import { oauthFlowRouter } from "./routers/oauthFlow";
 import { socialMediaRouter } from "./routers/socialMedia";
 import { enterpriseRouter } from "./routers/enterprise";
+import { oauthManagementRouter } from "./routers/oauthManagement";
 
 export const appRouter = router({
   system: systemRouter,
@@ -62,6 +63,7 @@ export const appRouter = router({
   oauthFlow: oauthFlowRouter,
   socialMedia: socialMediaRouter,
   enterprise: enterpriseRouter,
+  oauthManagement: oauthManagementRouter,
   contentRewriter: contentGenerationRouter.contentRewriter,
   contentRepurposer: contentGenerationRouter.contentRepurposer,
   aiAssistant: contentGenerationRouter.aiAssistant,

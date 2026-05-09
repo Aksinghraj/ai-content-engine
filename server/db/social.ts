@@ -108,6 +108,41 @@ export async function getSocialConnection(connectionId: number) {
 }
 
 /**
+ * Get connection by userId and platform
+ */
+export async function getSocialConnectionByPlatform(userId: number, platform: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db
+    .select()
+    .from(socialConnections)
+    .where(
+      and(
+        eq(socialConnections.userId, userId),
+        eq(socialConnections.platform, platform)
+      )
+    )
+    .limit(1);
+
+  return result[0] || null;
+}
+
+/**
+ * Update social connection
+ */
+export async function updateSocialConnection(connectionId: number, data: Partial<any>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db
+    .update(socialConnections)
+    .set({
+      ...data,
+      updatedAt: new Date(),
+    })
+    .where(eq(socialConnections.id, connectionId));
+}
+
+/**
  * Disconnect a social account
  */
 export async function disconnectSocialAccount(userId: number, connectionId: number) {
