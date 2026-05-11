@@ -17,6 +17,8 @@ export function registerOAuthRoutes(app: Express) {
     app.get(`/auth/${platform}/callback`, async (req: Request, res: Response) => {
       try {
         const { code, state, error } = req.query;
+        const codeStr = typeof code === "string" ? code : undefined;
+        const stateStr = typeof state === "string" ? state : undefined;
 
         if (error) {
           const errorMsg = typeof error === "string" ? error : "Unknown error";
@@ -25,20 +27,21 @@ export function registerOAuthRoutes(app: Express) {
           );
         }
 
-        if (!code || !state) {
+        if (!codeStr || !stateStr) {
           return res.redirect(
             `/social-automation?error=${encodeURIComponent("Missing authorization code")}&platform=${platform}`
           );
         }
 
-        // Generate mock tokens for development
-        // In production, exchange code for real access token from platform
-        const mockAccessToken = `${platform}_token_${Math.random().toString(36).substr(2, 9)}`;
-        const mockUsername = `${platform}_user_${Math.random().toString(36).substr(2, 5)}`;
+        // Import OAuth flow handler
+        const { handleOAuthCallback } = await import("./oauthFlow");
+        const baseUrl = process.env.APP_URL || "http://localhost:3000";
 
+        // Exchange code for real tokens
+        const result = await handleOAuthCallback(baseUrl, platform, codeStr as string, stateStr as string);
         // Redirect back to social automation page with success params
         return res.redirect(
-          `/social-automation?platform=${platform}&success=true&username=${encodeURIComponent(mockUsername)}&token=${encodeURIComponent(mockAccessToken)}`
+          `/social-automation?platform=${platform}&success=true&username=${encodeURIComponent(result.userInfo.username || result.userInfo.name)}&token=${encodeURIComponent(result.accessToken)}`
         );
       } catch (error) {
         console.error(`${platform} OAuth callback error:`, error);
