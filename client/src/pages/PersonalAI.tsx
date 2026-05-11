@@ -53,6 +53,27 @@ Be conversational, helpful, and thorough. Provide detailed, actionable answers. 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const multilingualChatMutation = trpc.multilingualAI.chat.useMutation({
+    onSuccess: (response: any) => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: response.response,
+        },
+      ]);
+    },
+    onError: (_error: unknown) => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Sorry, I encountered an error. Please try again.",
+        },
+      ]);
+    },
+  });
+
   const chatMutation = trpc.aiAssistant.chat.useMutation({
     onSuccess: (response: { success: boolean; message: string }) => {
       setMessages((prev) => [
@@ -160,9 +181,8 @@ Be conversational, helpful, and thorough. Provide detailed, actionable answers. 
         content: m.content,
       }));
 
-    chatMutation.mutate({
+    multilingualChatMutation.mutate({
       message: content,
-      conversationHistory: conversationHistory.slice(0, -1),
     });
   };
 
@@ -249,7 +269,7 @@ Be conversational, helpful, and thorough. Provide detailed, actionable answers. 
                       </div>
                     ))
                   )}
-                  {chatMutation.isPending && (
+                  {multilingualChatMutation.isPending && (
                     <div className="flex justify-start">
                       <div className="bg-slate-700 text-slate-100 px-4 py-3 rounded-lg rounded-bl-none flex items-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -287,7 +307,7 @@ Be conversational, helpful, and thorough. Provide detailed, actionable answers. 
                   variant={isListening ? "default" : "outline"}
                   size="sm"
                   className={isListening ? "bg-red-600 hover:bg-red-700" : ""}
-                  disabled={chatMutation.isPending}
+                  disabled={multilingualChatMutation.isPending}
                 >
                   <Mic className="w-4 h-4 mr-2" />
                   {isListening ? "Listening..." : "Voice"}
@@ -295,7 +315,7 @@ Be conversational, helpful, and thorough. Provide detailed, actionable answers. 
 
                 <Button
                   onClick={() => handleSendMessage(input)}
-                  disabled={!input.trim() || chatMutation.isPending}
+                  disabled={!input.trim() || multilingualChatMutation.isPending}
                   className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white"
                 >
                   <Send className="w-4 h-4 mr-2" />
