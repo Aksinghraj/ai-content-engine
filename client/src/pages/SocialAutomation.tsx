@@ -92,10 +92,7 @@ export default function SocialAutomation() {
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   const chatMutation = trpc.aiAssistant.chat.useMutation();
-  const getLoginUrlQuery = trpc.oauthFlow.getLoginUrl.useQuery(
-    selectedPlatformForLogin ? { platform: selectedPlatformForLogin } : { platform: "" },
-    { enabled: !!selectedPlatformForLogin && showLoginModal }
-  );
+  const [authUrlState, setAuthUrlState] = useState<{ success: boolean; authorizationUrl: string; state: string } | null>(null);
 
   const handleConnect = (platformId: string) => {
     setSelectedPlatformForLogin(platformId);
@@ -106,12 +103,15 @@ export default function SocialAutomation() {
     if (!selectedPlatformForLogin) return;
 
     try {
-      // Get the real OAuth login URL from backend
-      if (!getLoginUrlQuery.data?.loginUrl) {
-        toast.error("Failed to get OAuth login URL");
+      // Get the real OAuth authorization URL from backend
+      const { data: result } = await trpc.oauthManagement.getAuthorizationUrl.useQuery({
+        platform: selectedPlatformForLogin as any,
+      });
+
+      if (!result?.success || !result?.authorizationUrl) {
+        toast.error("Failed to get OAuth authorization URL");
         return;
       }
-      const loginUrlData = getLoginUrlQuery.data;
 
       // Open real OAuth login in a new window
       const width = 500;
@@ -120,7 +120,7 @@ export default function SocialAutomation() {
       const top = window.screenY + (window.outerHeight - height) / 2;
 
       const oauthWindow = window.open(
-        loginUrlData.loginUrl,
+        result?.authorizationUrl,
         "oauth_login",
         `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
       );
@@ -154,7 +154,7 @@ export default function SocialAutomation() {
       toast.error("Failed to connect account");
       console.error(error);
     }
-  };
+  }
 
   const handleDisconnect = async (platformId: string) => {
     const platform = PLATFORMS.find(p => p.id === platformId);
