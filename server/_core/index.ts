@@ -33,6 +33,13 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+  // Dev: log incoming requests for debugging
+  if (process.env.NODE_ENV !== "production") {
+    app.use((req, res, next) => {
+      console.log(`[DEV-LOG] ${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
+      next();
+    });
+  }
   
   // Stripe webhook must be registered BEFORE express.json() to access raw body
   app.post(
@@ -76,6 +83,55 @@ async function startServer() {
       createContext,
     })
   );
+
+  // Dev-only debug endpoint to inspect current session user
+  if (process.env.NODE_ENV !== "production") {
+    app.get("/api/debug/me", async (req, res) => {
+      try {
+        const { sdk } = await import("./sdk");
+        const { COOKIE_NAME } = await import("@shared/const");
+        const cookies = req.headers.cookie || "";
+        // Attempt to verify session cookie using configured cookie name
+        const match = cookies.match(new RegExp(`${COOKIE_NAME}=([^;]+)`)) || [];
+        const session = await sdk.verifySession(match[1]);
+        res.json({ session });
+      } catch (err) {
+        console.error("/api/debug/me error:", err);
+        res.status(500).json({ error: "failed" });
+      }
+    });
+  }
+  // development mode uses Vite, production mode uses static files
+  // Dev-only helper: quick login route to create a session cookie for local development
+  if (process.env.NODE_ENV !== "production") {
+    app.get("/dev-login", async (req, res) => {
+      try {
+        const { sdk } = await import("./sdk");
+        const { COOKIE_NAME } = await import("@shared/const");
+        const { getSessionCookieOptions } = await import("./cookies");
+        const { upsertUser } = await import("../db");
+
+        const openId = "dev-openid-1";
+        // Ensure user exists in DB
+        await upsertUser({
+          openId,
+          name: "Dev User",
+          email: "dev@example.com",
+          loginMethod: "dev",
+          lastSignedIn: new Date(),
+        });
+
+        const sessionToken = await sdk.createSessionToken(openId, { name: "Dev User" });
+        const cookieOptions = getSessionCookieOptions(req);
+        res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: 1000 * 60 * 60 * 24 * 30 });
+        res.redirect("/");
+      } catch (err) {
+        console.error("/dev-login error:", err);
+        res.status(500).send("Dev login failed");
+      }
+    });
+  }
+
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);

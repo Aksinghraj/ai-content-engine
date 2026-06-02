@@ -227,7 +227,9 @@ class SDKServer {
         name,
       };
     } catch (error) {
-      console.warn("[Auth] Session verification failed", String(error));
+        // Log a truncated view of the cookie for debugging malformed tokens in dev
+        const displayed = typeof cookieValue === "string" ? cookieValue.slice(0, 80) : String(cookieValue);
+        console.warn("[Auth] Session verification failed", String(error), "cookiePreview=", displayed + (typeof cookieValue === "string" && cookieValue.length > 80 ? "..." : ""));
       return null;
     }
   }
