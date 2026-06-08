@@ -62,6 +62,7 @@ export default function SocialAutomationV3() {
   const [loginPassword, setLoginPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [testingPlatform, setTestingPlatform] = useState<string>("");
 
   // tRPC queries and mutations
   const connectionsQuery = trpc.socialMedia.getConnections.useQuery();
@@ -72,6 +73,29 @@ export default function SocialAutomationV3() {
   const deletePostMutation = trpc.socialMedia.deletePost.useMutation();
   const chatMutation = trpc.aiAssistant.chat.useMutation();
   const saveConnectionMutation = trpc.socialMedia.saveConnection.useMutation();
+  const sendTestPostMutation = trpc.socialMedia.sendTestPost.useMutation();
+
+  // Handle sending a test post to verify connection
+  const handleSendTestPost = async (connectionId: number, platform: string) => {
+    setTestingPlatform(platform);
+    try {
+      const result = await sendTestPostMutation.mutateAsync({ connectionId, platform });
+      if (result.success) {
+        toast.success(result.message, { duration: 5000 });
+      } else {
+        // Show reconnect guidance if needed
+        if ('reconnectRequired' in result && result.reconnectRequired) {
+          toast.error(result.message + " Click 'Disconnect' and reconnect with valid credentials.", { duration: 8000 });
+        } else {
+          toast.error(result.message, { duration: 5000 });
+        }
+      }
+    } catch (error) {
+      toast.error(`Test post failed: ${(error as Error).message}. Please check your connection and try again.`, { duration: 5000 });
+    } finally {
+      setTestingPlatform("");
+    }
+  };
 
   // Open login modal for a platform
   const handleConnect = (platformId: string) => {
@@ -342,6 +366,17 @@ export default function SocialAutomationV3() {
                             <Lock size={12} />
                             <span>Credentials encrypted & secured</span>
                           </div>
+                          <Button
+                            onClick={() => handleSendTestPost(connection.id, platform.id)}
+                            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:opacity-90"
+                            disabled={testingPlatform === platform.id}
+                          >
+                            {testingPlatform === platform.id ? (
+                              <><Loader2 size={16} className="mr-2 animate-spin" /> Verifying...</>
+                            ) : (
+                              <><Send size={16} className="mr-2" /> Send Test Post</>
+                            )}
+                          </Button>
                           <Button
                             onClick={() => handleDisconnect(connection.id)}
                             variant="destructive"

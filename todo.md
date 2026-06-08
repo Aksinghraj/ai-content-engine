@@ -346,3 +346,13 @@
 - [x] Disconnect functionality working
 - [x] All 6 platforms tested and connecting successfully
 - [x] 0 TypeScript errors, 94 tests passing
+
+
+## Phase 20: Test Post Feature
+- [x] Create backend tRPC procedure for sending test posts
+- [x] Add "Send Test Post" button to each connected account in UI
+- [x] Show success/failure status after test post
+- [x] Verify credentials are valid during test
+- [x] Implement real per-platform API verification calls
+- [x] Return structured validation results (success, provider error, expired token)
+- [x] Surface reconnect guidance in UI when verification fails
