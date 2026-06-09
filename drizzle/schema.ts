@@ -301,7 +301,10 @@ export const socialConnections = mysqlTable("socialConnections", {
   refreshToken: text("refreshToken"),
   tokenExpiresAt: timestamp("tokenExpiresAt"),
   platformUserId: varchar("platformUserId", { length: 255 }).notNull(),
-  isConnected: boolean("isConnected").default(true).notNull(),
+  isConnected: boolean("isConnected").default(false).notNull(), // Only true if credentials validated
+  isValidated: boolean("isValidated").default(false).notNull(), // Credentials verified with platform API
+  validationError: text("validationError"), // Error message if validation failed
+  lastValidationAt: timestamp("lastValidationAt"), // Last time credentials were validated
   autoPost: boolean("autoPost").default(false).notNull(),
   autoReply: boolean("autoReply").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

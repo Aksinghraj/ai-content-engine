@@ -50,6 +50,13 @@
       "when": 1778310504987,
       "tag": "0006_curious_enchantress",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1781036233603,
+      "tag": "0007_sticky_wolfpack",
+      "breakpoints": true
     }
   ]
 }

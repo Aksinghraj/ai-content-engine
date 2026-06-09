@@ -12,6 +12,7 @@ import {
 } from "./oauthPKCE";
 import { initializeOAuthConfigs, getPlatformConfig, validateOAuthConfig } from "./oauthPlatforms";
 import { saveSocialConnection, getSocialConnectionByPlatform, updateSocialConnection } from "../db/social";
+import { validateCredentials } from "./credentialValidation";
 
 /**
  * OAuth 2.0 Authorization Code Grant Flow Handler
@@ -146,8 +147,11 @@ export async function handleOAuthCallback(
   const platformUserId = extractPlatformUserId(platform, userInfo);
   const username = extractUsername(platform, userInfo);
 
+  // Validate credentials with platform API
+  const validationResult = await validateCredentials(platform as any, tokenData.access_token);
+
   // Save connection to database
-  await saveSocialConnection(
+  const connection = await saveSocialConnection(
     oauthState.userId,
     platform,
     username,
@@ -156,6 +160,23 @@ export async function handleOAuthCallback(
     tokenData.refresh_token,
     tokenData.expires_in ? new Date(Date.now() + tokenData.expires_in * 1000) : undefined
   );
+
+  // If validation failed, update with error
+  if (!validationResult.isValid) {
+    await updateSocialConnection(connection.id, {
+      isValidated: false,
+      validationError: validationResult.error || "Validation failed",
+      isConnected: false,
+    });
+  } else {
+    // Mark as validated
+    await updateSocialConnection(connection.id, {
+      isValidated: true,
+      validationError: null,
+      isConnected: true,
+      lastValidationAt: new Date(),
+    });
+  }
 
   // Clean up state
   deleteOAuthState(state);

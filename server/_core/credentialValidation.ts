@@ -1,0 +1,292 @@
+/**
+ * Credential Validation Module
+ * Validates social media credentials against actual platform APIs
+ * Only marks account as "Connected" if credentials are verified as valid
+ */
+
+import axios from "axios";
+
+export type SocialPlatform = "instagram" | "twitter" | "linkedin" | "facebook" | "youtube" | "tiktok";
+
+interface ValidationResult {
+  isValid: boolean;
+  username?: string;
+  userId?: string;
+  error?: string;
+  message: string;
+}
+
+/**
+ * Validate Instagram credentials
+ * Checks if access token is valid by calling Instagram Graph API
+ */
+export async function validateInstagramCredentials(
+  accessToken: string
+): Promise<ValidationResult> {
+  try {
+    const response = await axios.get("https://graph.instagram.com/me", {
+      params: {
+        fields: "id,username",
+        access_token: accessToken,
+      },
+      timeout: 5000,
+    });
+
+    if (response.data?.id && response.data?.username) {
+      return {
+        isValid: true,
+        username: response.data.username,
+        userId: response.data.id,
+        message: "Instagram credentials verified successfully",
+      };
+    }
+
+    return {
+      isValid: false,
+      error: "Invalid response from Instagram API",
+      message: "Failed to verify Instagram credentials",
+    };
+  } catch (error: any) {
+    const errorMsg = error?.response?.data?.error?.message || error?.message || "Unknown error";
+    return {
+      isValid: false,
+      error: errorMsg,
+      message: `Instagram validation failed: ${errorMsg}`,
+    };
+  }
+}
+
+/**
+ * Validate Twitter/X credentials
+ * Checks if bearer token is valid by calling Twitter API v2
+ */
+export async function validateTwitterCredentials(accessToken: string): Promise<ValidationResult> {
+  try {
+    const response = await axios.get("https://api.twitter.com/2/users/me", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      timeout: 5000,
+    });
+
+    if (response.data?.data?.id && response.data?.data?.username) {
+      return {
+        isValid: true,
+        username: response.data.data.username,
+        userId: response.data.data.id,
+        message: "Twitter credentials verified successfully",
+      };
+    }
+
+    return {
+      isValid: false,
+      error: "Invalid response from Twitter API",
+      message: "Failed to verify Twitter credentials",
+    };
+  } catch (error: any) {
+    const errorMsg = error?.response?.data?.detail || error?.message || "Unknown error";
+    return {
+      isValid: false,
+      error: errorMsg,
+      message: `Twitter validation failed: ${errorMsg}`,
+    };
+  }
+}
+
+/**
+ * Validate LinkedIn credentials
+ * Checks if access token is valid by calling LinkedIn API
+ */
+export async function validateLinkedInCredentials(
+  accessToken: string
+): Promise<ValidationResult> {
+  try {
+    const response = await axios.get("https://api.linkedin.com/v2/me", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Accept": "application/json",
+      },
+      timeout: 5000,
+    });
+
+    if (response.data?.id) {
+      const username = response.data?.localizedFirstName || response.data?.id;
+      return {
+        isValid: true,
+        username: username,
+        userId: response.data.id,
+        message: "LinkedIn credentials verified successfully",
+      };
+    }
+
+    return {
+      isValid: false,
+      error: "Invalid response from LinkedIn API",
+      message: "Failed to verify LinkedIn credentials",
+    };
+  } catch (error: any) {
+    const errorMsg = error?.response?.data?.message || error?.message || "Unknown error";
+    return {
+      isValid: false,
+      error: errorMsg,
+      message: `LinkedIn validation failed: ${errorMsg}`,
+    };
+  }
+}
+
+/**
+ * Validate Facebook credentials
+ * Checks if access token is valid by calling Facebook Graph API
+ */
+export async function validateFacebookCredentials(
+  accessToken: string
+): Promise<ValidationResult> {
+  try {
+    const response = await axios.get("https://graph.facebook.com/me", {
+      params: {
+        fields: "id,name,email",
+        access_token: accessToken,
+      },
+      timeout: 5000,
+    });
+
+    if (response.data?.id && response.data?.name) {
+      return {
+        isValid: true,
+        username: response.data.name,
+        userId: response.data.id,
+        message: "Facebook credentials verified successfully",
+      };
+    }
+
+    return {
+      isValid: false,
+      error: "Invalid response from Facebook API",
+      message: "Failed to verify Facebook credentials",
+    };
+  } catch (error: any) {
+    const errorMsg = error?.response?.data?.error?.message || error?.message || "Unknown error";
+    return {
+      isValid: false,
+      error: errorMsg,
+      message: `Facebook validation failed: ${errorMsg}`,
+    };
+  }
+}
+
+/**
+ * Validate YouTube credentials
+ * Checks if access token is valid by calling YouTube API
+ */
+export async function validateYouTubeCredentials(
+  accessToken: string
+): Promise<ValidationResult> {
+  try {
+    const response = await axios.get("https://www.googleapis.com/youtube/v3/channels", {
+      params: {
+        part: "snippet",
+        mine: true,
+        access_token: accessToken,
+      },
+      timeout: 5000,
+    });
+
+    if (response.data?.items?.[0]?.id && response.data?.items?.[0]?.snippet?.title) {
+      return {
+        isValid: true,
+        username: response.data.items[0].snippet.title,
+        userId: response.data.items[0].id,
+        message: "YouTube credentials verified successfully",
+      };
+    }
+
+    return {
+      isValid: false,
+      error: "Invalid response from YouTube API",
+      message: "Failed to verify YouTube credentials",
+    };
+  } catch (error: any) {
+    const errorMsg = error?.response?.data?.error?.message || error?.message || "Unknown error";
+    return {
+      isValid: false,
+      error: errorMsg,
+      message: `YouTube validation failed: ${errorMsg}`,
+    };
+  }
+}
+
+/**
+ * Validate TikTok credentials
+ * Checks if access token is valid by calling TikTok API
+ */
+export async function validateTikTokCredentials(
+  accessToken: string
+): Promise<ValidationResult> {
+  try {
+    const response = await axios.get("https://open.tiktokapis.com/v1/user/info/", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      timeout: 5000,
+    });
+
+    if (response.data?.data?.user?.id && response.data?.data?.user?.username) {
+      return {
+        isValid: true,
+        username: response.data.data.user.username,
+        userId: response.data.data.user.id,
+        message: "TikTok credentials verified successfully",
+      };
+    }
+
+    return {
+      isValid: false,
+      error: "Invalid response from TikTok API",
+      message: "Failed to verify TikTok credentials",
+    };
+  } catch (error: any) {
+    const errorMsg = error?.response?.data?.error?.message || error?.message || "Unknown error";
+    return {
+      isValid: false,
+      error: errorMsg,
+      message: `TikTok validation failed: ${errorMsg}`,
+    };
+  }
+}
+
+/**
+ * Main validation function - routes to platform-specific validators
+ */
+export async function validateCredentials(
+  platform: SocialPlatform,
+  accessToken: string
+): Promise<ValidationResult> {
+  if (!accessToken || accessToken.trim() === "") {
+    return {
+      isValid: false,
+      error: "Access token is empty",
+      message: "No access token provided",
+    };
+  }
+
+  switch (platform) {
+    case "instagram":
+      return validateInstagramCredentials(accessToken);
+    case "twitter":
+      return validateTwitterCredentials(accessToken);
+    case "linkedin":
+      return validateLinkedInCredentials(accessToken);
+    case "facebook":
+      return validateFacebookCredentials(accessToken);
+    case "youtube":
+      return validateYouTubeCredentials(accessToken);
+    case "tiktok":
+      return validateTikTokCredentials(accessToken);
+    default:
+      return {
+        isValid: false,
+        error: `Unknown platform: ${platform}`,
+        message: "Platform not supported",
+      };
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `socialConnections` MODIFY COLUMN `isConnected` boolean NOT NULL DEFAULT false;\nALTER TABLE `socialConnections` ADD `isValidated` boolean DEFAULT false NOT NULL;\nALTER TABLE `socialConnections` ADD `validationError` text;\nALTER TABLE `socialConnections` ADD `lastValidationAt` timestamp;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway06.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4LEkgcnFHoh6ycF.root --database femEUyBHWVCN36wXXc2HNh --execute ALTER TABLE `socialConnections` MODIFY COLUMN `isConnected` boolean NOT NULL DEFAULT false;\nALTER TABLE `socialConnections` ADD `isValidated` boolean DEFAULT false NOT NULL;\nALTER TABLE `socialConnections` ADD `validationError` text;\nALTER TABLE `socialConnections` ADD `lastValidationAt` timestamp;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2990
+}

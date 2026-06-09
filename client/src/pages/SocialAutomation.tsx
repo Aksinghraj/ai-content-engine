@@ -51,6 +51,9 @@ interface ConnectedAccount {
   autoReply: boolean;
   lastPosted?: string;
   accessToken?: string;
+  isValidated?: boolean;
+  validationError?: string;
+  lastValidationAt?: Date;
 }
 
 interface ScheduledPost {
@@ -358,20 +361,25 @@ export default function SocialAutomation() {
                             )}
                           </div>
                         </div>
-                        {account?.connected ? (
+                        {account?.connected && account?.isValidated ? (
                           <Badge className="bg-green-500/20 text-green-400 border-green-500/50">
                             <CheckCircle2 size={14} className="mr-1" />
-                            Connected
+                            Connected & Verified
+                          </Badge>
+                        ) : account?.validationError ? (
+                          <Badge className="bg-red-500/20 text-red-400 border-red-500/50">
+                            <XCircle size={14} className="mr-1" />
+                            Validation Failed
                           </Badge>
                         ) : (
-                          <Badge className="bg-red-500/20 text-red-400 border-red-500/50">
+                          <Badge className="bg-gray-500/20 text-gray-400 border-gray-500/50">
                             <XCircle size={14} className="mr-1" />
                             Not Connected
                           </Badge>
                         )}
                       </div>
 
-                      {account?.connected ? (
+                      {account?.connected && account?.isValidated ? (
                         <div className="space-y-4">
                           {(() => {
                             const score = getHealthScore(account);
@@ -422,6 +430,14 @@ export default function SocialAutomation() {
                           </Button>
                         </div>
                       ) : (
+                        <div className="space-y-3">
+                          {account?.validationError && (
+                            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                              <p className="text-xs text-red-400">
+                                <span className="font-semibold">Validation Error:</span> {account.validationError}
+                              </p>
+                            </div>
+                          )}
                         <Button
                           onClick={() => handleConnect(platform.id)}
                           className={`w-full bg-gradient-to-r ${platform.color} text-white hover:opacity-90 transition`}
@@ -429,6 +445,7 @@ export default function SocialAutomation() {
                           <Link2 size={18} className="mr-2" />
                           Connect {platform.name}
                         </Button>
+                        </div>
                       )}
                     </CardContent>
                   </Card>
