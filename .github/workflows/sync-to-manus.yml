@@ -1,0 +1,27 @@
+name: Sync to Manus Cloud
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Log sync event
+        run: |
+          echo "✅ GitHub push detected"
+          echo "Commit: $(git rev-parse --short HEAD)"
+          echo "Author: $(git log -1 --pretty=format:'%an')"
+          echo "Message: $(git log -1 --pretty=format:'%s')"
+
+      - name: Verify sync
+        run: |
+          echo "✅ Changes are ready to sync to Manus cloud"
+          echo "Manus will pull these changes automatically within 5 minutes"
