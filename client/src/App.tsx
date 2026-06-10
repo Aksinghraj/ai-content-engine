@@ -34,7 +34,7 @@ import SocialAutomation from "./pages/SocialAutomation";
 import PostScheduling from "./pages/PostScheduling";
 import DemoVideos from "./pages/DemoVideos";
 import { SimpleAutomation } from "./pages/SimpleAutomation";
-import KimiHome from "./pages/KimiHome";
+import KimiAdvancedHome from "./pages/KimiAdvancedHome";
 import KimiDashboard from "./pages/KimiDashboard";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
@@ -98,7 +98,7 @@ function Router() {
       <Switch>
          {/* Public Routes - No login required */}
         <Route path={"/"}>
-          {(params) => <PublicRoute component={KimiHome} path="/" {...params} />}
+          {(params) => <PublicRoute component={KimiAdvancedHome} path="/" {...params} />}
         </Route>
         <Route path={"/login"}>
           {(params) => <PublicRoute component={LoginEnhanced} path="/login" {...params} />}
