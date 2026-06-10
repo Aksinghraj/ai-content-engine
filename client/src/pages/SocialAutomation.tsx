@@ -100,9 +100,21 @@ export default function SocialAutomation() {
 
   const handleConnect = async (platformId: string) => {
     try {
-      const result = await utils.oauthManagement.getAuthorizationUrl.fetch({
-        platform: platformId as any,
-      });
+      let result;
+      try {
+        result = await utils.oauthManagement.getAuthorizationUrl.fetch({
+          platform: platformId as any,
+        });
+      } catch (fetchError: any) {
+        // Handle TRPC errors from missing credentials
+        const errorMessage = fetchError?.message || "";
+        if (errorMessage.includes("OAuth not configured")) {
+          toast.error("OAuth credentials not yet configured. Please add them in Settings.");
+        } else {
+          toast.error(errorMessage || "Failed to get OAuth authorization URL");
+        }
+        return;
+      }
 
       if (!result?.success || !result?.authorizationUrl) {
         toast.error("Failed to get OAuth authorization URL");
