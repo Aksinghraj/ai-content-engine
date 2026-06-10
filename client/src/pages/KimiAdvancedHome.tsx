@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import StreamingChat from "@/components/StreamingChat";
 import DynamicPrompts from "@/components/DynamicPrompts";
+import { VoiceWelcomeIntegration, VoiceWelcomeIndicator } from "@/components/VoiceWelcomeIntegration";
 import { detectTopic, getTopicGradient, getTopicEmoji, createTopicSVGBackground } from "@/lib/topicAnimations";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Zap, Brain, ArrowRight } from "lucide-react";
@@ -31,6 +32,9 @@ export default function KimiAdvancedHome() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
+      {/* Voice Welcome Integration */}
+      <VoiceWelcomeIntegration enabled={true} delay={800} />
+      <VoiceWelcomeIndicator />
       {/* Animated background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
