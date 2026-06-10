@@ -31,6 +31,7 @@ import AIAssistant from "./pages/AIAssistant";
 import PersonalAI from "./pages/PersonalAI";
 import SocialAutomationV3 from "./pages/SocialAutomationV3";
 import SocialAutomation from "./pages/SocialAutomation";
+import PostScheduling from "./pages/PostScheduling";
 import { SimpleAutomation } from "./pages/SimpleAutomation";
 import DemoVideos from "./pages/DemoVideos";
 import { Loader2 } from "lucide-react";
@@ -171,6 +172,9 @@ function Router() {
           {(params) => <ProtectedRoute component={SimpleAutomation} {...params} />}
         </Route>        <Route path={"/social-automation"}>
           {(params) => <ProtectedRoute component={SocialAutomation} {...params} />}
+        </Route>
+        <Route path={"/post-scheduling"}>
+          {(params) => <ProtectedRoute component={PostScheduling} {...params} />}
         </Route>
         <Route path={"/demo-videos"}>
           {(params) => <ProtectedRoute component={DemoVideos} {...params} />}
