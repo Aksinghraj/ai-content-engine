@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import StreamingChat from "@/components/StreamingChat";
 import DynamicPrompts from "@/components/DynamicPrompts";
 import { VoiceWelcomeIntegration, VoiceWelcomeIndicator } from "@/components/VoiceWelcomeIntegration";
+import { useVoiceWelcomeFixed } from "@/hooks/useVoiceWelcomeFixed";
 import { detectTopic, getTopicGradient, getTopicEmoji, createTopicSVGBackground } from "@/lib/topicAnimations";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Zap, Brain, ArrowRight } from "lucide-react";
@@ -12,6 +13,15 @@ export default function KimiAdvancedHome() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentTopic, setCurrentTopic] = useState("general");
   const [svgBackground, setSvgBackground] = useState("");
+  
+  // Initialize voice welcome with debugging
+  useVoiceWelcomeFixed({
+    enabled: true,
+    delay: 1000,
+    debug: true,
+    onSuccess: () => console.log("✅ Voice welcome played successfully"),
+    onError: (error) => console.error("❌ Voice welcome error:", error),
+  });
 
   useEffect(() => {
     if (searchQuery) {

@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Send, Loader2 } from "lucide-react";
 import { streamText, StreamingTextEffect } from "@/lib/streamingText";
 import { detectTopic, getTopicGradient, getTopicEmoji } from "@/lib/topicAnimations";
+import { SpeechToTextMicrophone } from "@/components/SpeechToTextMicrophone";
 
 export interface Message {
   id: string;
@@ -30,6 +31,7 @@ export default function StreamingChat({ onSearch, placeholder = "Ask me anything
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showMicrophone, setShowMicrophone] = useState(false);
   const [currentTopic, setCurrentTopic] = useState("general");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const streamingEffectRef = useRef<StreamingTextEffect | null>(null);
@@ -41,6 +43,11 @@ export default function StreamingChat({ onSearch, placeholder = "Ask me anything
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+  const handleTranscript = (transcript: string) => {
+    setInput(transcript);
+    setShowMicrophone(false);
+  };
+
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,7 +175,18 @@ export default function StreamingChat({ onSearch, placeholder = "Ask me anything
       </div>
 
       {/* Input */}
-      <div className="border-t border-white/10 bg-black/20 backdrop-blur-sm p-4">
+      <div className="border-t border-white/10 bg-black/20 backdrop-blur-sm p-4 space-y-3">
+        {/* Microphone Component */}
+        {showMicrophone && (
+          <SpeechToTextMicrophone
+            onTranscript={handleTranscript}
+            onError={(error) => console.error("Speech error:", error)}
+            placeholder={placeholder}
+            disabled={isLoading}
+          />
+        )}
+
+        {/* Input Form */}
         <form onSubmit={handleSendMessage} className="flex gap-3">
           <Input
             value={input}
@@ -177,6 +195,16 @@ export default function StreamingChat({ onSearch, placeholder = "Ask me anything
             disabled={isLoading}
             className="bg-white/10 border-white/20 text-white placeholder-gray-400 focus:border-purple-500"
           />
+          <Button
+            type="button"
+            onClick={() => setShowMicrophone(!showMicrophone)}
+            variant="outline"
+            disabled={isLoading}
+            className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+            title="Toggle speech-to-text"
+          >
+            🎤
+          </Button>
           <Button
             type="submit"
             disabled={isLoading || !input.trim()}
