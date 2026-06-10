@@ -32,8 +32,10 @@ import PersonalAI from "./pages/PersonalAI";
 import SocialAutomationV3 from "./pages/SocialAutomationV3";
 import SocialAutomation from "./pages/SocialAutomation";
 import PostScheduling from "./pages/PostScheduling";
-import { SimpleAutomation } from "./pages/SimpleAutomation";
 import DemoVideos from "./pages/DemoVideos";
+import { SimpleAutomation } from "./pages/SimpleAutomation";
+import KimiHome from "./pages/KimiHome";
+import KimiDashboard from "./pages/KimiDashboard";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -94,9 +96,9 @@ function Router() {
   return (
     <>
       <Switch>
-        {/* Public Routes - No login required */}
+         {/* Public Routes - No login required */}
         <Route path={"/"}>
-          {(params) => <PublicRoute component={LoginEnhanced} path="/" {...params} />}
+          {(params) => <PublicRoute component={KimiHome} path="/" {...params} />}
         </Route>
         <Route path={"/login"}>
           {(params) => <PublicRoute component={LoginEnhanced} path="/login" {...params} />}
@@ -109,7 +111,7 @@ function Router() {
           {(params) => <ProtectedRoute component={HomeNew} {...params} />}
         </Route>
         <Route path={"/dashboard"}>
-          {(params) => <ProtectedRoute component={Dashboard} {...params} />}
+          {(params) => <ProtectedRoute component={KimiDashboard} {...params} />}
         </Route>
         <Route path={"/features"}>
           {(params) => <ProtectedRoute component={Features} {...params} />}
