@@ -32,6 +32,7 @@ import { oauthManagementRouter } from "./routers/oauthManagement";
 import { multilingualAIRouter } from "./routers/multilingualAI";
 import { socialPostingRouter } from "./routers/socialPosting";
 import { encryptionRouter } from "./routers/encryption";
+import { aiPostGenerationRouter } from "./routers/aiPostGeneration";
 
 export const appRouter = router({
   system: systemRouter,
@@ -70,6 +71,7 @@ export const appRouter = router({
   multilingualAI: multilingualAIRouter,
   socialPosting: socialPostingRouter,
   encryption: encryptionRouter,
+  aiPostGeneration: aiPostGenerationRouter,
   contentRewriter: contentGenerationRouter.contentRewriter,
   contentRepurposer: contentGenerationRouter.contentRepurposer,
   aiAssistant: contentGenerationRouter.aiAssistant,

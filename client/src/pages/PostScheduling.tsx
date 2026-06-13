@@ -1,4 +1,3 @@
-import DashboardLayout from "@/components/DashboardLayout";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,11 +31,17 @@ import {
   Eye,
   Zap,
   Plus,
-  Edit2,
   Trash2,
   Send,
+  Sparkles,
+  Loader2,
+  RefreshCw,
+  Wand2,
+  Copy,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 import {
   mockAccounts,
   mockScheduledPosts,
@@ -44,8 +49,8 @@ import {
   formatScheduleTime,
   getEngagementRate,
   getPlatformColor,
-  getPlatformEmoji,
 } from "@/lib/mockData";
+import DashboardLayout from "@/components/DashboardLayout";
 
 interface PostDraft {
   id: string;
@@ -55,6 +60,24 @@ interface PostDraft {
   scheduledTime: string;
   media: File[];
 }
+
+const PLATFORM_CHAR_LIMITS: Record<string, number> = {
+  twitter: 280,
+  instagram: 2200,
+  linkedin: 3000,
+  facebook: 63206,
+  youtube: 5000,
+  tiktok: 2200,
+};
+
+const PLATFORM_ICONS: Record<string, React.ElementType> = {
+  instagram: Instagram,
+  twitter: Twitter,
+  linkedin: Linkedin,
+  facebook: Facebook,
+  youtube: Youtube,
+  tiktok: Zap,
+};
 
 function PostSchedulingContent() {
   const [activeTab, setActiveTab] = useState("create");
@@ -68,7 +91,18 @@ function PostSchedulingContent() {
   });
 
   const [posts, setPosts] = useState(mockScheduledPosts);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [aiTopic, setAiTopic] = useState("");
+  const [aiTone, setAiTone] = useState<"professional" | "casual" | "humorous" | "inspirational" | "educational">("casual");
+  const [aiNiche, setAiNiche] = useState("");
+  const [generatedPlatformPosts, setGeneratedPlatformPosts] = useState<Record<string, string>>({});
+  const [selectedGeneratedPlatform, setSelectedGeneratedPlatform] = useState("twitter");
+  const [copiedPlatform, setCopiedPlatform] = useState<string | null>(null);
+  const [isGeneratingAll, setIsGeneratingAll] = useState(false);
+
+  // AI generation mutations
+  const generateAllMutation = trpc.aiPostGeneration.generateForAllPlatforms.useMutation();
+  const generateSingleMutation = trpc.aiPostGeneration.generateForPlatform.useMutation();
+  const improveMutation = trpc.aiPostGeneration.improvePost.useMutation();
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setPostDraft({ ...postDraft, content: e.target.value });
@@ -88,16 +122,12 @@ function PostSchedulingContent() {
       toast.error("Please write some content for your post");
       return;
     }
-
     if (postDraft.selectedPlatforms.length === 0) {
       toast.error("Please select at least one platform");
       return;
     }
 
-    const scheduledDateTime = new Date(
-      `${postDraft.scheduledAt}T${postDraft.scheduledTime}`
-    );
-
+    const scheduledDateTime = new Date(`${postDraft.scheduledAt}T${postDraft.scheduledTime}`);
     const newPost = {
       id: `post-${Date.now()}`,
       content: postDraft.content,
@@ -116,7 +146,6 @@ function PostSchedulingContent() {
       scheduledTime: "09:00",
       media: [],
     });
-
     toast.success("Post scheduled successfully! 🎉");
   };
 
@@ -125,9 +154,122 @@ function PostSchedulingContent() {
     toast.success("Post deleted");
   };
 
+  const handleGenerateAllPlatforms = async () => {
+    if (!aiTopic.trim()) {
+      toast.error("Please enter a topic for AI generation");
+      return;
+    }
+    setIsGeneratingAll(true);
+    try {
+      const result = await generateAllMutation.mutateAsync({
+        topic: aiTopic,
+        tone: aiTone,
+        niche: aiNiche || undefined,
+        includeHashtags: true,
+      });
+      if (result.success && result.posts) {
+        setGeneratedPlatformPosts(result.posts);
+        toast.success("AI generated content for all 6 platforms! ✨");
+      }
+    } catch (error) {
+      toast.error("Failed to generate content. Please try again.");
+    } finally {
+      setIsGeneratingAll(false);
+    }
+  };
+
+  const handleGenerateSingle = async (platform: string) => {
+    if (!aiTopic.trim()) {
+      toast.error("Please enter a topic first");
+      return;
+    }
+    try {
+      const result = await generateSingleMutation.mutateAsync({
+        topic: aiTopic,
+        platform: platform as "twitter" | "instagram" | "linkedin" | "facebook" | "youtube" | "tiktok",
+        tone: aiTone,
+        niche: aiNiche || undefined,
+        includeHashtags: true,
+        includeEmoji: true,
+      });
+      if (result.success) {
+        setGeneratedPlatformPosts((prev) => ({ ...prev, [platform]: result.content }));
+        toast.success(`Generated ${platform} content! ✨`);
+      }
+    } catch (error) {
+      toast.error(`Failed to generate ${platform} content`);
+    }
+  };
+
+  const handleImprovePost = async () => {
+    if (!postDraft.content.trim()) {
+      toast.error("Please write some content first");
+      return;
+    }
+    const platform = postDraft.selectedPlatforms[0] || "twitter";
+    try {
+      const result = await improveMutation.mutateAsync({
+        content: postDraft.content,
+        platform: platform as "twitter" | "instagram" | "linkedin" | "facebook" | "youtube" | "tiktok",
+        improvementType: "more_engaging",
+      });
+      if (result.success) {
+        setPostDraft((prev) => ({ ...prev, content: result.improvedContent }));
+        toast.success("Post improved with AI! ✨");
+      }
+    } catch (error) {
+      toast.error("Failed to improve post");
+    }
+  };
+
+  const handleUseGeneratedContent = (platform: string) => {
+    const content = generatedPlatformPosts[platform];
+    if (content) {
+      setPostDraft((prev) => ({
+        ...prev,
+        content,
+        selectedPlatforms: prev.selectedPlatforms.includes(platform)
+          ? prev.selectedPlatforms
+          : [...prev.selectedPlatforms, platform],
+      }));
+      setActiveTab("create");
+      toast.success(`Using ${platform} content in editor`);
+    }
+  };
+
+  const handleCopyContent = async (platform: string) => {
+    const content = generatedPlatformPosts[platform];
+    if (content) {
+      await navigator.clipboard.writeText(content);
+      setCopiedPlatform(platform);
+      setTimeout(() => setCopiedPlatform(null), 2000);
+      toast.success("Copied to clipboard!");
+    }
+  };
+
   const contentLength = postDraft.content.length;
-  const charLimit = 280;
+  const charLimit = postDraft.selectedPlatforms.length > 0
+    ? Math.min(...postDraft.selectedPlatforms.map(p => PLATFORM_CHAR_LIMITS[p] || 280))
+    : 280;
   const charPercentage = (contentLength / charLimit) * 100;
+
+  const platformList = ["twitter", "instagram", "linkedin", "facebook", "youtube", "tiktok"];
+  const platformLabels: Record<string, string> = {
+    twitter: "Twitter/X",
+    instagram: "Instagram",
+    linkedin: "LinkedIn",
+    facebook: "Facebook",
+    youtube: "YouTube",
+    tiktok: "TikTok",
+  };
+  const platformEmojis: Record<string, string> = {
+    twitter: "🐦",
+    instagram: "📸",
+    linkedin: "💼",
+    facebook: "👥",
+    youtube: "▶️",
+    tiktok: "🎵",
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
@@ -136,7 +278,7 @@ function PostSchedulingContent() {
         <div className="space-y-2">
           <h1 className="text-4xl font-bold text-white">Post Scheduling</h1>
           <p className="text-purple-200">
-            Create and schedule posts across all your social media platforms
+            Create, generate with AI, and schedule posts across all your social media platforms
           </p>
         </div>
 
@@ -147,51 +289,40 @@ function PostSchedulingContent() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-purple-300 text-sm">Total Posts</p>
-                  <p className="text-3xl font-bold text-white">
-                    {mockAnalytics.totalPosts}
-                  </p>
+                  <p className="text-3xl font-bold text-white">{mockAnalytics.totalPosts}</p>
                 </div>
                 <TrendingUp className="w-8 h-8 text-purple-400" />
               </div>
             </CardContent>
           </Card>
-
           <Card className="bg-slate-800/50 border-blue-500/20 hover:border-blue-500/50 transition">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-blue-300 text-sm">Posted Today</p>
-                  <p className="text-3xl font-bold text-white">
-                    {mockAnalytics.postedToday}
-                  </p>
+                  <p className="text-3xl font-bold text-white">{mockAnalytics.postedToday}</p>
                 </div>
                 <CheckCircle2 className="w-8 h-8 text-blue-400" />
               </div>
             </CardContent>
           </Card>
-
           <Card className="bg-slate-800/50 border-pink-500/20 hover:border-pink-500/50 transition">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-pink-300 text-sm">Scheduled This Week</p>
-                  <p className="text-3xl font-bold text-white">
-                    {mockAnalytics.scheduledForWeek}
-                  </p>
+                  <p className="text-3xl font-bold text-white">{mockAnalytics.scheduledForWeek}</p>
                 </div>
                 <Calendar className="w-8 h-8 text-pink-400" />
               </div>
             </CardContent>
           </Card>
-
           <Card className="bg-slate-800/50 border-green-500/20 hover:border-green-500/50 transition">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-green-300 text-sm">Avg Engagement</p>
-                  <p className="text-3xl font-bold text-white">
-                    {mockAnalytics.averageEngagement.toLocaleString()}
-                  </p>
+                  <p className="text-3xl font-bold text-white">{mockAnalytics.averageEngagement.toLocaleString()}</p>
                 </div>
                 <Heart className="w-8 h-8 text-green-400" />
               </div>
@@ -201,10 +332,14 @@ function PostSchedulingContent() {
 
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-slate-800/50 border border-purple-500/20">
+          <TabsList className="grid w-full grid-cols-4 bg-slate-800/50 border border-purple-500/20">
             <TabsTrigger value="create" className="data-[state=active]:bg-purple-600">
               <Plus className="w-4 h-4 mr-2" />
               Create Post
+            </TabsTrigger>
+            <TabsTrigger value="ai-generate" className="data-[state=active]:bg-purple-600">
+              <Sparkles className="w-4 h-4 mr-2" />
+              AI Generate
             </TabsTrigger>
             <TabsTrigger value="scheduled" className="data-[state=active]:bg-purple-600">
               <Clock className="w-4 h-4 mr-2" />
@@ -231,25 +366,42 @@ function PostSchedulingContent() {
                   <CardContent className="space-y-6">
                     {/* Content Editor */}
                     <div className="space-y-2">
-                      <Label className="text-white">Post Content</Label>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-white">Post Content</Label>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleImprovePost}
+                          disabled={!postDraft.content.trim() || improveMutation.isPending}
+                          className="text-purple-300 hover:text-purple-100 hover:bg-purple-500/20 text-xs"
+                        >
+                          {improveMutation.isPending ? (
+                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                          ) : (
+                            <Wand2 className="w-3 h-3 mr-1" />
+                          )}
+                          AI Improve
+                        </Button>
+                      </div>
                       <Textarea
-                        placeholder="What's on your mind? Share your thoughts, updates, or news..."
+                        placeholder="What's on your mind? Share your thoughts, updates, or news... Or use the AI Generate tab to create content automatically!"
                         value={postDraft.content}
                         onChange={handleContentChange}
-                        className="min-h-32 bg-slate-700/50 border-purple-500/30 text-white placeholder:text-purple-300/50 focus:border-purple-500"
+                        className="min-h-40 bg-slate-700/50 border-purple-500/30 text-white placeholder:text-purple-300/50 focus:border-purple-500"
                       />
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-purple-300">
+                        <span className={`${contentLength > charLimit ? "text-red-400" : "text-purple-300"}`}>
                           {contentLength} / {charLimit} characters
+                          {postDraft.selectedPlatforms.length > 0 && (
+                            <span className="text-xs ml-1 opacity-70">
+                              (limit for selected platforms)
+                            </span>
+                          )}
                         </span>
                         <div className="w-32 h-2 bg-slate-700 rounded-full overflow-hidden">
                           <div
                             className={`h-full transition-all ${
-                              charPercentage > 90
-                                ? "bg-red-500"
-                                : charPercentage > 70
-                                  ? "bg-yellow-500"
-                                  : "bg-green-500"
+                              charPercentage > 100 ? "bg-red-500" : charPercentage > 90 ? "bg-yellow-500" : "bg-green-500"
                             }`}
                             style={{ width: `${Math.min(charPercentage, 100)}%` }}
                           />
@@ -273,9 +425,7 @@ function PostSchedulingContent() {
                           >
                             <div className="flex items-center gap-2 justify-center">
                               <span className="text-2xl">{account.avatar}</span>
-                              <span className="text-sm font-medium text-white">
-                                {account.displayName}
-                              </span>
+                              <span className="text-sm font-medium text-white">{account.displayName}</span>
                             </div>
                             {postDraft.selectedPlatforms.includes(account.platform) && (
                               <CheckCircle2 className="w-4 h-4 text-purple-400 mx-auto mt-2" />
@@ -292,12 +442,7 @@ function PostSchedulingContent() {
                         <Input
                           type="date"
                           value={postDraft.scheduledAt}
-                          onChange={(e) =>
-                            setPostDraft({
-                              ...postDraft,
-                              scheduledAt: e.target.value,
-                            })
-                          }
+                          onChange={(e) => setPostDraft({ ...postDraft, scheduledAt: e.target.value })}
                           className="bg-slate-700/50 border-purple-500/30 text-white"
                         />
                       </div>
@@ -306,12 +451,7 @@ function PostSchedulingContent() {
                         <Input
                           type="time"
                           value={postDraft.scheduledTime}
-                          onChange={(e) =>
-                            setPostDraft({
-                              ...postDraft,
-                              scheduledTime: e.target.value,
-                            })
-                          }
+                          onChange={(e) => setPostDraft({ ...postDraft, scheduledTime: e.target.value })}
                           className="bg-slate-700/50 border-purple-500/30 text-white"
                         />
                       </div>
@@ -328,16 +468,14 @@ function PostSchedulingContent() {
                       </Button>
                       <Button
                         variant="outline"
-                        onClick={() =>
-                          setPostDraft({
-                            id: "draft-1",
-                            content: "",
-                            selectedPlatforms: [],
-                            scheduledAt: new Date().toISOString().split("T")[0],
-                            scheduledTime: "09:00",
-                            media: [],
-                          })
-                        }
+                        onClick={() => setPostDraft({
+                          id: "draft-1",
+                          content: "",
+                          selectedPlatforms: [],
+                          scheduledAt: new Date().toISOString().split("T")[0],
+                          scheduledTime: "09:00",
+                          media: [],
+                        })}
                         className="border-purple-500/30 text-purple-200 hover:bg-purple-500/10"
                       >
                         Clear
@@ -358,28 +496,25 @@ function PostSchedulingContent() {
                       <div className="space-y-4">
                         {postDraft.selectedPlatforms.length > 0 ? (
                           postDraft.selectedPlatforms.map((platform) => {
-                            const account = mockAccounts.find(
-                              (a) => a.platform === platform
-                            );
+                            const account = mockAccounts.find((a) => a.platform === platform);
+                            const limit = PLATFORM_CHAR_LIMITS[platform] || 280;
+                            const isOverLimit = postDraft.content.length > limit;
                             return (
-                              <div
-                                key={platform}
-                                className="p-4 bg-slate-700/50 rounded-lg border border-purple-500/20"
-                              >
+                              <div key={platform} className={`p-4 bg-slate-700/50 rounded-lg border ${isOverLimit ? "border-red-500/50" : "border-purple-500/20"}`}>
                                 <div className="flex items-center gap-2 mb-3">
                                   <span className="text-2xl">{account?.avatar}</span>
                                   <div>
-                                    <p className="text-sm font-medium text-white">
-                                      {account?.displayName}
-                                    </p>
-                                    <p className="text-xs text-purple-300">
-                                      {account?.username}
-                                    </p>
+                                    <p className="text-sm font-medium text-white">{account?.displayName}</p>
+                                    <p className="text-xs text-purple-300">{account?.username}</p>
                                   </div>
+                                  {isOverLimit && (
+                                    <Badge className="ml-auto bg-red-500/20 text-red-300 border-red-500/50 text-xs">
+                                      Over limit
+                                    </Badge>
+                                  )}
                                 </div>
-                                <p className="text-sm text-purple-100 line-clamp-4">
-                                  {postDraft.content}
-                                </p>
+                                <p className="text-sm text-purple-100 line-clamp-4">{postDraft.content}</p>
+                                <p className="text-xs text-purple-400 mt-2">{postDraft.content.length}/{limit} chars</p>
                               </div>
                             );
                           })
@@ -408,43 +543,196 @@ function PostSchedulingContent() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-green-300">
-                      {mockAnalytics.bestTimeToPost}
-                    </p>
-                    <p className="text-xs text-purple-300 mt-2">
-                      Based on your audience activity
-                    </p>
+                    <p className="text-sm text-green-300">{mockAnalytics.bestTimeToPost}</p>
+                    <p className="text-xs text-purple-300 mt-2">Based on your audience activity</p>
                   </CardContent>
                 </Card>
               </div>
             </div>
           </TabsContent>
 
+          {/* AI Generate Tab */}
+          <TabsContent value="ai-generate" className="space-y-6">
+            <Card className="bg-slate-800/50 border-purple-500/20">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-purple-400" />
+                  AI Content Generator
+                </CardTitle>
+                <CardDescription className="text-purple-200">
+                  Generate platform-optimized content for all 6 social media platforms at once
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-1 space-y-2">
+                    <Label className="text-white">Topic / Idea *</Label>
+                    <Input
+                      placeholder="e.g. New product launch, tips for productivity..."
+                      value={aiTopic}
+                      onChange={(e) => setAiTopic(e.target.value)}
+                      className="bg-slate-700/50 border-purple-500/30 text-white placeholder:text-purple-300/50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-white">Tone</Label>
+                    <Select value={aiTone} onValueChange={(v) => setAiTone(v as typeof aiTone)}>
+                      <SelectTrigger className="bg-slate-700/50 border-purple-500/30 text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="casual">Casual & Friendly</SelectItem>
+                        <SelectItem value="professional">Professional</SelectItem>
+                        <SelectItem value="humorous">Humorous & Fun</SelectItem>
+                        <SelectItem value="inspirational">Inspirational</SelectItem>
+                        <SelectItem value="educational">Educational</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-white">Niche (optional)</Label>
+                    <Input
+                      placeholder="e.g. fitness, tech, fashion..."
+                      value={aiNiche}
+                      onChange={(e) => setAiNiche(e.target.value)}
+                      className="bg-slate-700/50 border-purple-500/30 text-white placeholder:text-purple-300/50"
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleGenerateAllPlatforms}
+                  disabled={isGeneratingAll || !aiTopic.trim()}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3"
+                >
+                  {isGeneratingAll ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Generating content for all platforms...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5 mr-2" />
+                      Generate for All 6 Platforms at Once
+                    </>
+                  )}
+                </Button>
+
+                {/* Generated Content Display */}
+                {Object.keys(generatedPlatformPosts).length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="text-white font-semibold text-lg flex items-center gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-400" />
+                      Generated Content — Ready to Use!
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {platformList.map((platform) => {
+                        const content = generatedPlatformPosts[platform];
+                        const limit = PLATFORM_CHAR_LIMITS[platform];
+                        const isCopied = copiedPlatform === platform;
+                        return (
+                          <Card key={platform} className="bg-slate-700/50 border-purple-500/20">
+                            <CardHeader className="pb-2">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xl">{platformEmojis[platform]}</span>
+                                  <span className="text-white font-medium">{platformLabels[platform]}</span>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleGenerateSingle(platform)}
+                                    disabled={generateSingleMutation.isPending}
+                                    className="text-purple-300 hover:text-white hover:bg-purple-500/20 h-7 w-7 p-0"
+                                    title="Regenerate"
+                                  >
+                                    <RefreshCw className="w-3 h-3" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleCopyContent(platform)}
+                                    className="text-purple-300 hover:text-white hover:bg-purple-500/20 h-7 w-7 p-0"
+                                    title="Copy"
+                                  >
+                                    {isCopied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {content ? (
+                                <>
+                                  <p className="text-purple-100 text-sm leading-relaxed whitespace-pre-wrap">{content}</p>
+                                  <div className="flex items-center justify-between">
+                                    <span className={`text-xs ${content.length > limit ? "text-red-400" : "text-purple-400"}`}>
+                                      {content.length}/{limit} chars
+                                    </span>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleUseGeneratedContent(platform)}
+                                      className="bg-purple-600 hover:bg-purple-700 text-white text-xs h-7"
+                                    >
+                                      Use This →
+                                    </Button>
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="text-center py-4">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleGenerateSingle(platform)}
+                                    disabled={generateSingleMutation.isPending || !aiTopic.trim()}
+                                    className="text-purple-300 hover:text-white"
+                                  >
+                                    <Sparkles className="w-4 h-4 mr-1" />
+                                    Generate for {platformLabels[platform]}
+                                  </Button>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Empty state - show platform cards for individual generation */}
+                {Object.keys(generatedPlatformPosts).length === 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {platformList.map((platform) => (
+                      <Card key={platform} className="bg-slate-700/30 border-purple-500/10 hover:border-purple-500/30 transition cursor-pointer"
+                        onClick={() => aiTopic.trim() && handleGenerateSingle(platform)}>
+                        <CardContent className="pt-4 pb-4 text-center">
+                          <span className="text-3xl">{platformEmojis[platform]}</span>
+                          <p className="text-white text-sm font-medium mt-2">{platformLabels[platform]}</p>
+                          <p className="text-purple-400 text-xs mt-1">Max {PLATFORM_CHAR_LIMITS[platform]} chars</p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Scheduled Posts Tab */}
           <TabsContent value="scheduled" className="space-y-4">
             <div className="space-y-4">
               {posts.map((post) => (
-                <Card
-                  key={post.id}
-                  className="bg-slate-800/50 border-purple-500/20 hover:border-purple-500/50 transition"
-                >
+                <Card key={post.id} className="bg-slate-800/50 border-purple-500/20 hover:border-purple-500/50 transition">
                   <CardContent className="pt-6">
                     <div className="space-y-4">
-                      {/* Post Header */}
                       <div className="flex items-start justify-between">
                         <div className="space-y-2 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             {post.platforms.map((platform) => {
-                              const account = mockAccounts.find(
-                                (a) => a.platform === platform
-                              );
+                              const account = mockAccounts.find((a) => a.platform === platform);
                               return (
-                                <Badge
-                                  key={platform}
-                                  className={`bg-gradient-to-r ${getPlatformColor(
-                                    platform
-                                  )} text-white`}
-                                >
+                                <Badge key={platform} className={`bg-gradient-to-r ${getPlatformColor(platform)} text-white`}>
                                   {account?.avatar} {account?.displayName}
                                 </Badge>
                               );
@@ -462,21 +750,15 @@ function PostSchedulingContent() {
                         </div>
                       </div>
 
-                      {/* Post Meta */}
                       <div className="flex flex-wrap gap-4 text-sm text-purple-300">
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4" />
                           <span>
                             {post.status === "posted"
-                              ? `Posted ${formatScheduleTime(
-                                  new Date(post.postedAt || post.scheduledAt)
-                                )}`
-                              : `Scheduled ${formatScheduleTime(
-                                  new Date(post.scheduledAt)
-                                )}`}
+                              ? `Posted ${formatScheduleTime(new Date(post.postedAt || post.scheduledAt))}`
+                              : `Scheduled ${formatScheduleTime(new Date(post.scheduledAt))}`}
                           </span>
                         </div>
-
                         {post.status === "posted" && post.engagement && (
                           <>
                             <div className="flex items-center gap-2">
@@ -499,27 +781,22 @@ function PostSchedulingContent() {
                         )}
                       </div>
 
-                      {/* Status Badge */}
                       <div className="flex items-center gap-2">
                         {post.status === "scheduled" && (
                           <Badge className="bg-blue-500/20 text-blue-300 border border-blue-500/50">
-                            <Clock className="w-3 h-3 mr-1" />
-                            Scheduled
+                            <Clock className="w-3 h-3 mr-1" />Scheduled
                           </Badge>
                         )}
                         {post.status === "posted" && (
                           <Badge className="bg-green-500/20 text-green-300 border border-green-500/50">
-                            <CheckCircle2 className="w-3 h-3 mr-1" />
-                            Posted
+                            <CheckCircle2 className="w-3 h-3 mr-1" />Posted
                           </Badge>
                         )}
                         {post.status === "failed" && (
                           <Badge className="bg-red-500/20 text-red-300 border border-red-500/50">
-                            <AlertCircle className="w-3 h-3 mr-1" />
-                            Failed
+                            <AlertCircle className="w-3 h-3 mr-1" />Failed
                           </Badge>
                         )}
-
                         {post.status === "posted" && post.engagement && (
                           <Badge className="bg-purple-500/20 text-purple-300 border border-purple-500/50 ml-auto">
                             {getEngagementRate(post)}% engagement
@@ -536,42 +813,30 @@ function PostSchedulingContent() {
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Top Performing Post */}
               <Card className="bg-slate-800/50 border-purple-500/20">
                 <CardHeader>
                   <CardTitle className="text-white">Top Performing Post</CardTitle>
-                  <CardDescription className="text-purple-200">
-                    Your most engaged post
-                  </CardDescription>
+                  <CardDescription className="text-purple-200">Your most engaged post</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-white line-clamp-3">
-                    {mockAnalytics.topPerformingPost.content}
-                  </p>
+                  <p className="text-white line-clamp-3">{mockAnalytics.topPerformingPost.content}</p>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-3 bg-slate-700/50 rounded-lg">
                       <p className="text-xs text-purple-300 mb-1">Engagement Rate</p>
-                      <p className="text-2xl font-bold text-white">
-                        {getEngagementRate(mockAnalytics.topPerformingPost)}%
-                      </p>
+                      <p className="text-2xl font-bold text-white">{getEngagementRate(mockAnalytics.topPerformingPost)}%</p>
                     </div>
                     <div className="p-3 bg-slate-700/50 rounded-lg">
                       <p className="text-xs text-purple-300 mb-1">Total Reach</p>
-                      <p className="text-2xl font-bold text-white">
-                        {mockAnalytics.topPerformingPost.engagement?.views.toLocaleString()}
-                      </p>
+                      <p className="text-2xl font-bold text-white">{mockAnalytics.topPerformingPost.engagement?.views.toLocaleString()}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Platform Performance */}
               <Card className="bg-slate-800/50 border-purple-500/20">
                 <CardHeader>
                   <CardTitle className="text-white">Platform Performance</CardTitle>
-                  <CardDescription className="text-purple-200">
-                    Average engagement by platform
-                  </CardDescription>
+                  <CardDescription className="text-purple-200">Average engagement by platform</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {mockAccounts.map((account) => (
@@ -582,9 +847,7 @@ function PostSchedulingContent() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Users className="w-4 h-4 text-purple-300" />
-                        <span className="text-sm text-purple-300">
-                          {account.followers.toLocaleString()}
-                        </span>
+                        <span className="text-sm text-purple-300">{account.followers.toLocaleString()}</span>
                       </div>
                     </div>
                   ))}
@@ -592,29 +855,19 @@ function PostSchedulingContent() {
               </Card>
             </div>
 
-            {/* Posting Schedule */}
             <Card className="bg-slate-800/50 border-purple-500/20">
               <CardHeader>
                 <CardTitle className="text-white">Recommended Posting Schedule</CardTitle>
-                <CardDescription className="text-purple-200">
-                  Optimal times to post for maximum engagement
-                </CardDescription>
+                <CardDescription className="text-purple-200">Optimal times to post for maximum engagement</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
                   {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, idx) => (
-                    <div
-                      key={day}
-                      className="p-4 bg-slate-700/50 rounded-lg border border-purple-500/20 text-center"
-                    >
+                    <div key={day} className="p-4 bg-slate-700/50 rounded-lg border border-purple-500/20 text-center">
                       <p className="text-sm font-medium text-white mb-2">{day}</p>
-                      <p className="text-xs text-purple-300">
-                        {["9 AM", "10 AM", "11 AM", "12 PM", "1 PM", "2 PM", "3 PM"][idx]}
-                      </p>
+                      <p className="text-xs text-purple-300">{["9 AM", "10 AM", "11 AM", "12 PM", "1 PM", "2 PM", "3 PM"][idx]}</p>
                       <div className="mt-2 h-12 bg-purple-500/20 rounded flex items-center justify-center">
-                        <span className="text-xs text-purple-300">
-                          {Math.floor(Math.random() * 50) + 50}%
-                        </span>
+                        <span className="text-xs text-purple-300">{[72, 85, 68, 91, 78, 55, 62][idx]}%</span>
                       </div>
                     </div>
                   ))}

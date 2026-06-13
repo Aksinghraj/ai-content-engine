@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, Calendar, Settings } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, Calendar, Settings, Bot, TrendingUp, Repeat, Sparkles, BarChart3, Zap, Wand2, DollarSign, Youtube } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -30,6 +30,14 @@ import { Button } from "./ui/button";
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
   { icon: Calendar, label: "Post Scheduling", path: "/post-scheduling" },
+  { icon: Sparkles, label: "AI Generator", path: "/generator" },
+  { icon: Bot, label: "Auto-Reply AI", path: "/auto-reply" },
+  { icon: Repeat, label: "Repurposing Engine", path: "/repurposing" },
+  { icon: Youtube, label: "Video Repurposing", path: "/video-repurposing" },
+  { icon: BarChart3, label: "Analytics", path: "/analytics-dashboard" },
+  { icon: DollarSign, label: "ROI Dashboard", path: "/roi-dashboard" },
+  { icon: Wand2, label: "Content Rewriter", path: "/rewriter" },
+  { icon: TrendingUp, label: "Viral Score", path: "/viral-score" },
   { icon: Users, label: "Social Automation", path: "/social-automation" },
   { icon: Settings, label: "OAuth Settings", path: "/oauth-settings" },
 ];

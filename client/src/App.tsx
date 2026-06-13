@@ -37,6 +37,9 @@ import { SimpleAutomation } from "./pages/SimpleAutomation";
 import KimiAdvancedHome from "./pages/KimiAdvancedHome";
 import KimiDashboard from "./pages/KimiDashboard";
 import { OAuthSettings } from "./pages/OAuthSettings";
+import AutoReplySystem from "./pages/AutoReplySystem";
+import ROIDashboard from "./pages/ROIDashboard";
+import VideoRepurposingEngine from "./pages/VideoRepurposingEngine";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -185,6 +188,15 @@ function Router() {
         </Route>
         <Route path={"/demo-videos"}>
           {(params) => <ProtectedRoute component={DemoVideos} {...params} />}
+        </Route>
+        <Route path={"/auto-reply"}>
+          {(params) => <ProtectedRoute component={AutoReplySystem} {...params} />}
+        </Route>
+        <Route path={"/roi-dashboard"}>
+          {(params) => <ProtectedRoute component={ROIDashboard} {...params} />}
+        </Route>
+        <Route path={"/video-repurposing"}>
+          {(params) => <ProtectedRoute component={VideoRepurposingEngine} {...params} />}
         </Route>
 
         {/* 404 Route */}

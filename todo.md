@@ -533,3 +533,71 @@
 - [x] 0 TypeScript errors
 - [x] Super user-friendly UI - no code needed
 - [x] Anyone can add credentials and start automation
+
+
+## Phase 21: AI Content Generation & New Features (COMPLETED ✅)
+
+### AI Post Generation for Scheduling
+- [x] Create aiPostGeneration.ts router with generatePostContent procedure
+- [x] Generate platform-specific posts (Twitter, LinkedIn, Instagram, Facebook, TikTok) with AI
+- [x] Add hashtag suggestions and best posting time recommendations
+- [x] Add viral score prediction (0-100)
+- [x] Integrate AI generation button into PostScheduling.tsx page
+- [x] Show generated content in platform preview tabs
+
+### Auto-Reply System with Sentiment Analysis
+- [x] Create AutoReplySystem.tsx page with full UI
+- [x] Implement sentiment analysis visualization (positive/neutral/negative)
+- [x] Build knowledge base management (add/remove entries)
+- [x] Create comment simulation for testing auto-reply
+- [x] Add per-platform auto-reply toggle
+- [x] Show suggested replies with copy/approve buttons
+- [x] Add /auto-reply route to App.tsx
+- [x] Add Auto-Reply AI to sidebar navigation
+
+### ROI Analytics Dashboard
+- [x] Create ROIDashboard.tsx with full cross-platform analytics
+- [x] Build KPI cards (Revenue, ROI %, Impressions, Conversions)
+- [x] Add Revenue Over Time area chart
+- [x] Add Engagement vs Impressions line chart
+- [x] Add Conversions bar chart
+- [x] Build Platform ROI comparison (horizontal bar chart)
+- [x] Build Revenue Distribution pie chart
+- [x] Add Platform Performance Details table with progress bars
+- [x] Add Content Type performance analysis
+- [x] Add AI Content Insights panel
+- [x] Add Top Posts leaderboard with revenue tracking
+- [x] Add /roi-dashboard route to App.tsx
+- [x] Add ROI Dashboard to sidebar navigation
+
+### Video Repurposing Engine
+- [x] Create VideoRepurposingEngine.tsx with full UI
+- [x] Support YouTube URL, Article, and Podcast as source types
+- [x] Integrate with enterprise.generateCrossPlatformContent tRPC procedure
+- [x] Generate content for 6 platforms simultaneously
+- [x] Add character limit validation per platform
+- [x] Add copy to clipboard per platform
+- [x] Add download all content as .txt
+- [x] Add repurposing history (last 10 items)
+- [x] Add /video-repurposing route to App.tsx
+- [x] Add Video Repurposing to sidebar navigation
+
+### Sidebar Navigation Expansion
+- [x] Add AI Generator, Auto-Reply AI, Repurposing Engine, Video Repurposing to sidebar
+- [x] Add Analytics, ROI Dashboard, Content Rewriter, Viral Score to sidebar
+- [x] Import all new lucide-react icons (Bot, TrendingUp, Repeat, Sparkles, BarChart3, Wand2, DollarSign, Youtube)
+
+### Tests
+- [x] Create aiPostGeneration.test.ts with 10 comprehensive tests
+- [x] Test AI post generation structure validation
+- [x] Test Twitter character limit enforcement
+- [x] Test hashtag format validation
+- [x] Test viral score range (0-100)
+- [x] Test sentiment analysis (positive/neutral/negative)
+- [x] Test ROI calculation logic
+- [x] Test engagement rate calculation
+- [x] Test platform ROI ranking
+- [x] Test YouTube URL validation
+- [x] Test content truncation per platform limit
+- [x] Total: 461 tests passing (all green)
+- [x] 0 TypeScript errors
