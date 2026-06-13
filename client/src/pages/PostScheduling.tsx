@@ -98,6 +98,33 @@ function PostSchedulingContent() {
   const [selectedGeneratedPlatform, setSelectedGeneratedPlatform] = useState("twitter");
   const [copiedPlatform, setCopiedPlatform] = useState<string | null>(null);
   const [isGeneratingAll, setIsGeneratingAll] = useState(false);
+  const [mediaMode, setMediaMode] = useState<"none" | "ai" | "upload">("none");
+  const [uploadedMedia, setUploadedMedia] = useState<File[]>([]);
+  const [mediaPreviewUrls, setMediaPreviewUrls] = useState<string[]>([]);
+
+  const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const validFiles = files.filter((f) => {
+      const isValidType = f.type.startsWith("image/") || f.type.startsWith("video/");
+      const isValidSize = f.size <= 100 * 1024 * 1024; // 100MB
+      if (!isValidType) toast.error(`${f.name}: Invalid file type`);
+      if (!isValidSize) toast.error(`${f.name}: File too large (max 100MB)`);
+      return isValidType && isValidSize;
+    });
+    setUploadedMedia((prev) => [...prev, ...validFiles]);
+    const urls = validFiles.map((f) => URL.createObjectURL(f));
+    setMediaPreviewUrls((prev) => [...prev, ...urls]);
+    setPostDraft((prev) => ({ ...prev, media: [...prev.media, ...validFiles] }));
+  };
+
+  const handleRemoveMedia = (idx: number) => {
+    setUploadedMedia((prev) => prev.filter((_, i) => i !== idx));
+    setMediaPreviewUrls((prev) => {
+      URL.revokeObjectURL(prev[idx]);
+      return prev.filter((_, i) => i !== idx);
+    });
+    setPostDraft((prev) => ({ ...prev, media: prev.media.filter((_, i) => i !== idx) }));
+  };
 
   // AI generation mutations
   const generateAllMutation = trpc.aiPostGeneration.generateForAllPlatforms.useMutation();
@@ -407,6 +434,67 @@ function PostSchedulingContent() {
                           />
                         </div>
                       </div>
+                    </div>
+
+                    {/* Media Upload Toggle */}
+                    <div className="space-y-3">
+                      <Label className="text-white">Media (Optional)</Label>
+                      <div className="flex gap-2">
+                        {(["none", "upload", "ai"] as const).map((mode) => (
+                          <Button
+                            key={mode}
+                            size="sm"
+                            variant={mediaMode === mode ? "default" : "outline"}
+                            onClick={() => setMediaMode(mode)}
+                            className={mediaMode === mode ? "bg-purple-600 text-white" : "border-purple-500/30 text-purple-200 hover:bg-purple-500/10"}
+                          >
+                            {mode === "none" ? "No Media" : mode === "upload" ? "📁 Upload from Gallery" : "🤖 AI Generate"}
+                          </Button>
+                        ))}
+                      </div>
+                      {mediaMode === "upload" && (
+                        <div className="space-y-3">
+                          <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-purple-500/40 rounded-lg cursor-pointer bg-slate-700/30 hover:bg-slate-700/50 transition-all">
+                            <div className="flex flex-col items-center">
+                              <span className="text-2xl mb-1">📎</span>
+                              <span className="text-purple-200 text-sm">Click to upload images or videos</span>
+                              <span className="text-purple-400 text-xs">JPG, PNG, MP4, MOV, WEBM (max 100MB)</span>
+                            </div>
+                            <input
+                              type="file"
+                              multiple
+                              accept="image/*,video/*"
+                              className="hidden"
+                              onChange={handleMediaUpload}
+                            />
+                          </label>
+                          {mediaPreviewUrls.length > 0 && (
+                            <div className="flex gap-2 flex-wrap">
+                              {mediaPreviewUrls.map((url, idx) => (
+                                <div key={idx} className="relative group">
+                                  {uploadedMedia[idx]?.type.startsWith("video/") ? (
+                                    <video src={url} className="w-20 h-20 object-cover rounded-lg border border-purple-500/30" />
+                                  ) : (
+                                    <img src={url} alt="preview" className="w-20 h-20 object-cover rounded-lg border border-purple-500/30" />
+                                  )}
+                                  <button
+                                    onClick={() => handleRemoveMedia(idx)}
+                                    className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {mediaMode === "ai" && (
+                        <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                          <p className="text-purple-200 text-sm">🤖 AI will generate an image based on your post content when you schedule.</p>
+                          <p className="text-purple-400 text-xs mt-1">Image generation happens automatically using your post text as the prompt.</p>
+                        </div>
+                      )}
                     </div>
 
                     {/* Platform Selection */}

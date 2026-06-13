@@ -40,6 +40,8 @@ import { OAuthSettings } from "./pages/OAuthSettings";
 import AutoReplySystem from "./pages/AutoReplySystem";
 import ROIDashboard from "./pages/ROIDashboard";
 import VideoRepurposingEngine from "./pages/VideoRepurposingEngine";
+import ContentFormattingAgent from "./pages/ContentFormattingAgent";
+import SentimentEscalation from "./pages/SentimentEscalation";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -197,6 +199,12 @@ function Router() {
         </Route>
         <Route path={"/video-repurposing"}>
           {(params) => <ProtectedRoute component={VideoRepurposingEngine} {...params} />}
+        </Route>
+        <Route path={"/content-formatting"}>
+          {(params) => <ProtectedRoute component={ContentFormattingAgent} {...params} />}
+        </Route>
+        <Route path={"/sentiment-escalation"}>
+          {(params) => <ProtectedRoute component={SentimentEscalation} {...params} />}
         </Route>
 
         {/* 404 Route */}
