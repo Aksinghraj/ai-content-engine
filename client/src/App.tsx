@@ -36,6 +36,7 @@ import DemoVideos from "./pages/DemoVideos";
 import { SimpleAutomation } from "./pages/SimpleAutomation";
 import KimiAdvancedHome from "./pages/KimiAdvancedHome";
 import KimiDashboard from "./pages/KimiDashboard";
+import { OAuthSettings } from "./pages/OAuthSettings";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -172,11 +173,15 @@ function Router() {
         </Route>
         <Route path={"/simple-automation"}>
           {(params) => <ProtectedRoute component={SimpleAutomation} {...params} />}
-        </Route>        <Route path={"/social-automation"}>
+        </Route>
+        <Route path={"/social-automation"}>
           {(params) => <ProtectedRoute component={SocialAutomation} {...params} />}
         </Route>
         <Route path={"/post-scheduling"}>
           {(params) => <ProtectedRoute component={PostScheduling} {...params} />}
+        </Route>
+        <Route path={"/oauth-settings"}>
+          {(params) => <ProtectedRoute component={OAuthSettings} {...params} />}
         </Route>
         <Route path={"/demo-videos"}>
           {(params) => <ProtectedRoute component={DemoVideos} {...params} />}
