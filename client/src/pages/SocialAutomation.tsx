@@ -1,3 +1,4 @@
+import DashboardLayout from "@/components/DashboardLayout";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
@@ -73,7 +74,7 @@ const PLATFORMS = [
   { id: "tiktok", name: "TikTok", icon: Zap, color: "from-black to-gray-800", domain: "tiktok.com" },
 ];
 
-export default function SocialAutomation() {
+function SocialAutomationContent() {
   const [, navigate] = useLocation();
   const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>([
     { id: "1", platform: "instagram", username: "", connected: false, autoPost: false, autoReply: false },
@@ -652,5 +653,13 @@ export default function SocialAutomation() {
          </Tabs>
       </div>
     </div>
+  );
+}
+
+export default function SocialAutomation() {
+  return (
+    <DashboardLayout>
+      <SocialAutomationContent />
+    </DashboardLayout>
   );
 }

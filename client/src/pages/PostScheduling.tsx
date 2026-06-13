@@ -1,3 +1,4 @@
+import DashboardLayout from "@/components/DashboardLayout";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,7 +56,7 @@ interface PostDraft {
   media: File[];
 }
 
-export default function PostScheduling() {
+function PostSchedulingContent() {
   const [activeTab, setActiveTab] = useState("create");
   const [postDraft, setPostDraft] = useState<PostDraft>({
     id: "draft-1",
@@ -624,5 +625,13 @@ export default function PostScheduling() {
         </Tabs>
       </div>
     </div>
+  );
+}
+
+export default function PostScheduling() {
+  return (
+    <DashboardLayout>
+      <PostSchedulingContent />
+    </DashboardLayout>
   );
 }
