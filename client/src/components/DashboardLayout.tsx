@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, Calendar, Settings, Bot, TrendingUp, Repeat, Sparkles, BarChart3, Zap, Wand2, DollarSign, Youtube, AlertTriangle } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, Calendar, Settings, Bot, TrendingUp, Repeat, Sparkles, BarChart3, Zap, Wand2, DollarSign, Youtube, AlertTriangle, Image } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -31,6 +31,7 @@ const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
   { icon: Calendar, label: "Post Scheduling", path: "/post-scheduling" },
   { icon: Sparkles, label: "AI Generator", path: "/generator" },
+  { icon: Image, label: "Media Generation", path: "/media-generation" },
   { icon: Bot, label: "Auto-Reply AI", path: "/auto-reply" },
   { icon: Repeat, label: "Repurposing Engine", path: "/repurposing" },
   { icon: Youtube, label: "Video Repurposing", path: "/video-repurposing" },

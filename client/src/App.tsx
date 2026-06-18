@@ -42,6 +42,7 @@ import ROIDashboard from "./pages/ROIDashboard";
 import VideoRepurposingEngine from "./pages/VideoRepurposingEngine";
 import ContentFormattingAgent from "./pages/ContentFormattingAgent";
 import SentimentEscalation from "./pages/SentimentEscalation";
+import MediaGeneration from "./pages/MediaGeneration";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -205,6 +206,9 @@ function Router() {
         </Route>
         <Route path={"/sentiment-escalation"}>
           {(params) => <ProtectedRoute component={SentimentEscalation} {...params} />}
+        </Route>
+        <Route path={"/media-generation"}>
+          {(params) => <ProtectedRoute component={MediaGeneration} {...params} />}
         </Route>
 
         {/* 404 Route */}

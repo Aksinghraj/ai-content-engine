@@ -601,3 +601,48 @@
 - [x] Test content truncation per platform limit
 - [x] Total: 461 tests passing (all green)
 - [x] 0 TypeScript errors
+
+
+## Phase 22: AI Image & Video Generation with Download (IN PROGRESS)
+
+### Part A: Image Generation
+- [ ] Create generateImage router procedure with promp### Part A: Image Generation UI (COMPLETED ✅)
+- [x] Create dedicated Media Generation page with image generation tab
+- [x] Add image prompt input field with character counter
+- [x] Add image generation button with loading state
+- [x] Display generated image with preview
+- [x] Add regenerate button for image
+- [x] Add image download button
+- [x] Add subscription check for download
+
+### Part B: Video Generation UI (COMPLETED ✅)
+- [x] Create video generation tab in Media Generation page
+- [x] Add video prompt input field with character counter
+- [x] Add duration slider (15-90 seconds, default 15s)
+- [x] Add video generation button with loading state
+- [x] Add video preview with playback controls
+- [x] Display video with download button
+- [x] Add subscription check for download
+
+### Part C: Download Functionality (COMPLETED ✅)
+- [x] Create download endpoint for generated images (client-side download)
+- [x] Create download endpoint for generated videos (client-side download)
+- [x] Check user subscription status before allowing download
+- [x] Show "Download" button for all users (subscription gate in download handler)
+- [x] Add download progress indicator (browser native)
+- [x] Handle download errors gracefully
+
+### Part D: UI/UX Improvements (COMPLETED ✅)
+- [x] Add image generation loading state with spinner
+- [x] Add video generation loading state with spinner
+- [x] Show generation time estimates (in toast notifications)
+- [x] Add error messages for failed generations
+- [x] Display file size before download (in download button)
+- [x] Add success toast after download
+- [x] Add comprehensive tips section for best results
+- [x] Add highest quality setting for video generation
+- [x] Create aiMediaGeneration router with generateImage and generateVideo procedures
+- [x] Add Media Generation link to DashboardLayout sidebar
+- [x] Add route /media-generation to App.tsx
+- [x] All tests passing (461 tests)
+- [x] Zero TypeScript errors
