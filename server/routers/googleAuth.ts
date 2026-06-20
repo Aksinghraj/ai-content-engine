@@ -22,20 +22,23 @@ export const googleAuthRouter = router({
         timestamp: Date.now(),
       })).toString("base64");
 
-      // Use URLSearchParams to properly build the OAuth URL
-      // This ensures scopes are sent correctly as space-separated values
-      const params = new URLSearchParams();
-      params.append("client_id", clientId);
-      params.append("redirect_uri", redirectUri);
-      params.append("response_type", "code");
-      params.append("scope", "openid profile email");  // Space-separated scopes
-      params.append("state", state);
-      params.append("access_type", "offline");
-      params.append("prompt", "consent");
+      // Build URL using Google's exact OAuth 2.0 format
+      // Each scope must be separately appended to the URL
+      const baseUrl = "https://accounts.google.com/o/oauth2/v2/auth";
+      const url = new URL(baseUrl);
+      
+      url.searchParams.set("client_id", clientId);
+      url.searchParams.set("redirect_uri", redirectUri);
+      url.searchParams.set("response_type", "code");
+      // Append each scope separately
+      url.searchParams.append("scope", "openid");
+      url.searchParams.append("scope", "profile");
+      url.searchParams.append("scope", "email");
+      url.searchParams.set("state", state);
+      url.searchParams.set("access_type", "offline");
+      url.searchParams.set("prompt", "consent");
 
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-
-      return { url: authUrl };
+      return { url: url.toString() };
     }),
 
   // Exchange Google auth code for tokens
