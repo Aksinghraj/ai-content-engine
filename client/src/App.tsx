@@ -43,11 +43,12 @@ import VideoRepurposingEngine from "./pages/VideoRepurposingEngine";
 import ContentFormattingAgent from "./pages/ContentFormattingAgent";
 import SentimentEscalation from "./pages/SentimentEscalation";
 import MediaGeneration from "./pages/MediaGeneration";
+import GoogleOAuthCallback from "./pages/GoogleOAuthCallback";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 
 // List of public routes that don't require authentication
-const PUBLIC_ROUTES = ["/", "/login", "/landing"];
+const PUBLIC_ROUTES = ["/", "/login", "/landing", "/api/oauth/google/callback"];
 
 // Protected Route Wrapper
 function ProtectedRoute({ component: Component, ...rest }: any) {
@@ -210,6 +211,9 @@ function Router() {
         <Route path={"/media-generation"}>
           {(params) => <ProtectedRoute component={MediaGeneration} {...params} />}
         </Route>
+
+        {/* Google OAuth Callback */}
+        <Route path={"/api/oauth/google/callback"} component={GoogleOAuthCallback} />
 
         {/* 404 Route */}
         <Route path={"/404"} component={NotFound} />

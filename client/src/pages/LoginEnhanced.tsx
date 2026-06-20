@@ -1,11 +1,11 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { getLoginUrl } from "@/const";
 import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
-import { Sparkles, Zap, Flame, ArrowRight, Mail, Lock, ArrowLeft, CheckCircle } from "lucide-react";
+import { Sparkles, Zap, Flame, ArrowRight, Mail, Lock, ArrowLeft, CheckCircle, Chrome } from "lucide-react";
+import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function LoginEnhanced() {
   const { isAuthenticated } = useAuth();
@@ -21,7 +21,7 @@ export default function LoginEnhanced() {
     }
   }, [isAuthenticated, navigate]);
 
-  const loginUrl = getLoginUrl();
+  const googleAuthQuery = trpc.googleAuth.getLoginUrl.useQuery();
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,10 +102,16 @@ export default function LoginEnhanced() {
 
               {/* Login Button */}
               <Button
-                onClick={() => window.location.href = loginUrl}
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-6 text-lg"
+                onClick={() => {
+                  if (googleAuthQuery.data?.url) {
+                    window.location.href = googleAuthQuery.data.url;
+                  }
+                }}
+                disabled={!googleAuthQuery.data?.url}
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-6 text-lg disabled:opacity-50"
               >
-                Sign In with Manus
+                <Chrome className="w-4 h-4 mr-2" />
+                Sign In with Google
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
 
