@@ -3,15 +3,24 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
 /**
- * Build a Google OAuth 2.0 authorization URL with correct scope encoding.
+ * Build a Google OAuth 2.0 authorization URL.
  *
- * IMPORTANT: Both `URLSearchParams` and `URL.searchParams` encode spaces as '+',
- * which is application/x-www-form-urlencoded format. Google OAuth requires RFC 3986
- * percent-encoding (%20) for spaces in the scope parameter. Using '+' causes:
- *   "Error 400: OAuth 2 parameters can only have a single value: scope"
+ * SCOPE ENCODING RULES (learned from trial and error):
  *
- * Solution: build the query string manually using encodeURIComponent for all values,
- * and join scope words with '%20' so spaces are encoded as %20 (not +).
+ * The scope parameter must be sent as a plain space-separated string with LITERAL spaces.
+ * e.g.  scope=openid profile email
+ *
+ * Do NOT percent-encode the spaces:
+ *   - scope=openid%20profile%20email  → Google receives "openid%20profile%20email" as a
+ *     literal string (double-encoded) and rejects it as invalid_scope
+ *   - scope=openid+profile+email      → Google rejects with "only one value for scope"
+ *
+ * When we set window.location.href = url, the browser does NOT decode %20 before sending
+ * the request — it re-encodes them to %2520. So we must put literal spaces in the URL
+ * string and let the browser encode them exactly once to %20.
+ *
+ * All other parameters (client_id, redirect_uri, state) must still be percent-encoded
+ * because they contain characters like : / @ = that would break the query string.
  */
 function buildGoogleOAuthUrl(params: {
   clientId: string;
@@ -20,14 +29,14 @@ function buildGoogleOAuthUrl(params: {
   scope: string;
 }): string {
   const enc = encodeURIComponent;
-  // Encode each scope word individually and join with %20 (not +)
-  const scopeEncoded = params.scope.split(" ").map(enc).join("%20");
 
+  // scope is intentionally NOT encoded — literal spaces are correct here.
+  // The browser will encode them to %20 when navigating to this URL.
   const qs = [
     `client_id=${enc(params.clientId)}`,
     `redirect_uri=${enc(params.redirectUri)}`,
     `response_type=code`,
-    `scope=${scopeEncoded}`,
+    `scope=${params.scope}`,
     `state=${enc(params.state)}`,
     `access_type=offline`,
     `prompt=consent`,
