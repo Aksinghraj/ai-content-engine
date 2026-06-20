@@ -22,12 +22,11 @@ export const googleAuthRouter = router({
         timestamp: Date.now(),
       })).toString("base64");
 
-      // Build URL with scopes as SEPARATE parameters (not as single string)
-      // Google OAuth requires: scope=openid&scope=profile&scope=email
-      const scopes = ["openid", "profile", "email"];
-      const scopeParams = scopes.map(s => `scope=${encodeURIComponent(s)}`).join("&");
+      // Build URL with scopes as plain string (no encoding)
+      // Google OAuth expects: scope=openid profile email (not URL-encoded)
+      const scope = "openid profile email";
       
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&${scopeParams}&state=${encodeURIComponent(state)}&access_type=offline&prompt=consent`;
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}&state=${encodeURIComponent(state)}&access_type=offline&prompt=consent`;
 
       return { url: authUrl };
     }),
