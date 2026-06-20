@@ -10,9 +10,79 @@ function getQueryParam(req: Request, key: string): string | undefined {
 }
 
 export function registerOAuthRoutes(app: Express) {
-  // Social Media OAuth Callbacks for Instagram, Twitter, LinkedIn, Facebook, YouTube, TikTok
+  // ─── Google OAuth: server-side redirect ────────────────────────────────────
+  //
+  // The frontend navigates to /api/oauth/google/login?origin=...
+  // The server builds the Google OAuth URL and issues a 302 redirect.
+  //
+  // WHY server-side? When the frontend does window.location.href = url, different
+  // browsers (especially Android WebView / Chrome mobile) handle spaces in URLs
+  // inconsistently. A server-side redirect guarantees the Location header contains
+  // exactly the bytes we want — scope=openid%20profile%20email — with no
+  // double-encoding or browser interference.
+  //
+  app.get("/api/oauth/google/login", (req: Request, res: Response) => {
+    const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
+    if (!clientId) {
+      return res.status(500).json({ error: "Google OAuth not configured" });
+    }
+
+    const origin =
+      (req.query.origin as string) ||
+      `${req.headers["x-forwarded-proto"] || req.protocol}://${req.headers.host}`;
+    const returnPath = (req.query.returnPath as string) || "/";
+    const redirectUri = `${origin}/api/oauth/google/callback`;
+
+    const state = Buffer.from(
+      JSON.stringify({ returnPath, origin, timestamp: Date.now() })
+    ).toString("base64");
+
+    // Build the query string manually.
+    // encodeURIComponent produces %20 for spaces (RFC 3986).
+    // The scope words are encoded individually and joined with %20 so the
+    // Location header contains: scope=openid%20profile%20email
+    const enc = encodeURIComponent;
+    const scopeEncoded = ["openid", "profile", "email"].map(enc).join("%20");
+
+    const qs = [
+      `client_id=${enc(clientId)}`,
+      `redirect_uri=${enc(redirectUri)}`,
+      `response_type=code`,
+      `scope=${scopeEncoded}`,
+      `state=${enc(state)}`,
+      `access_type=offline`,
+      `prompt=consent`,
+    ].join("&");
+
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?${qs}`;
+
+    // 302 redirect — the browser follows this URL exactly as written in the
+    // Location header, without any additional encoding.
+    return res.redirect(302, googleAuthUrl);
+  });
+
+  // Google OAuth callback: Google redirects here with ?code=...&state=...
+  // We forward to the frontend React page that handles token exchange.
+  app.get("/api/oauth/google/callback", (req: Request, res: Response) => {
+    const enc = encodeURIComponent;
+    const error = req.query.error as string;
+    const code = req.query.code as string;
+    const state = req.query.state as string;
+
+    if (error) {
+      return res.redirect(`/auth/google/callback?error=${enc(error)}`);
+    }
+    if (!code) {
+      return res.redirect("/auth/google/callback?error=missing_code");
+    }
+    return res.redirect(
+      `/auth/google/callback?code=${enc(code)}&state=${enc(state || "")}`
+    );
+  });
+
+  // ─── Social Media OAuth Callbacks ──────────────────────────────────────────
   const platforms = ["instagram", "twitter", "linkedin", "facebook", "youtube", "tiktok"];
-  
+
   platforms.forEach((platform) => {
     app.get(`/auth/${platform}/callback`, async (req: Request, res: Response) => {
       try {
@@ -33,13 +103,10 @@ export function registerOAuthRoutes(app: Express) {
           );
         }
 
-        // Import OAuth flow handler
         const { handleOAuthCallback } = await import("./oauthFlow");
         const baseUrl = process.env.APP_URL || "http://localhost:3000";
 
-        // Exchange code for real tokens
-        const result = await handleOAuthCallback(baseUrl, platform, codeStr as string, stateStr as string);
-        // Redirect back to social automation page with success params
+        const result = await handleOAuthCallback(baseUrl, platform, codeStr, stateStr);
         return res.redirect(
           `/social-automation?platform=${platform}&success=true&username=${encodeURIComponent(result.userInfo.username || result.userInfo.name)}&token=${encodeURIComponent(result.accessToken)}`
         );
@@ -52,7 +119,7 @@ export function registerOAuthRoutes(app: Express) {
     });
   });
 
-  // Manus OAuth Callback
+  // ─── Manus OAuth Callback ──────────────────────────────────────────────────
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
@@ -86,7 +153,6 @@ export function registerOAuthRoutes(app: Express) {
 
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
-
       res.redirect(302, "/");
     } catch (error) {
       console.error("[OAuth] Callback failed", error);

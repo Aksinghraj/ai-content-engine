@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
 import { Sparkles, Zap, Flame, ArrowRight, Mail, Lock, ArrowLeft, CheckCircle, Chrome } from "lucide-react";
-import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function LoginEnhanced() {
@@ -21,7 +20,10 @@ export default function LoginEnhanced() {
     }
   }, [isAuthenticated, navigate]);
 
-  const googleAuthQuery = trpc.googleAuth.getLoginUrl.useQuery({ origin: window.location.origin });
+  // Use server-side redirect: the browser navigates to /api/oauth/google/login
+  // which issues a 302 redirect to Google with correctly encoded scope=openid%20profile%20email.
+  // This avoids all browser-side URL encoding issues.
+  const googleLoginUrl = `/api/oauth/google/login?origin=${encodeURIComponent(window.location.origin)}`;
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,12 +105,9 @@ export default function LoginEnhanced() {
               {/* Login Button */}
               <Button
                 onClick={() => {
-                  if (googleAuthQuery.data?.url) {
-                    window.location.href = googleAuthQuery.data.url;
-                  }
+                  window.location.href = googleLoginUrl;
                 }}
-                disabled={!googleAuthQuery.data?.url}
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-6 text-lg disabled:opacity-50"
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-6 text-lg"
               >
                 <Chrome className="w-4 h-4 mr-2" />
                 Sign In with Google
