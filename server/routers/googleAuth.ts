@@ -17,14 +17,17 @@ export const googleAuthRouter = router({
         });
       }
 
-      const scope = "openid profile email";
       const state = Buffer.from(JSON.stringify({
         returnPath: input?.returnPath || "/",
         timestamp: Date.now(),
       })).toString("base64");
 
-      // Build URL with proper encoding
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&state=${encodeURIComponent(state)}&access_type=offline&prompt=consent`;
+      // Build URL with scopes as SEPARATE parameters (not as single string)
+      // Google OAuth requires: scope=openid&scope=profile&scope=email
+      const scopes = ["openid", "profile", "email"];
+      const scopeParams = scopes.map(s => `scope=${encodeURIComponent(s)}`).join("&");
+      
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&${scopeParams}&state=${encodeURIComponent(state)}&access_type=offline&prompt=consent`;
 
       return { url: authUrl };
     }),
