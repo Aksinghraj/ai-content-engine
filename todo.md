@@ -606,7 +606,7 @@
 ## Phase 22: AI Image & Video Generation with Download (IN PROGRESS)
 
 ### Part A: Image Generation
-- [ ] Create generateImage router procedure with promp### Part A: Image Generation UI (COMPLETED ✅)
+- [x] Create generateImage router procedure with prompt input (COMPLETED ✅)
 - [x] Create dedicated Media Generation page with image generation tab
 - [x] Add image prompt input field with character counter
 - [x] Add image generation button with loading state

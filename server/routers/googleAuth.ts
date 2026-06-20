@@ -2,6 +2,40 @@ import { publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
+/**
+ * Build a Google OAuth 2.0 authorization URL with correct scope encoding.
+ *
+ * IMPORTANT: Both `URLSearchParams` and `URL.searchParams` encode spaces as '+',
+ * which is application/x-www-form-urlencoded format. Google OAuth requires RFC 3986
+ * percent-encoding (%20) for spaces in the scope parameter. Using '+' causes:
+ *   "Error 400: OAuth 2 parameters can only have a single value: scope"
+ *
+ * Solution: build the query string manually using encodeURIComponent for all values,
+ * and join scope words with '%20' so spaces are encoded as %20 (not +).
+ */
+function buildGoogleOAuthUrl(params: {
+  clientId: string;
+  redirectUri: string;
+  state: string;
+  scope: string;
+}): string {
+  const enc = encodeURIComponent;
+  // Encode each scope word individually and join with %20 (not +)
+  const scopeEncoded = params.scope.split(" ").map(enc).join("%20");
+
+  const qs = [
+    `client_id=${enc(params.clientId)}`,
+    `redirect_uri=${enc(params.redirectUri)}`,
+    `response_type=code`,
+    `scope=${scopeEncoded}`,
+    `state=${enc(params.state)}`,
+    `access_type=offline`,
+    `prompt=consent`,
+  ].join("&");
+
+  return `https://accounts.google.com/o/oauth2/v2/auth?${qs}`;
+}
+
 export const googleAuthRouter = router({
   // Get Google OAuth login URL
   getLoginUrl: publicProcedure
@@ -32,18 +66,12 @@ export const googleAuthRouter = router({
         })
       ).toString("base64");
 
-      // Build URL manually with a SINGLE scope parameter (space-separated)
-      // Google requires: scope=openid%20profile%20email (single param, NOT multiple scope= params)
-      const params = new URLSearchParams();
-      params.set("client_id", clientId);
-      params.set("redirect_uri", redirectUri);
-      params.set("response_type", "code");
-      params.set("scope", "openid profile email"); // Single param, URLSearchParams encodes spaces as %20
-      params.set("state", state);
-      params.set("access_type", "offline");
-      params.set("prompt", "consent");
-
-      const url = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+      const url = buildGoogleOAuthUrl({
+        clientId,
+        redirectUri,
+        state,
+        scope: "openid profile email",
+      });
 
       return { url };
     }),
