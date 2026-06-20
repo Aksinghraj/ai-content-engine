@@ -21,7 +21,7 @@ export default function LoginEnhanced() {
     }
   }, [isAuthenticated, navigate]);
 
-  const googleAuthQuery = trpc.googleAuth.getLoginUrl.useQuery();
+  const googleAuthQuery = trpc.googleAuth.getLoginUrl.useQuery({ origin: window.location.origin });
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();

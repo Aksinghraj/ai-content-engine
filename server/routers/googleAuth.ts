@@ -5,11 +5,10 @@ import { TRPCError } from "@trpc/server";
 export const googleAuthRouter = router({
   // Get Google OAuth login URL
   getLoginUrl: publicProcedure
-    .input(z.object({ returnPath: z.string().optional() }).optional())
-    .query(({ input }) => {
+    .input(z.object({ origin: z.string().optional(), returnPath: z.string().optional() }).optional())
+    .query(({ input, ctx }) => {
       const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
-      const redirectUri = `${process.env.VITE_FRONTEND_URL || "http://localhost:3000"}/api/oauth/google/callback`;
-      
+
       if (!clientId) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -17,20 +16,27 @@ export const googleAuthRouter = router({
         });
       }
 
+      // Use origin from input (passed by frontend) or fallback to request headers
+      const origin = input?.origin ||
+        (ctx.req.headers.origin as string) ||
+        `${ctx.req.headers['x-forwarded-proto'] || 'https'}://${ctx.req.headers.host}`;
+
+      const redirectUri = `${origin}/api/oauth/google/callback`;
+
       const state = Buffer.from(JSON.stringify({
         returnPath: input?.returnPath || "/",
+        origin,
         timestamp: Date.now(),
       })).toString("base64");
 
       // Build URL using Google's exact OAuth 2.0 format
-      // Each scope must be separately appended to the URL
       const baseUrl = "https://accounts.google.com/o/oauth2/v2/auth";
       const url = new URL(baseUrl);
-      
+
       url.searchParams.set("client_id", clientId);
       url.searchParams.set("redirect_uri", redirectUri);
       url.searchParams.set("response_type", "code");
-      // Append each scope separately
+      // Each scope as separate parameter - Google's preferred format
       url.searchParams.append("scope", "openid");
       url.searchParams.append("scope", "profile");
       url.searchParams.append("scope", "email");
@@ -47,10 +53,9 @@ export const googleAuthRouter = router({
       code: z.string(),
       state: z.string(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
       const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
-      const redirectUri = `${process.env.VITE_FRONTEND_URL || "http://localhost:3000"}/api/oauth/google/callback`;
 
       if (!clientId || !clientSecret) {
         throw new TRPCError({
@@ -60,14 +65,18 @@ export const googleAuthRouter = router({
       }
 
       try {
-        // Decode state to get return path
+        // Decode state to get origin and return path
         let returnPath = "/";
+        let origin = `${ctx.req.headers['x-forwarded-proto'] || 'https'}://${ctx.req.headers.host}`;
         try {
           const stateData = JSON.parse(Buffer.from(input.state, "base64").toString());
           returnPath = stateData.returnPath || "/";
+          if (stateData.origin) origin = stateData.origin;
         } catch (e) {
           console.error("Failed to decode state:", e);
         }
+
+        const redirectUri = `${origin}/api/oauth/google/callback`;
 
         // Exchange code for tokens
         const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
