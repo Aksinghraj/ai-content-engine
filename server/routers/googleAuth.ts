@@ -17,11 +17,11 @@ export const googleAuthRouter = router({
         });
       }
 
-      const scope = encodeURIComponent([
+      const scope = [
         "openid",
         "profile",
         "email",
-      ].join(" "));
+      ].join(" ");
 
       const state = Buffer.from(JSON.stringify({
         returnPath: input?.returnPath || "/",
