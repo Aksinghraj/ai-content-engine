@@ -1,4 +1,4 @@
-import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
+import { publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
@@ -17,27 +17,16 @@ export const googleAuthRouter = router({
         });
       }
 
-      const scope = [
-        "openid",
-        "profile",
-        "email",
-      ].join(" ");
-
+      const scope = "openid profile email";
       const state = Buffer.from(JSON.stringify({
         returnPath: input?.returnPath || "/",
         timestamp: Date.now(),
       })).toString("base64");
 
-      const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
-      url.searchParams.set("client_id", clientId);
-      url.searchParams.set("redirect_uri", redirectUri);
-      url.searchParams.set("response_type", "code");
-      url.searchParams.set("scope", scope);
-      url.searchParams.set("state", state);
-      url.searchParams.set("access_type", "offline");
-      url.searchParams.set("prompt", "consent");
+      // Build URL with proper encoding
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&state=${encodeURIComponent(state)}&access_type=offline&prompt=consent`;
 
-      return { url: url.toString() };
+      return { url: authUrl };
     }),
 
   // Exchange Google auth code for tokens
@@ -59,25 +48,36 @@ export const googleAuthRouter = router({
       }
 
       try {
+        // Decode state to get return path
+        let returnPath = "/";
+        try {
+          const stateData = JSON.parse(Buffer.from(input.state, "base64").toString());
+          returnPath = stateData.returnPath || "/";
+        } catch (e) {
+          console.error("Failed to decode state:", e);
+        }
+
         // Exchange code for tokens
         const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
           method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
           body: new URLSearchParams({
-            code: input.code,
             client_id: clientId,
             client_secret: clientSecret,
-            redirect_uri: redirectUri,
+            code: input.code,
             grant_type: "authorization_code",
+            redirect_uri: redirectUri,
           }).toString(),
         });
 
         if (!tokenResponse.ok) {
           const error = await tokenResponse.json();
-          console.error("Google token exchange error:", error);
+          console.error("Token exchange error:", error);
           throw new TRPCError({
             code: "UNAUTHORIZED",
-            message: "Failed to exchange authorization code",
+            message: "Failed to exchange authorization code for tokens",
           });
         }
 
@@ -85,7 +85,9 @@ export const googleAuthRouter = router({
 
         // Get user info
         const userResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
-          headers: { Authorization: `Bearer ${tokens.access_token}` },
+          headers: {
+            Authorization: `Bearer ${tokens.access_token}`,
+          },
         });
 
         if (!userResponse.ok) {
@@ -97,41 +99,34 @@ export const googleAuthRouter = router({
 
         const userInfo = await userResponse.json();
 
-        // Parse state to get return path
-        let returnPath = "/";
-        try {
-          const stateData = JSON.parse(Buffer.from(input.state, "base64").toString());
-          returnPath = stateData.returnPath || "/";
-        } catch (e) {
-          console.error("Failed to parse state:", e);
-        }
-
         return {
-          user: {
-            id: userInfo.id,
-            email: userInfo.email,
-            name: userInfo.name,
-            picture: userInfo.picture,
-          },
           tokens: {
             accessToken: tokens.access_token,
             refreshToken: tokens.refresh_token,
             expiresIn: tokens.expires_in,
           },
+          user: {
+            id: userInfo.id,
+            name: userInfo.name,
+            email: userInfo.email,
+            picture: userInfo.picture,
+          },
           returnPath,
         };
       } catch (error) {
-        console.error("Google OAuth error:", error);
+        console.error("OAuth exchange error:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: error instanceof Error ? error.message : "Google OAuth failed",
+          message: error instanceof Error ? error.message : "OAuth exchange failed",
         });
       }
     }),
 
-  // Refresh Google access token
-  refreshToken: protectedProcedure
-    .input(z.object({ refreshToken: z.string() }))
+  // Refresh access token
+  refreshToken: publicProcedure
+    .input(z.object({
+      refreshToken: z.string(),
+    }))
     .mutation(async ({ input }) => {
       const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
       const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
@@ -144,9 +139,11 @@ export const googleAuthRouter = router({
       }
 
       try {
-        const response = await fetch("https://oauth2.googleapis.com/token", {
+        const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
           method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
           body: new URLSearchParams({
             client_id: clientId,
             client_secret: clientSecret,
@@ -155,14 +152,15 @@ export const googleAuthRouter = router({
           }).toString(),
         });
 
-        if (!response.ok) {
+        if (!tokenResponse.ok) {
           throw new TRPCError({
             code: "UNAUTHORIZED",
             message: "Failed to refresh token",
           });
         }
 
-        const tokens = await response.json();
+        const tokens = await tokenResponse.json();
+
         return {
           accessToken: tokens.access_token,
           expiresIn: tokens.expires_in,
@@ -171,7 +169,7 @@ export const googleAuthRouter = router({
         console.error("Token refresh error:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to refresh Google token",
+          message: error instanceof Error ? error.message : "Token refresh failed",
         });
       }
     }),
