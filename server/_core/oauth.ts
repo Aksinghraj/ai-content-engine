@@ -9,6 +9,7 @@ function getQueryParam(req: Request, key: string): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
+// Build: 2026-06-21 — form-based Google OAuth (no redirect, no double-encoding)
 export function registerOAuthRoutes(app: Express) {
   // ─── Google OAuth ──────────────────────────────────────────────────────────
   //
