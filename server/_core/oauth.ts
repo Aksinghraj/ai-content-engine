@@ -10,74 +10,179 @@ function getQueryParam(req: Request, key: string): string | undefined {
 }
 
 export function registerOAuthRoutes(app: Express) {
-  // ─── Google OAuth: server-side redirect ────────────────────────────────────
+  // ─── Google OAuth ──────────────────────────────────────────────────────────
   //
-  // The frontend navigates to /api/oauth/google/login?origin=...
-  // The server builds the Google OAuth URL and issues a 302 redirect.
-  //
-  // WHY server-side? When the frontend does window.location.href = url, different
-  // browsers (especially Android WebView / Chrome mobile) handle spaces in URLs
-  // inconsistently. A server-side redirect guarantees the Location header contains
-  // exactly the bytes we want — scope=openid%20profile%20email — with no
-  // double-encoding or browser interference.
+  // Step 1: /api/oauth/google/login
+  //   The frontend navigates here. We respond with a plain HTML page containing
+  //   an auto-submitting GET form. This is the only reliable cross-platform way
+  //   to send the scope as separate words — the browser encodes the form field
+  //   value exactly once, so Google receives "scope=openid+profile+email" which
+  //   it accepts. Any redirect-based approach risks double-encoding on Android.
   //
   app.get("/api/oauth/google/login", (req: Request, res: Response) => {
     const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
     if (!clientId) {
-      return res.status(500).json({ error: "Google OAuth not configured" });
+      return res.status(500).send("Google OAuth not configured (missing GOOGLE_OAUTH_CLIENT_ID)");
     }
 
+    // Derive the app origin: prefer the forwarded proto+host, fall back to req
     const origin =
       (req.query.origin as string) ||
-      `${req.headers["x-forwarded-proto"] || req.protocol}://${req.headers.host}`;
-    const returnPath = (req.query.returnPath as string) || "/";
+      `${req.headers["x-forwarded-proto"] || req.protocol}://${req.headers["x-forwarded-host"] || req.headers.host}`;
+
     const redirectUri = `${origin}/api/oauth/google/callback`;
 
+    // State carries the return path and origin so the callback can redirect correctly
     const state = Buffer.from(
-      JSON.stringify({ returnPath, origin, timestamp: Date.now() })
-    ).toString("base64");
+      JSON.stringify({ returnPath: "/dashboard", origin, ts: Date.now() })
+    ).toString("base64url");
 
-    // Build the query string manually.
-    // encodeURIComponent produces %20 for spaces (RFC 3986).
-    // The scope words are encoded individually and joined with %20 so the
-    // Location header contains: scope=openid%20profile%20email
-    const enc = encodeURIComponent;
-    const scopeEncoded = ["openid", "profile", "email"].map(enc).join("%20");
+    // Escape HTML special chars to prevent XSS in attribute values
+    const esc = (s: string) =>
+      s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 
-    const qs = [
-      `client_id=${enc(clientId)}`,
-      `redirect_uri=${enc(redirectUri)}`,
-      `response_type=code`,
-      `scope=${scopeEncoded}`,
-      `state=${enc(state)}`,
-      `access_type=offline`,
-      `prompt=consent`,
-    ].join("&");
+    // NOTE: scope value is plain text — the browser encodes it once on submit.
+    // Do NOT pre-encode it here.
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Signing in with Google…</title>
+  <style>
+    body { font-family: sans-serif; display: flex; align-items: center;
+           justify-content: center; min-height: 100vh; margin: 0;
+           background: #0f172a; color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <p>Redirecting to Google…</p>
+  <form id="f" method="GET" action="https://accounts.google.com/o/oauth2/v2/auth">
+    <input type="hidden" name="client_id"     value="${esc(clientId)}">
+    <input type="hidden" name="redirect_uri"  value="${esc(redirectUri)}">
+    <input type="hidden" name="response_type" value="code">
+    <input type="hidden" name="scope"         value="openid profile email">
+    <input type="hidden" name="state"         value="${esc(state)}">
+    <input type="hidden" name="access_type"   value="offline">
+    <input type="hidden" name="prompt"        value="consent">
+  </form>
+  <script>document.getElementById('f').submit();</script>
+</body>
+</html>`;
 
-    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?${qs}`;
-
-    // 302 redirect — the browser follows this URL exactly as written in the
-    // Location header, without any additional encoding.
-    return res.redirect(302, googleAuthUrl);
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    return res.send(html);
   });
 
-  // Google OAuth callback: Google redirects here with ?code=...&state=...
-  // We forward to the frontend React page that handles token exchange.
-  app.get("/api/oauth/google/callback", (req: Request, res: Response) => {
-    const enc = encodeURIComponent;
-    const error = req.query.error as string;
-    const code = req.query.code as string;
-    const state = req.query.state as string;
+  // Step 2: /api/oauth/google/callback
+  //   Google redirects here with ?code=...&state=...
+  //   We exchange the code for tokens, fetch the user's profile, upsert them
+  //   into our DB, create a session cookie, and redirect to the dashboard.
+  //
+  app.get("/api/oauth/google/callback", async (req: Request, res: Response) => {
+    const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+
+    const error = req.query.error as string | undefined;
+    const code = req.query.code as string | undefined;
+    const stateRaw = req.query.state as string | undefined;
 
     if (error) {
-      return res.redirect(`/auth/google/callback?error=${enc(error)}`);
+      console.error("[Google OAuth] Error from Google:", error);
+      return res.redirect(`/login?error=${encodeURIComponent(error)}`);
     }
     if (!code) {
-      return res.redirect("/auth/google/callback?error=missing_code");
+      return res.redirect("/login?error=missing_code");
     }
-    return res.redirect(
-      `/auth/google/callback?code=${enc(code)}&state=${enc(state || "")}`
-    );
+    if (!clientId || !clientSecret) {
+      return res.redirect("/login?error=google_oauth_not_configured");
+    }
+
+    // Parse state to get the origin for building the redirect URI
+    let origin = `${req.headers["x-forwarded-proto"] || req.protocol}://${req.headers["x-forwarded-host"] || req.headers.host}`;
+    let returnPath = "/dashboard";
+    try {
+      if (stateRaw) {
+        const parsed = JSON.parse(Buffer.from(stateRaw, "base64url").toString("utf8"));
+        if (parsed.origin) origin = parsed.origin;
+        if (parsed.returnPath) returnPath = parsed.returnPath;
+      }
+    } catch {
+      // ignore malformed state
+    }
+
+    const redirectUri = `${origin}/api/oauth/google/callback`;
+
+    try {
+      // Exchange authorization code for tokens
+      const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          code,
+          client_id: clientId,
+          client_secret: clientSecret,
+          redirect_uri: redirectUri,
+          grant_type: "authorization_code",
+        }),
+      });
+
+      if (!tokenRes.ok) {
+        const body = await tokenRes.text();
+        console.error("[Google OAuth] Token exchange failed:", body);
+        return res.redirect(`/login?error=${encodeURIComponent("token_exchange_failed")}`);
+      }
+
+      const tokens = (await tokenRes.json()) as {
+        access_token: string;
+        id_token?: string;
+        refresh_token?: string;
+        expires_in: number;
+      };
+
+      // Fetch user profile using the access token
+      const profileRes = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+        headers: { Authorization: `Bearer ${tokens.access_token}` },
+      });
+
+      if (!profileRes.ok) {
+        console.error("[Google OAuth] Profile fetch failed:", profileRes.status);
+        return res.redirect(`/login?error=${encodeURIComponent("profile_fetch_failed")}`);
+      }
+
+      const profile = (await profileRes.json()) as {
+        id: string;
+        email: string;
+        name: string;
+        picture?: string;
+      };
+
+      if (!profile.id) {
+        return res.redirect(`/login?error=${encodeURIComponent("missing_google_id")}`);
+      }
+
+      // Use "google:<id>" as the openId so it doesn't clash with Manus openIds
+      const openId = `google:${profile.id}`;
+
+      await db.upsertUser({
+        openId,
+        name: profile.name || null,
+        email: profile.email || null,
+        loginMethod: "google",
+        lastSignedIn: new Date(),
+      });
+
+      const sessionToken = await sdk.createSessionToken(openId, {
+        name: profile.name || "",
+        expiresInMs: ONE_YEAR_MS,
+      });
+
+      const cookieOptions = getSessionCookieOptions(req);
+      res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+      return res.redirect(302, returnPath);
+    } catch (err) {
+      console.error("[Google OAuth] Callback error:", err);
+      return res.redirect(`/login?error=${encodeURIComponent("internal_error")}`);
+    }
   });
 
   // ─── Social Media OAuth Callbacks ──────────────────────────────────────────
