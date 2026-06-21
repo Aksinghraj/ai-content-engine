@@ -3,8 +3,9 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
-import { Sparkles, Zap, Flame, ArrowRight, Mail, Lock, ArrowLeft, CheckCircle, Chrome } from "lucide-react";
+import { Sparkles, Zap, Flame, ArrowRight, Mail, Lock, ArrowLeft, CheckCircle } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 
 export default function LoginEnhanced() {
   const { isAuthenticated } = useAuth();
@@ -20,10 +21,8 @@ export default function LoginEnhanced() {
     }
   }, [isAuthenticated, navigate]);
 
-  // Use server-side redirect: the browser navigates to /api/oauth/google/login
-  // which issues a 302 redirect to Google with correctly encoded scope=openid%20profile%20email.
-  // This avoids all browser-side URL encoding issues.
-  const googleLoginUrl = `/api/oauth/google/login?origin=${encodeURIComponent(window.location.origin)}`;
+  // Use Manus OAuth for login
+  const loginUrl = getLoginUrl();
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,12 +104,12 @@ export default function LoginEnhanced() {
               {/* Login Button */}
               <Button
                 onClick={() => {
-                  window.location.href = googleLoginUrl;
+                  window.location.href = loginUrl;
                 }}
                 className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-6 text-lg"
               >
-                <Chrome className="w-4 h-4 mr-2" />
-                Sign In with Google
+                <Zap className="w-4 h-4 mr-2" />
+                Sign In
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
 
