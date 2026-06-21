@@ -37,28 +37,42 @@ export function registerOAuthRoutes(app: Express) {
       JSON.stringify({ returnPath, origin, timestamp: Date.now() })
     ).toString("base64");
 
-    // Build the query string manually.
-    // encodeURIComponent produces %20 for spaces (RFC 3986).
-    // The scope words are encoded individually and joined with %20 so the
-    // Location header contains: scope=openid%20profile%20email
-    const enc = encodeURIComponent;
-    const scopeEncoded = ["openid", "profile", "email"].map(enc).join("%20");
+    // Serve an auto-submitting HTML form instead of a 302 redirect.
+    //
+    // WHY A FORM?
+    // A GET form submission sends each field value through the browser's
+    // standard URL encoding exactly ONCE. There is no risk of double-encoding
+    // because the browser reads the raw text value of each <input> and encodes
+    // it when building the request URL.
+    //
+    // With a 302 redirect, the Location header value may be re-encoded by
+    // proxies or browsers (especially Android WebView), causing %20 → %2520.
+    //
+    // IMPORTANT: form field values must be PLAIN TEXT — not pre-encoded.
+    // The browser will encode them exactly once when submitting.
+    // Use escapeHtml() only to prevent XSS in the HTML attribute value.
+    const escHtml = (s: string) =>
+      s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 
-    const qs = [
-      `client_id=${enc(clientId)}`,
-      `redirect_uri=${enc(redirectUri)}`,
-      `response_type=code`,
-      `scope=${scopeEncoded}`,
-      `state=${enc(state)}`,
-      `access_type=offline`,
-      `prompt=consent`,
-    ].join("&");
-
-    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?${qs}`;
-
-    // 302 redirect — the browser follows this URL exactly as written in the
-    // Location header, without any additional encoding.
-    return res.redirect(302, googleAuthUrl);
+    const html = `<!DOCTYPE html>
+<html>
+<head><title>Redirecting to Google...</title></head>
+<body>
+<p>Redirecting to Google...</p>
+<form id="f" method="GET" action="https://accounts.google.com/o/oauth2/v2/auth">
+  <input type="hidden" name="client_id" value="${escHtml(clientId)}">
+  <input type="hidden" name="redirect_uri" value="${escHtml(redirectUri)}">
+  <input type="hidden" name="response_type" value="code">
+  <input type="hidden" name="scope" value="openid profile email">
+  <input type="hidden" name="state" value="${escHtml(state)}">
+  <input type="hidden" name="access_type" value="offline">
+  <input type="hidden" name="prompt" value="consent">
+</form>
+<script>document.getElementById('f').submit();</script>
+</body>
+</html>`;
+    res.setHeader("Content-Type", "text/html");
+    return res.send(html);
   });
 
   // Google OAuth callback: Google redirects here with ?code=...&state=...
