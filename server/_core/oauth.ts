@@ -35,7 +35,7 @@ export function registerOAuthRoutes(app: Express) {
 
     // State carries the return path and origin so the callback can redirect correctly
     const state = Buffer.from(
-      JSON.stringify({ returnPath: "/dashboard", origin, ts: Date.now() })
+      JSON.stringify({ returnPath: "/home", origin, ts: Date.now() })
     ).toString("base64url");
 
     // Escape HTML special chars to prevent XSS in attribute values
@@ -172,13 +172,19 @@ export function registerOAuthRoutes(app: Express) {
         lastSignedIn: new Date(),
       });
 
+      // Ensure name is never empty — verifySession rejects tokens with empty name
+      const displayName = profile.name || profile.email?.split("@")[0] || "User";
+
       const sessionToken = await sdk.createSessionToken(openId, {
-        name: profile.name || "",
+        name: displayName,
         expiresInMs: ONE_YEAR_MS,
       });
 
+      console.log("[Google OAuth] Session token created for", openId, "name:", displayName);
+
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+      console.log("[Google OAuth] Cookie set, redirecting to", returnPath);
       return res.redirect(302, returnPath);
     } catch (err) {
       console.error("[Google OAuth] Callback error:", err);
