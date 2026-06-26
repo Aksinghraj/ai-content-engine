@@ -44,11 +44,13 @@ import ContentFormattingAgent from "./pages/ContentFormattingAgent";
 import SentimentEscalation from "./pages/SentimentEscalation";
 import MediaGeneration from "./pages/MediaGeneration";
 import GoogleOAuthCallback from "./pages/GoogleOAuthCallback";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 
 // List of public routes that don't require authentication
-const PUBLIC_ROUTES = ["/", "/login", "/landing", "/auth/google/callback"];
+const PUBLIC_ROUTES = ["/", "/login", "/landing", "/auth/google/callback", "/privacy", "/terms"];
 
 // Protected Route Wrapper
 function ProtectedRoute({ component: Component, ...rest }: any) {
@@ -113,6 +115,8 @@ function Router() {
         </Route>
         <Route path={"/landing"} component={LandingPage} />
         <Route path={"/landing-premium"} component={LandingPremium} />
+        <Route path={"/privacy"} component={PrivacyPolicy} />
+        <Route path={"/terms"} component={TermsOfService} />
 
         {/* Protected Routes - Login required */}
         <Route path={"/home"}>
