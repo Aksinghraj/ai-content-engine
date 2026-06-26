@@ -50,7 +50,7 @@ import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 
 // List of public routes that don't require authentication
-const PUBLIC_ROUTES = ["/", "/login", "/landing", "/auth/google/callback", "/privacy", "/terms"];
+const PUBLIC_ROUTES = ["/", "/login", "/landing", "/privacy", "/terms"];
 
 // Protected Route Wrapper
 function ProtectedRoute({ component: Component, ...rest }: any) {
@@ -217,7 +217,7 @@ function Router() {
         </Route>
 
         {/* Google OAuth Callback - server redirects here after Google auth */}
-        <Route path={"/auth/google/callback"} component={GoogleOAuthCallback} />
+
 
         {/* 404 Route */}
         <Route path={"/404"} component={NotFound} />

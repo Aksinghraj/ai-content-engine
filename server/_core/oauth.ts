@@ -35,7 +35,7 @@ export function registerOAuthRoutes(app: Express) {
 
     // State carries the return path and origin so the callback can redirect correctly
     const state = Buffer.from(
-      JSON.stringify({ returnPath: "/home", origin, ts: Date.now() })
+      JSON.stringify({ returnPath: "/", origin, ts: Date.now() })
     ).toString("base64url");
 
     // Escape HTML special chars to prevent XSS in attribute values
@@ -100,7 +100,7 @@ export function registerOAuthRoutes(app: Express) {
 
     // Parse state to get the origin for building the redirect URI
     let origin = `${req.headers["x-forwarded-proto"] || req.protocol}://${req.headers["x-forwarded-host"] || req.headers.host}`;
-    let returnPath = "/dashboard";
+    let returnPath = "/";
     try {
       if (stateRaw) {
         const parsed = JSON.parse(Buffer.from(stateRaw, "base64url").toString("utf8"));

@@ -16,7 +16,7 @@ export default function LoginEnhanced() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/home");
+      navigate("/dashboard");
     }
   }, [isAuthenticated, navigate]);
 
