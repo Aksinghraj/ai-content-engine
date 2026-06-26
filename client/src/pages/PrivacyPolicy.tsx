@@ -22,7 +22,7 @@ export default function PrivacyPolicy() {
             <ul className="list-disc list-inside space-y-2 text-foreground/90">
               <li><strong>Personal Data:</strong> When you sign in with Google, we collect your email address, name, and profile picture.</li>
               <li><strong>Usage Data:</strong> We collect information about how you interact with our Service, including the features you use and content you create.</li>
-              <li><strong>Social Media Data:</strong> If you connect your social media accounts (Instagram, YouTube, Twitter, LinkedIn), we collect data necessary to schedule and publish content on your behalf.</li>
+              <li><strong>Social Media Data:</strong> If you connect your social media accounts (Instagram, YouTube, Twitter, LinkedIn), we collect data necessary to schedule and publish content on your behalf. We share this data with the respective social media platforms to enable content publishing and automation features.</li>
             </ul>
           </section>
 
@@ -46,6 +46,16 @@ export default function PrivacyPolicy() {
             <h2 className="text-2xl font-semibold mb-4">4. Security of Data</h2>
             <p className="text-foreground/90 leading-relaxed">
               The security of your data is important to us but remember that no method of transmission over the Internet or method of electronic storage is 100% secure. While we strive to use commercially acceptable means to protect your Personal Data, we cannot guarantee its absolute security.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold mb-4">5. Data Retention and Deletion</h2>
+            <p className="text-foreground/90 leading-relaxed">
+              We retain your Personal Data only for as long as is necessary for the purposes set out in this Privacy Policy. We will retain and use your Personal Data to the extent necessary to comply with our legal obligations (for example, if we are required to retain your data to comply with applicable laws), resolve disputes, and enforce our legal agreements and policies.
+            </p>
+            <p className="text-foreground/90 leading-relaxed mt-4">
+              If you wish to delete your account or request that we no longer use your information to provide you services, please contact us at <a href="mailto:kiddotv1411@gmail.com" className="text-primary hover:underline">kiddotv1411@gmail.com</a>. We will respond to your request within a reasonable timeframe.
             </p>
           </section>
 

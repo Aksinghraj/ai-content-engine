@@ -36,8 +36,25 @@ export default function Home() {
         <div className="absolute -bottom-8 left-1/2 w-96 h-96 bg-pink-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: "4s" }}></div>
       </div>
 
-      {/* Content */}
-      <div className="relative z-10">
+        {/* Content */}
+        <div className="relative z-10">
+          {/* Header */}
+          <header className="absolute top-0 left-0 right-0 z-20 p-4 md:p-8">
+            <div className="max-w-6xl mx-auto flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <img src="/manus-storage/ai-content-engine-logo_c06be0a7.png" alt="AI Content Engine Logo" className="h-10" />
+                <span className="text-2xl font-bold text-white">AI Content Engine</span>
+              </div>
+              <nav>
+                <Button
+                  onClick={handleGetStarted}
+                  className="px-6 py-3 text-md font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg shadow-lg transition-all duration-300"
+                >
+                  Sign In / Sign Up
+                </Button>
+              </nav>
+            </div>
+          </header>
         {/* Hero Section */}
         <section className="min-h-screen flex items-center justify-center px-4 pt-20 pb-20">
           <div className="max-w-5xl mx-auto text-center">
@@ -115,8 +132,8 @@ export default function Home() {
                 <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Zap className="w-7 h-7" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">10 Viral Ideas</h3>
-                <p className="text-slate-300 leading-relaxed">Get 10 highly engaging, curiosity-driven content ideas specifically tailored to your niche and audience</p>
+                <h3 className="text-xl font-bold mb-3">AI Content Generation</h3>
+                <p className="text-slate-300 leading-relaxed">Generate complete, high-engagement content ideas tailored to your niche, audience, and platform.</p>
               </div>
 
               {/* Feature 2 */}
@@ -124,8 +141,8 @@ export default function Home() {
                 <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-pink-500 to-red-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <TrendingUp className="w-7 h-7" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Complete Scripts</h3>
-                <p className="text-slate-300 leading-relaxed">Platform-optimized video scripts, captions, hooks, and hashtags ready to post immediately</p>
+                <h3 className="text-xl font-bold mb-3">AI Caption & Script Generation</h3>
+                <p className="text-slate-300 leading-relaxed">Craft compelling captions, engaging scripts, and viral hooks optimized for each social media platform.</p>
               </div>
 
               {/* Feature 3 */}
@@ -133,8 +150,8 @@ export default function Home() {
                 <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Layers className="w-7 h-7" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Repurposed Content</h3>
-                <p className="text-slate-300 leading-relaxed">Convert to Twitter threads, LinkedIn posts, and YouTube descriptions with one click</p>
+                <h3 className="text-xl font-bold mb-3">Content Repurposing</h3>
+                <p className="text-slate-300 leading-relaxed">Transform a single piece of content into multiple formats for different platforms with one click.</p>
               </div>
 
               {/* Feature 4 */}
@@ -142,8 +159,8 @@ export default function Home() {
                 <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Clock className="w-7 h-7" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Instant Generation</h3>
-                <p className="text-slate-300 leading-relaxed">Get complete content packages in seconds, not hours. No waiting, no delays</p>
+                <h3 className="text-xl font-bold mb-3">AI Video & Media Generation</h3>
+                <p className="text-slate-300 leading-relaxed">Automatically generate stunning videos, images, and other media assets from your content ideas.</p>
               </div>
 
               {/* Feature 5 */}
@@ -151,8 +168,8 @@ export default function Home() {
                 <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Sparkles className="w-7 h-7" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Pro Automation</h3>
-                <p className="text-slate-300 leading-relaxed">Schedule content generation on any platform, any time. Full automation for Pro users</p>
+                <h3 className="text-xl font-bold mb-3">Scheduling & Auto-Reply Automation</h3>
+                <p className="text-slate-300 leading-relaxed">Schedule posts across all your social media platforms and automate replies to engage your audience 24/7.</p>
               </div>
 
               {/* Feature 6 */}
@@ -160,8 +177,8 @@ export default function Home() {
                 <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Rocket className="w-7 h-7" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Optimization Tips</h3>
-                <p className="text-slate-300 leading-relaxed">Get posting times, engagement strategies, and proven tactics for maximum reach</p>
+                <h3 className="text-xl font-bold mb-3">Advanced Analytics</h3>
+                <p className="text-slate-300 leading-relaxed">Gain deep insights into your content performance, audience engagement, and growth metrics across all platforms.</p>
               </div>
             </div>
           </div>
@@ -192,8 +209,21 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="border-t border-purple-500/20 py-12 px-4 mt-20">
-          <div className="max-w-6xl mx-auto text-center text-slate-400 text-sm">
-            <p>© 2026 AI Content Engine. All rights reserved. | Powered by Advanced AI</p>
+          <div className="max-w-6xl mx-auto">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-8">
+              <div className="flex items-center space-x-2">
+                <img src="/manus-storage/ai-content-engine-logo_c06be0a7.png" alt="AI Content Engine Logo" className="h-8" />
+                <span className="text-lg font-bold text-white">AI Content Engine</span>
+              </div>
+              <nav className="flex flex-wrap gap-6 justify-center md:justify-end">
+                <a href="/privacy" className="text-slate-400 hover:text-purple-400 transition-colors">Privacy Policy</a>
+                <a href="/terms" className="text-slate-400 hover:text-purple-400 transition-colors">Terms of Service</a>
+                <a href="mailto:kiddotv1411@gmail.com" className="text-slate-400 hover:text-purple-400 transition-colors">Contact Us</a>
+              </nav>
+            </div>
+            <div className="border-t border-purple-500/20 pt-8 text-center text-slate-400 text-sm">
+              <p>© 2026 AI Content Engine. All rights reserved. | Powered by Advanced AI</p>
+            </div>
           </div>
         </footer>
       </div>
