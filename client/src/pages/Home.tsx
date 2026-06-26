@@ -20,10 +20,9 @@ export default function Home() {
 
   const handleGetStarted = () => {
     if (isAuthenticated) {
-      navigate("/generator");
+      navigate("/dashboard");
     } else {
       window.location.href = getLoginUrl();
-      // After login, user will be redirected to /generator via callback
     }
   };
 
@@ -50,7 +49,7 @@ export default function Home() {
                   onClick={handleGetStarted}
                   className="px-6 py-3 text-md font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg shadow-lg transition-all duration-300"
                 >
-                  Sign In / Sign Up
+                  {isAuthenticated ? "Go to Dashboard" : "Sign In / Sign Up"}
                 </Button>
               </nav>
             </div>

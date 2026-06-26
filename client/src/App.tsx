@@ -85,8 +85,8 @@ function PublicRoute({ component: Component, path, ...rest }: any) {
   const [, navigate] = useLocation();
 
   useEffect(() => {
-    // If user is authenticated and tries to access login page, redirect to dashboard
-    if (!loading && user && (path === "/" || path === "/login")) {
+    // Only redirect to dashboard if user is on the login page (not the landing page)
+    if (!loading && user && path === "/login") {
       navigate("/dashboard");
     }
   }, [user, loading, navigate, path]);
