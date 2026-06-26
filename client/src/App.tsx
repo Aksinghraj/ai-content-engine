@@ -108,7 +108,7 @@ function Router() {
       <Switch>
          {/* Public Routes - No login required */}
         <Route path={"/"}>
-          {(params) => <PublicRoute component={KimiAdvancedHome} path="/" {...params} />}
+          {(params) => <PublicRoute component={Home} path="/" {...params} />}
         </Route>
         <Route path={"/login"}>
           {(params) => <PublicRoute component={LoginEnhanced} path="/login" {...params} />}
