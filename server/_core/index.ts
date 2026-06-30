@@ -10,6 +10,8 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { handleStripeWebhook, verifyStripeSignature } from "./stripeWebhook";
 import { initializeAutomationEngine } from "./automationEngine";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -30,9 +32,38 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 
+// Rate limiter for auth endpoints (login, OTP, etc.)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests. Please try again later." },
+});
+
+// General API rate limiter
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 async function startServer() {
   const app = express();
   const server = createServer(app);
+
+  // Security headers
+  app.use(helmet({
+    contentSecurityPolicy: false, // Managed by Vite in dev; CSP set separately in prod
+    crossOriginEmbedderPolicy: false,
+  }));
+
+  // Apply rate limiting to auth and API routes
+  app.use("/api/oauth", authLimiter);
+  app.use("/api/trpc/auth", authLimiter);
+  app.use("/api/trpc", apiLimiter);
+
   // Dev: log incoming requests for debugging
   if (process.env.NODE_ENV !== "production") {
     app.use((req, res, next) => {
@@ -70,9 +101,9 @@ async function startServer() {
     }
   );
   
-  // Configure body parser with larger size limit for file uploads
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  // Configure body parser - limit to 10mb to prevent DoS
+  app.use(express.json({ limit: "10mb" }));
+  app.use(express.urlencoded({ limit: "10mb", extended: true }));
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   // tRPC API

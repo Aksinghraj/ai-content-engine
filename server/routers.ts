@@ -2,6 +2,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import * as db from "./db";
 import { saveContentHistory, getContentHistoryByUserId, getContentHistoryById, getTodayTokenUsage, trackTokenUsage } from "./db";
@@ -52,6 +53,13 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const success = await db.verifyEmailToken(input.token);
         return { success };
+      }),
+    resendOtp: protectedProcedure
+      .mutation(async ({ ctx }) => {
+        const { sendVerificationEmail } = await import("./_core/emailService");
+        const otp = await db.generateEmailVerificationToken(ctx.user.id);
+        const sent = await sendVerificationEmail(ctx.user.email ?? "", ctx.user.name ?? "", otp);
+        return { success: sent };
       }),
   }),
 
@@ -201,6 +209,19 @@ export const appRouter = router({
       )
       .mutation(async ({ ctx, input }) => {
         const user = ctx.user;
+        const FREE_GENERATION_LIMIT = 3;
+
+        // Enforce free tier generation limit
+        if (user.subscriptionTier !== "pro") {
+          const stats = await db.getUserGenerationStats(user.id);
+          const used = stats?.freeAiGenerationsUsed ?? 0;
+          if (used >= FREE_GENERATION_LIMIT) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: `Free tier limit reached. You have used all ${FREE_GENERATION_LIMIT} free AI generations. Upgrade to Pro for unlimited access.`,
+            });
+          }
+        }
         
         // Generate content
         const generatedContent = await generateContentPackage(input);
@@ -216,8 +237,11 @@ export const appRouter = router({
           generatedContent: JSON.stringify(generatedContent),
         });
         
-        // Track token usage
+        // Track token usage and increment free generation counter
         await trackTokenUsage(user.id, 1);
+        if (user.subscriptionTier !== "pro") {
+          await db.incrementFreeAiGenerations(user.id);
+        }
         
         return generatedContent;
       }),

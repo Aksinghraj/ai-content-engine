@@ -68,13 +68,13 @@ export async function sendEmail(payload: EmailPayload): Promise<boolean> {
 }
 
 /**
- * Sends a verification email to a new user
+ * Sends an OTP verification email to a new user
  */
 export async function sendVerificationEmail(
   email: string,
   userName: string,
-  verificationToken: string,
-  verificationUrl: string
+  otp: string,
+  _verificationUrl?: string  // kept for backward compat, not used
 ): Promise<boolean> {
   const htmlContent = `
     <!DOCTYPE html>
@@ -82,35 +82,45 @@ export async function sendVerificationEmail(
       <head>
         <meta charset="UTF-8">
         <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }
-          .content { background: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }
-          .button { display: inline-block; background: #667eea; color: white; padding: 12px 30px; border-radius: 5px; text-decoration: none; margin: 20px 0; }
-          .footer { margin-top: 20px; font-size: 12px; color: #666; text-align: center; }
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; background: #f4f4f4; margin: 0; padding: 0; }
+          .wrapper { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .card { background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+          .header { background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%); color: white; padding: 32px 24px; text-align: center; }
+          .header h1 { margin: 0; font-size: 24px; font-weight: 700; }
+          .header p { margin: 8px 0 0; opacity: 0.85; font-size: 14px; }
+          .content { padding: 32px 24px; }
+          .otp-box { background: #f8f4ff; border: 2px dashed #7c3aed; border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0; }
+          .otp-label { font-size: 13px; color: #6b7280; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+          .otp-code { font-size: 42px; font-weight: 900; color: #7c3aed; letter-spacing: 8px; font-family: monospace; }
+          .expiry { font-size: 13px; color: #9ca3af; margin-top: 8px; }
+          .warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 4px; font-size: 13px; color: #92400e; margin-top: 20px; }
+          .footer { padding: 20px 24px; background: #f9fafb; text-align: center; font-size: 12px; color: #9ca3af; }
         </style>
       </head>
       <body>
-        <div class="container">
-          <div class="header">
-            <h1>Welcome to Lumae AI</h1>
-          </div>
-          <div class="content">
-            <p>Hi ${userName || "there"},</p>
-            <p>Thank you for signing up! Please verify your email address to complete your registration and unlock all features of Lumae AI.</p>
-            <p style="text-align: center;">
-              <a href="${verificationUrl}" class="button">Verify Email Address</a>
-            </p>
-            <p>Or copy and paste this link in your browser:</p>
-            <p style="word-break: break-all; background: white; padding: 10px; border-radius: 5px; font-size: 12px;">
-              ${verificationUrl}
-            </p>
-            <p>This link will expire in 24 hours.</p>
-            <p>If you didn't create this account, please ignore this email.</p>
-          </div>
-          <div class="footer">
-            <p>&copy; 2026 Lumae AI. All rights reserved.</p>
-            <p>This is an automated message, please do not reply to this email.</p>
+        <div class="wrapper">
+          <div class="card">
+            <div class="header">
+              <h1>✨ Lumae AI</h1>
+              <p>Email Verification</p>
+            </div>
+            <div class="content">
+              <p>Hi <strong>${userName || "there"}</strong>,</p>
+              <p>Welcome to Lumae AI! Use the OTP below to verify your email address and unlock all features.</p>
+              <div class="otp-box">
+                <div class="otp-label">Your Verification Code</div>
+                <div class="otp-code">${otp}</div>
+                <div class="expiry">⏱ Expires in 10 minutes</div>
+              </div>
+              <p>Enter this code on the verification page to complete your registration.</p>
+              <div class="warning">
+                🔒 Never share this code with anyone. Lumae AI will never ask for your OTP.
+              </div>
+            </div>
+            <div class="footer">
+              <p>© 2026 Lumae AI. All rights reserved.</p>
+              <p>If you didn't create this account, you can safely ignore this email.</p>
+            </div>
           </div>
         </div>
       </body>
@@ -119,7 +129,7 @@ export async function sendVerificationEmail(
 
   return sendEmail({
     to: email,
-    subject: "Verify your Lumae AI email address",
+    subject: `${otp} is your Lumae AI verification code`,
     htmlContent,
   });
 }

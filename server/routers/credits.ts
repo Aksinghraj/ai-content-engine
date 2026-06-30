@@ -1,6 +1,6 @@
 import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
-import { getUserCredits, initializeUserCredits, addCredits, getCreditTransactions, getCreditPackages } from "../db";
+import { getUserCredits, initializeUserCredits, addCredits, getCreditTransactions, getCreditPackages, getUserGenerationStats } from "../db";
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", { apiVersion: "2026-04-22.dahlia" });
@@ -22,6 +22,19 @@ export const creditsRouter = router({
       balance: credits.balance,
       totalPurchased: credits.totalPurchased,
       totalUsed: credits.totalUsed,
+    };
+  }),
+
+  /**
+   * Get user's generation stats (free AI uses + image/video credits)
+   */
+  getGenerationStats: protectedProcedure.query(async ({ ctx }) => {
+    const stats = await getUserGenerationStats(ctx.user.id);
+    return {
+      freeAiGenerationsUsed: stats?.freeAiGenerationsUsed ?? 0,
+      freeAiGenerationsLimit: 3,
+      imageVideoCredits: stats?.imageVideoCredits ?? 0,
+      subscriptionTier: stats?.subscriptionTier ?? "free",
     };
   }),
 

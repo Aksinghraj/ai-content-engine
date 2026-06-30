@@ -35,6 +35,10 @@ export const users = mysqlTable("users", {
   emailVerified: boolean("emailVerified").default(false).notNull(),
   emailVerificationToken: varchar("emailVerificationToken", { length: 255 }),
   emailVerificationTokenExpiresAt: timestamp("emailVerificationTokenExpiresAt"),
+  // Free AI text generation counter (max 3 for free tier)
+  freeAiGenerationsUsed: int("freeAiGenerationsUsed").default(0).notNull(),
+  // Credits for image/video generation (free users get 5 to start)
+  imageVideoCredits: int("imageVideoCredits").default(5).notNull(),
 });
 
 export type User = typeof users.$inferSelect;

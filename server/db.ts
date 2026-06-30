@@ -729,19 +729,19 @@ export async function generateEmailVerificationToken(userId: number): Promise<st
     throw new Error("Database not available");
   }
 
-  // Generate a random token
-  const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+  // Generate a 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-  // Update user with verification token
+  // Update user with OTP
   await db.update(users)
     .set({
-      emailVerificationToken: token,
+      emailVerificationToken: otp,
       emailVerificationTokenExpiresAt: expiresAt,
     })
     .where(eq(users.id, userId));
 
-  return token;
+  return otp;
 }
 
 export async function verifyEmailToken(token: string): Promise<boolean> {
@@ -785,4 +785,80 @@ export async function getUserByEmail(email: string) {
 
   const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
   return result.length > 0 ? result[0] : undefined;
+}
+
+// ============================================================================
+// Generation Credits & Free Quota Helpers
+// ============================================================================
+
+/** Returns the user's current free AI generation count and image/video credits */
+export async function getUserGenerationStats(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    const result = await db
+      .select({
+        freeAiGenerationsUsed: users.freeAiGenerationsUsed,
+        imageVideoCredits: users.imageVideoCredits,
+        subscriptionTier: users.subscriptionTier,
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error("[Database] Failed to get generation stats:", error);
+    return null;
+  }
+}
+
+/** Increments freeAiGenerationsUsed by 1 — call after a successful AI text generation */
+export async function incrementFreeAiGenerations(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    await db
+      .update(users)
+      .set({ freeAiGenerationsUsed: sql`freeAiGenerationsUsed + 1` })
+      .where(eq(users.id, userId));
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to increment free AI generations:", error);
+    return false;
+  }
+}
+
+/** Deducts imageVideoCredits by 1 — call before image/video generation */
+export async function deductImageVideoCredit(userId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  try {
+    // Atomic deduct only if balance > 0
+    const result = await db
+      .update(users)
+      .set({ imageVideoCredits: sql`imageVideoCredits - 1` })
+      .where(and(eq(users.id, userId), sql`imageVideoCredits > 0`));
+    // rowsAffected > 0 means deduction succeeded
+    const affected = (result as any)?.[0]?.affectedRows ?? (result as any)?.rowsAffected ?? 1;
+    return affected > 0;
+  } catch (error) {
+    console.error("[Database] Failed to deduct image/video credit:", error);
+    return false;
+  }
+}
+
+/** Adds imageVideoCredits (e.g., after a credit purchase) */
+export async function addImageVideoCredits(userId: number, amount: number) {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    await db
+      .update(users)
+      .set({ imageVideoCredits: sql`imageVideoCredits + ${amount}` })
+      .where(eq(users.id, userId));
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to add image/video credits:", error);
+    return false;
+  }
 }

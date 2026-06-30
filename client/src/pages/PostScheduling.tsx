@@ -62,7 +62,7 @@ interface PostDraft {
 }
 
 const PLATFORM_CHAR_LIMITS: Record<string, number> = {
-  twitter: 280,
+  twitter: 1500,
   instagram: 2200,
   linkedin: 3000,
   facebook: 63206,
@@ -276,8 +276,8 @@ function PostSchedulingContent() {
 
   const contentLength = postDraft.content.length;
   const charLimit = postDraft.selectedPlatforms.length > 0
-    ? Math.min(...postDraft.selectedPlatforms.map(p => PLATFORM_CHAR_LIMITS[p] || 280))
-    : 280;
+    ? Math.min(...postDraft.selectedPlatforms.map(p => PLATFORM_CHAR_LIMITS[p] || 1500))
+    : 1500;
   const charPercentage = (contentLength / charLimit) * 100;
 
   const platformList = ["twitter", "instagram", "linkedin", "facebook", "youtube", "tiktok"];

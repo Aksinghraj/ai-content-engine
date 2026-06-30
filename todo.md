@@ -646,3 +646,15 @@
 - [x] Add route /media-generation to App.tsx
 - [x] All tests passing (461 tests)
 - [x] Zero TypeScript errors
+## Round 3 Bug Fixes & Features (Jun 30 2026)
+
+- [ ] Fix OAuth redirect loop - ?code= param appearing in URL after login/publish
+- [ ] Fix logout state bug - home page showing "Go to Dashboard" after logout
+- [ ] Fix mobile responsive UI - buttons overlapping on phone and PC glitches
+- [ ] Fix post scheduling character limit from 280 to 1500
+- [ ] Apply UI/UX skill improvements (mobile-first, touch targets, responsive)
+- [ ] Implement OTP email verification for new accounts
+- [ ] Security audit - fix critical/high vulnerabilities
+- [ ] SEO improvements - footer, pricing signal, how-it-works, social proof
+- [ ] Fix SSR/prerendering for Googlebot
+- [ ] Build credits system for image/video generation (3 free AI text generations)

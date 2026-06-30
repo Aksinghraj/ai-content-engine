@@ -175,19 +175,27 @@ export function registerOAuthRoutes(app: Express) {
 
       // Get the user to access their ID for email verification
       const user = await db.getUserByOpenId(openId);
-      if (user && profile.email) {
-        // Generate email verification token
-        const verificationToken = await db.generateEmailVerificationToken(user.id);
-        const verificationUrl = `${origin}/verify-email?token=${verificationToken}`;
-        
-        // Send verification email
-        await sendVerificationEmail(
-          profile.email,
-          profile.name || "User",
-          verificationToken,
-          verificationUrl
-        );
-        console.log("[Google OAuth] Verification email sent to", profile.email);
+      const isNewUser = !user; // User didn't exist before upsert
+      
+      if (isNewUser && profile.email) {
+        // Only send verification email to NEW users
+        const freshUser = await db.getUserByOpenId(openId);
+        if (freshUser) {
+          try {
+            const verificationToken = await db.generateEmailVerificationToken(freshUser.id);
+            const verificationUrl = `${origin}/verify-email?token=${verificationToken}`;
+            await sendVerificationEmail(
+              profile.email,
+              profile.name || "User",
+              verificationToken,
+              verificationUrl
+            );
+            console.log("[Google OAuth] Verification email sent to new user:", profile.email);
+          } catch (emailErr) {
+            console.warn("[Google OAuth] Failed to send verification email:", emailErr);
+            // Don't block login if email fails
+          }
+        }
       }
 
       // Ensure name is never empty — verifySession rejects tokens with empty name
@@ -202,8 +210,12 @@ export function registerOAuthRoutes(app: Express) {
 
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
-      console.log("[Google OAuth] Cookie set, redirecting to", returnPath);
-      return res.redirect(302, returnPath);
+      
+      // Redirect to dashboard after login, not home page
+      // This prevents the ?code= param from being visible on the home page
+      const redirectTarget = returnPath === "/" ? "/dashboard" : returnPath;
+      console.log("[Google OAuth] Cookie set, redirecting to", redirectTarget);
+      return res.redirect(302, redirectTarget);
     } catch (err) {
       console.error("[Google OAuth] Callback error:", err);
       return res.redirect(`/login?error=${encodeURIComponent("internal_error")}`);

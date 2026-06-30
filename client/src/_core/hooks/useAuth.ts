@@ -26,34 +26,21 @@ export function useAuth(options?: UseAuthOptions) {
 
   const logout = useCallback(async () => {
     try {
-      // Set flag to prevent redirect loop during logout
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("is_logging_out", "true");
-      }
       await logoutMutation.mutateAsync();
     } catch (error: unknown) {
       if (
         error instanceof TRPCClientError &&
         error.data?.code === "UNAUTHORIZED"
       ) {
-        // Expected error when already logged out
+        // Expected error when already logged out — still clear state
       } else {
         throw error;
       }
     } finally {
-      // Clear cache immediately
+      // Immediately wipe the cached user from React Query
       utils.auth.me.setData(undefined, null);
-      // Invalidate to trigger a fresh fetch from server
+      // Force a fresh fetch so any component reading useAuth sees null
       await utils.auth.me.invalidate();
-      
-      if (typeof window !== "undefined") {
-        // Clear the flag
-        sessionStorage.removeItem("is_logging_out");
-        // Use a small delay to ensure cache is cleared before navigation
-        setTimeout(() => {
-          window.location.href = "/";
-        }, 100);
-      }
     }
   }, [logoutMutation, utils]);
 

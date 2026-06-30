@@ -28,7 +28,8 @@ export default function Header() {
 
   const handleLogout = async () => {
     await logout();
-    navigate("/");
+    // Navigate to home page after cache is cleared
+    window.location.href = "/";
   };
 
   return (

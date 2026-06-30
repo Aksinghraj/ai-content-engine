@@ -117,9 +117,20 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    box-sizing: border-box;
+  }
+  html {
+    /* Remove 300ms tap delay on mobile */
+    touch-action: manipulation;
+    /* Prevent horizontal overflow */
+    overflow-x: hidden;
   }
   body {
     @apply bg-background text-foreground;
+    /* Prevent horizontal overflow on mobile */
+    overflow-x: hidden;
+    /* Use dynamic viewport height for mobile browsers */
+    min-height: 100dvh;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),

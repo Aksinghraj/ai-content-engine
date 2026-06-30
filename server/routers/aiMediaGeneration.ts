@@ -1,11 +1,24 @@
 import { router, protectedProcedure } from "../_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { generateImage } from "../_core/imageGeneration";
 import { invokeLLM } from "../_core/llm";
+import { getUserGenerationStats, deductImageVideoCredit } from "../db";
 
 export const aiMediaGeneration = router({
   /**
-   * Generate an image based on a prompt
+   * Get user's remaining image/video credits
+   */
+  getCredits: protectedProcedure.query(async ({ ctx }) => {
+    const stats = await getUserGenerationStats(ctx.user.id);
+    return {
+      imageVideoCredits: stats?.imageVideoCredits ?? 0,
+      subscriptionTier: stats?.subscriptionTier ?? "free",
+    };
+  }),
+
+  /**
+   * Generate an image based on a prompt (costs 1 image/video credit)
    */
   generateImage: protectedProcedure
     .input(
@@ -15,6 +28,28 @@ export const aiMediaGeneration = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // Pro users have unlimited image generation
+      if (ctx.user.subscriptionTier !== "pro") {
+        const stats = await getUserGenerationStats(ctx.user.id);
+        const credits = stats?.imageVideoCredits ?? 0;
+
+        if (credits <= 0) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You have no image/video credits remaining. Upgrade to Pro or purchase more credits.",
+          });
+        }
+
+        // Deduct 1 credit atomically
+        const deducted = await deductImageVideoCredit(ctx.user.id);
+        if (!deducted) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Insufficient image/video credits.",
+          });
+        }
+      }
+
       try {
         const enhancedPrompt = `Create a professional, high-quality image for social media: ${input.prompt}. Style: modern, clean, professional. Resolution: 1920x1080.`;
 
@@ -29,6 +64,11 @@ export const aiMediaGeneration = router({
           generatedAt: new Date(),
         };
       } catch (error) {
+        // Refund the credit if generation failed
+        if (ctx.user.subscriptionTier !== "pro") {
+          const { addImageVideoCredits } = await import("../db");
+          await addImageVideoCredits(ctx.user.id, 1);
+        }
         console.error("Image generation error:", error);
         return {
           success: false,
@@ -38,7 +78,7 @@ export const aiMediaGeneration = router({
     }),
 
   /**
-   * Generate a video based on a prompt and duration
+   * Generate a video based on a prompt (costs 2 image/video credits)
    */
   generateVideo: protectedProcedure
     .input(
@@ -50,6 +90,30 @@ export const aiMediaGeneration = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // Pro users have unlimited video generation
+      if (ctx.user.subscriptionTier !== "pro") {
+        const stats = await getUserGenerationStats(ctx.user.id);
+        const credits = stats?.imageVideoCredits ?? 0;
+        const VIDEO_COST = 2;
+
+        if (credits < VIDEO_COST) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: `Video generation costs ${VIDEO_COST} credits. You have ${credits} credit(s). Upgrade to Pro or purchase more credits.`,
+          });
+        }
+
+        // Deduct 2 credits (one at a time atomically)
+        const d1 = await deductImageVideoCredit(ctx.user.id);
+        const d2 = await deductImageVideoCredit(ctx.user.id);
+        if (!d1 || !d2) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Insufficient image/video credits.",
+          });
+        }
+      }
+
       try {
         if (input.duration < 15 || input.duration > 90) {
           return {
@@ -90,6 +154,11 @@ Format: 16:9 aspect ratio, 1920x1080 resolution`;
           status: "generating",
         };
       } catch (error) {
+        // Refund credits if generation failed
+        if (ctx.user.subscriptionTier !== "pro") {
+          const { addImageVideoCredits } = await import("../db");
+          await addImageVideoCredits(ctx.user.id, 2);
+        }
         console.error("Video generation error:", error);
         return {
           success: false,
@@ -104,11 +173,11 @@ Format: 16:9 aspect ratio, 1920x1080 resolution`;
   checkDownloadAccess: protectedProcedure
     .input(z.object({ mediaType: z.enum(["image", "video"]) }))
     .query(async ({ ctx }) => {
-      const hasSubscription = ctx.user.role === "admin" || false;
+      const hasSubscription = ctx.user.subscriptionTier === "pro" || ctx.user.role === "admin";
 
       return {
         canDownload: hasSubscription,
-        message: hasSubscription ? "You have access to download" : "Subscribe to download generated media",
+        message: hasSubscription ? "You have access to download" : "Upgrade to Pro to download generated media",
         subscriptionRequired: !hasSubscription,
       };
     }),
