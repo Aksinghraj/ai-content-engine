@@ -9,7 +9,7 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>
             <p className="text-foreground/90 leading-relaxed">
-              AI Content Engine ("we", "us", "our", or "Company") operates the AI Content Engine application. This page informs you of our policies regarding the collection, use, and disclosure of personal data when you use our Service and the choices you have associated with that data.
+              Lumae AI ("we", "us", "our", or "Company") operates the Lumae AI application. This page informs you of our policies regarding the collection, use, and disclosure of personal data when you use our Service and the choices you have associated with that data.
             </p>
           </section>
 
@@ -29,7 +29,7 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">3. Use of Data</h2>
             <p className="text-foreground/90 leading-relaxed mb-4">
-              AI Content Engine uses the collected data for various purposes:
+              Lumae AI uses the collected data for various purposes:
             </p>
             <ul className="list-disc list-inside space-y-2 text-foreground/90">
               <li>To provide and maintain our Service</li>

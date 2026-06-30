@@ -79,7 +79,7 @@ ${(scoreData.recommendations || []).map((rec: string) => `• ${rec}`).join("\n"
       title: "Viral Score Analysis Report",
       content: scoreText,
       metadata: {
-        author: "AI Content Engine",
+        author: "Lumae AI",
         subject: "Viral Score Analysis",
         keywords: "viral score, content analysis, AI generated",
       },

@@ -41,7 +41,7 @@ export function getTimeBasedGreeting(): string {
  */
 export function generateWelcomeMessage(userName: string): string {
   const greeting = getTimeBasedGreeting();
-  return `${greeting}, ${userName}! Welcome back to AI Content Engine.`;
+  return `${greeting}, ${userName}! Welcome back to Lumae AI.`;
 }
 
 /**

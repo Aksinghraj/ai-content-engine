@@ -18,23 +18,23 @@ interface VideoPlayerProps {
 
 const SUBTITLE_DATA: Record<string, Subtitle[]> = {
   en: [
-    { start: 0, end: 5, text: "Welcome to AI Content Engine" },
+    { start: 0, end: 5, text: "Welcome to Lumae AI" },
     { start: 5, end: 10, text: "Create viral content with AI in seconds" },
     { start: 10, end: 15, text: "Chat with your personal AI assistant" },
     { start: 15, end: 20, text: "Connect all your social accounts securely" },
     { start: 20, end: 25, text: "Schedule posts to multiple platforms at once" },
-    { start: 25, end: 30, text: "Track your automation performance in real-time. Start growing your audience today with AI Content Engine." },
+    { start: 25, end: 30, text: "Track your automation performance in real-time. Start growing your audience today with Lumae AI." },
   ],
   hi: [
-    { start: 0, end: 5, text: "AI Content Engine mein aapka swagat hai" },
+    { start: 0, end: 5, text: "Lumae AI mein aapka swagat hai" },
     { start: 5, end: 10, text: "AI ke saath viral content banaye seconds mein" },
     { start: 10, end: 15, text: "Apne personal AI assistant ke saath chat kare" },
     { start: 15, end: 20, text: "Sab social accounts ko securely connect kare" },
     { start: 20, end: 25, text: "Multiple platforms par ek saath posts schedule kare" },
-    { start: 25, end: 30, text: "Real-time mein apna automation performance track kare. AI Content Engine ke saath aaj hi shuru kare." },
+    { start: 25, end: 30, text: "Real-time mein apna automation performance track kare. Lumae AI ke saath aaj hi shuru kare." },
   ],
   es: [
-    { start: 0, end: 5, text: "Bienvenido a AI Content Engine" },
+    { start: 0, end: 5, text: "Bienvenido a Lumae AI" },
     { start: 5, end: 10, text: "Crea contenido viral con IA en segundos" },
     { start: 10, end: 15, text: "Chatea con tu asistente de IA personal" },
     { start: 15, end: 20, text: "Conecta todas tus cuentas de redes sociales de forma segura" },
@@ -42,7 +42,7 @@ const SUBTITLE_DATA: Record<string, Subtitle[]> = {
     { start: 25, end: 30, text: "Realiza un seguimiento del rendimiento de tu automatización en tiempo real. Comienza a crecer tu audiencia hoy." },
   ],
   fr: [
-    { start: 0, end: 5, text: "Bienvenue sur AI Content Engine" },
+    { start: 0, end: 5, text: "Bienvenue sur Lumae AI" },
     { start: 5, end: 10, text: "Créez du contenu viral avec l'IA en secondes" },
     { start: 10, end: 15, text: "Discutez avec votre assistant IA personnel" },
     { start: 15, end: 20, text: "Connectez tous vos comptes de réseaux sociaux en toute sécurité" },
@@ -50,7 +50,7 @@ const SUBTITLE_DATA: Record<string, Subtitle[]> = {
     { start: 25, end: 30, text: "Suivez les performances de votre automatisation en temps réel. Commencez à développer votre audience aujourd'hui." },
   ],
   de: [
-    { start: 0, end: 5, text: "Willkommen bei AI Content Engine" },
+    { start: 0, end: 5, text: "Willkommen bei Lumae AI" },
     { start: 5, end: 10, text: "Erstellen Sie virale Inhalte mit KI in Sekunden" },
     { start: 10, end: 15, text: "Chatten Sie mit Ihrem persönlichen KI-Assistenten" },
     { start: 15, end: 20, text: "Verbinden Sie alle Ihre Social-Media-Konten sicher" },
@@ -58,7 +58,7 @@ const SUBTITLE_DATA: Record<string, Subtitle[]> = {
     { start: 25, end: 30, text: "Verfolgen Sie die Leistung Ihrer Automatisierung in Echtzeit. Beginnen Sie heute mit dem Wachstum Ihrer Zielgruppe." },
   ],
   pt: [
-    { start: 0, end: 5, text: "Bem-vindo ao AI Content Engine" },
+    { start: 0, end: 5, text: "Bem-vindo ao Lumae AI" },
     { start: 5, end: 10, text: "Crie conteúdo viral com IA em segundos" },
     { start: 10, end: 15, text: "Converse com seu assistente de IA pessoal" },
     { start: 15, end: 20, text: "Conecte todas as suas contas de redes sociais com segurança" },
@@ -66,7 +66,7 @@ const SUBTITLE_DATA: Record<string, Subtitle[]> = {
     { start: 25, end: 30, text: "Acompanhe o desempenho da sua automação em tempo real. Comece a crescer sua audiência hoje." },
   ],
   ja: [
-    { start: 0, end: 5, text: "AI Content Engineへようこそ" },
+    { start: 0, end: 5, text: "Lumae AIへようこそ" },
     { start: 5, end: 10, text: "AIを使用してバイラルコンテンツを数秒で作成" },
     { start: 10, end: 15, text: "パーソナルAIアシスタントとチャット" },
     { start: 15, end: 20, text: "すべてのソーシャルメディアアカウントを安全に接続" },
@@ -90,7 +90,7 @@ const SUBTITLE_DATA: Record<string, Subtitle[]> = {
     { start: 25, end: 30, text: "تتبع أداء الأتمتة الخاصة بك في الوقت الفعلي. ابدأ بتنمية جمهورك اليوم." },
   ],
   ru: [
-    { start: 0, end: 5, text: "Добро пожаловать в AI Content Engine" },
+    { start: 0, end: 5, text: "Добро пожаловать в Lumae AI" },
     { start: 5, end: 10, text: "Создавайте вирусный контент с помощью ИИ за секунды" },
     { start: 10, end: 15, text: "Общайтесь со своим личным помощником на основе ИИ" },
     { start: 15, end: 20, text: "Безопасно подключайте все свои учетные записи в социальных сетях" },
@@ -101,7 +101,7 @@ const SUBTITLE_DATA: Record<string, Subtitle[]> = {
 
 export default function VideoPlayer({
   src,
-  title = "AI Content Engine Demo",
+  title = "Lumae AI Demo",
   subtitles = SUBTITLE_DATA,
   defaultLanguage = "en",
   autoPlay = false,

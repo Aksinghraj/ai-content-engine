@@ -99,7 +99,7 @@ export default function RepurposingEngine() {
       title: "Multi-Platform Repurposed Content",
       content: allContent,
       metadata: {
-        author: "AI Content Engine",
+        author: "Lumae AI",
         subject: "Multi-Platform Repurposed Content",
         keywords: "content repurposing, multi-platform, AI generated",
       },

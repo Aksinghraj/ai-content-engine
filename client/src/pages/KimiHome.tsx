@@ -73,7 +73,7 @@ export default function KimiHome() {
               <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${gradient} flex items-center justify-center`}>
                 <Brain className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-white">AI Content Engine</h1>
+              <h1 className="text-2xl font-bold text-white">Lumae AI</h1>
             </div>
             <Button
               onClick={() => setLocation("/social-automation")}
@@ -171,7 +171,7 @@ export default function KimiHome() {
           <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 rounded-2xl p-12">
             <h3 className="text-3xl font-bold text-white mb-4">Ready to Transform Your Content?</h3>
             <p className="text-gray-300 mb-8 max-w-xl mx-auto">
-              Join thousands of creators using AI Content Engine to automate their social media strategy.
+              Join thousands of creators using Lumae AI to automate their social media strategy.
             </p>
             <Button
               onClick={() => setLocation("/post-scheduling")}
@@ -185,7 +185,7 @@ export default function KimiHome() {
         {/* Footer */}
         <footer className="border-t border-white/10 bg-black/20 backdrop-blur-md">
           <div className="container mx-auto px-4 py-8 text-center text-gray-400 text-sm">
-            <p>© 2026 AI Content Engine. Powered by Kimi AI principles.</p>
+            <p>© 2026 Lumae AI. Powered by Kimi AI principles.</p>
           </div>
         </footer>
       </div>

@@ -71,7 +71,7 @@ export default function KimiAdvancedHome() {
               <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${getTopicGradient(currentTopic as any)} flex items-center justify-center`}>
                 <Brain className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-white">AI Content Engine</h1>
+              <h1 className="text-2xl font-bold text-white">Lumae AI</h1>
             </div>
             <Button
               onClick={() => setLocation("/dashboard")}
@@ -181,7 +181,7 @@ export default function KimiAdvancedHome() {
         {/* Footer */}
         <footer className="border-t border-white/10 bg-black/20 backdrop-blur-md mt-12">
           <div className="container mx-auto px-4 py-8 text-center text-gray-400 text-sm">
-            <p>© 2026 AI Content Engine. Powered by Kimi AI principles.</p>
+            <p>© 2026 Lumae AI. Powered by Kimi AI principles.</p>
           </div>
         </footer>
       </div>

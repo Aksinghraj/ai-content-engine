@@ -99,7 +99,7 @@ export default function ContentRewriter() {
       title: `Content Rewritten - ${selectedStyle.toUpperCase()} Style`,
       content: rewrittenContent,
       metadata: {
-        author: "AI Content Engine",
+        author: "Lumae AI",
         subject: `Content Rewritten in ${selectedStyle} Style`,
         keywords: "content rewriting, AI generated",
       },

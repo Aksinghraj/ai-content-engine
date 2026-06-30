@@ -26,9 +26,9 @@ export function exportToPDF(options: PDFExportOptions) {
       pdf.setProperties({
         title: metadata.subject || title,
         subject: metadata.subject || "",
-        author: metadata.author || "AI Content Engine",
+        author: metadata.author || "Lumae AI",
         keywords: metadata.keywords || "",
-        creator: "AI Content Engine",
+        creator: "Lumae AI",
       });
     }
 
@@ -54,7 +54,7 @@ export function exportToPDF(options: PDFExportOptions) {
     const timestamp = new Date().toLocaleString();
     pdf.text(`Generated: ${timestamp}`, margin, yPosition);
     yPosition += 8;
-    pdf.text(`Source: AI Content Engine`, margin, yPosition);
+    pdf.text(`Source: Lumae AI`, margin, yPosition);
     yPosition += 15;
 
     // Reset text color

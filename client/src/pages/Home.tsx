@@ -138,7 +138,7 @@ export default function Home() {
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
-              <span className="text-2xl font-bold text-white">AI Content Engine</span>
+              <span className="text-2xl font-bold text-white">Lumae AI</span>
             </div>
             <nav>
               <Button
@@ -162,15 +162,15 @@ export default function Home() {
 
             {/* Main Headline */}
             <h1 className="text-6xl md:text-7xl lg:text-8xl font-black mb-6 leading-tight tracking-tight">
-              Create Viral Content in
+              Create Viral Content with
               <span className="block bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent animate-pulse">
-                Seconds
+                Lumae AI
               </span>
             </h1>
 
             {/* Subheadline */}
             <p className="text-lg md:text-xl text-slate-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Generate complete, high-engagement content packages tailored to your niche, audience, and platform. Ready to post. Ready to convert.
+              The AI-powered platform that generates, schedules, and automates social media content across all platforms. Transform your content strategy in seconds.
             </p>
 
             {/* CTA Buttons */}
@@ -213,9 +213,9 @@ export default function Home() {
         <section className="py-20 px-4">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-4xl md:text-5xl font-black text-center mb-4">
-              Everything You Need to
+              Lumae AI Features
               <span className="block text-transparent bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text">
-                Dominate Social Media
+                Everything You Need
               </span>
             </h2>
             <p className="text-center text-slate-300 mb-16 max-w-2xl mx-auto">
@@ -359,7 +359,7 @@ export default function Home() {
               </div>
             </div>
             <div className="border-t border-purple-500/10 pt-8 text-center text-slate-400">
-              <p>&copy; 2026 AI Content Engine. All rights reserved.</p>
+              <p>&copy; 2026 Lumae AI. All rights reserved.</p>
             </div>
           </div>
         </footer>

@@ -60,7 +60,7 @@ export default function LoginEnhanced() {
             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
               <Sparkles className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-white">AI Content Engine</h1>
+            <h1 className="text-3xl font-bold text-white">Lumae AI</h1>
           </div>
           <p className="text-slate-400">Create viral content in seconds</p>
         </div>

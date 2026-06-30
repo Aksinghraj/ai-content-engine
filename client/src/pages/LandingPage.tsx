@@ -137,7 +137,7 @@ export default function LandingPage() {
       <nav className="sticky top-0 z-50 border-b border-purple-500/20 bg-slate-900/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-            AI Content Engine
+            Lumae AI
           </div>
           <div className="flex gap-4">
             {user ? (
@@ -343,7 +343,7 @@ export default function LandingPage() {
       <section className="py-20 sm:py-32 border-t border-purple-500/20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl sm:text-5xl font-bold mb-6">Ready to Transform Your Content?</h2>
-          <p className="text-xl text-gray-300 mb-8">Join 50,000+ creators using AI Content Engine</p>
+          <p className="text-xl text-gray-300 mb-8">Join 50,000+ creators using Lumae AI</p>
 
           <form onSubmit={handleSubscribe} className="flex gap-2 max-w-md mx-auto mb-8">
             <input
@@ -408,7 +408,7 @@ export default function LandingPage() {
           </div>
 
           <div className="border-t border-purple-500/20 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 AI Content Engine. All rights reserved.</p>
+            <p>&copy; 2024 Lumae AI. All rights reserved.</p>
           </div>
         </div>
       </footer>

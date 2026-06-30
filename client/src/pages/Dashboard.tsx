@@ -156,7 +156,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-white">Watch Demo Videos</h3>
-                <p className="text-sm text-slate-300">Learn how to use AI Content Engine - Available in 10+ languages</p>
+                <p className="text-sm text-slate-300">Learn how to use Lumae AI - Available in 10+ languages</p>
               </div>
             </div>
             <Button

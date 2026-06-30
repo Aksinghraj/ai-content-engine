@@ -11,7 +11,7 @@ export default function DemoVideos() {
     {
       id: "full",
       title: "Complete App Walkthrough",
-      description: "See all features of AI Content Engine in one comprehensive demo",
+      description: "See all features of Lumae AI in one comprehensive demo",
       video: "/manus-storage/demo-tutorial-1_009e6e90.mp4",
       duration: "8 seconds (Professional Tutorial)",
       features: ["Dashboard", "Content Generation", "Personal AI", "Social Automation", "Scheduling", "Analytics"],
@@ -31,7 +31,7 @@ export default function DemoVideos() {
             Back to Dashboard
           </button>
           <h1 className="text-4xl font-bold text-white mb-2">Demo Videos</h1>
-          <p className="text-gray-400">Watch how to use AI Content Engine - Available in 10+ languages</p>
+          <p className="text-gray-400">Watch how to use Lumae AI - Available in 10+ languages</p>
         </div>
 
         {/* Main Demo */}
@@ -48,7 +48,7 @@ export default function DemoVideos() {
               {/* Video Player */}
               <VideoPlayer
                 src="/manus-storage/demo-tutorial-1_009e6e90.mp4"
-                title="AI Content Engine - Complete Demo"
+                title="Lumae AI - Complete Demo"
                 defaultLanguage="en"
                 autoPlay={false}
               />

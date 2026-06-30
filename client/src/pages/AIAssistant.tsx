@@ -162,7 +162,7 @@ export default function AIAssistant() {
       title: "AI Assistant Chat Export",
       content: chatContent,
       metadata: {
-        author: "AI Content Engine",
+        author: "Lumae AI",
         subject: "Chat Conversation Export",
         keywords: "chat, AI assistant, conversation",
       },

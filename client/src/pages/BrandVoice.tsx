@@ -153,7 +153,7 @@ ${generatedGuidelines.toneGuidelines?.dont?.length > 0 ? `DON'Ts\n${generatedGui
       title: `${formData.brandName} - Brand Voice Guidelines`,
       content: guidelinesText,
       metadata: {
-        author: "AI Content Engine",
+        author: "Lumae AI",
         subject: `${formData.brandName} Brand Voice Guidelines`,
         keywords: "brand voice, guidelines, brand identity",
       },

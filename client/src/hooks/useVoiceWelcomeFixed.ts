@@ -105,7 +105,7 @@ export function useVoiceWelcomeFixed(options: UseVoiceWelcomeFixedOptions = {}) 
               ? "Good afternoon"
               : "Good evening";
 
-        const greetingMessage = `${timeGreeting}, ${user.name}! Welcome back to AI Content Engine.`;
+        const greetingMessage = `${timeGreeting}, ${user.name}! Welcome back to Lumae AI.`;
 
         console.log("📢 Greeting message:", greetingMessage);
 
