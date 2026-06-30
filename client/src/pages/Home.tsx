@@ -7,7 +7,7 @@ import { Sparkles, Zap, Target, TrendingUp, ArrowRight, Rocket } from "lucide-re
 import * as THREE from "three";
 
 export default function Home() {
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
   const [, navigate] = useLocation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -147,13 +147,31 @@ export default function Home() {
               <img src="/manus-storage/lumae-ai-logo_f4bebb9d.png" alt="Lumae AI" className="w-12 h-12" />
               <span className="text-2xl font-bold text-white">Lumae AI</span>
             </div>
-            <nav>
-              <Button
-                onClick={handleGetStarted}
-                className="px-6 py-3 text-md font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg shadow-lg transition-all duration-300"
-              >
-                {user ? "Go to Dashboard" : "Sign In / Sign Up"}
-              </Button>
+            <nav className="flex items-center gap-4">
+              {user ? (
+                <>
+                  <Button
+                    onClick={handleGetStarted}
+                    className="px-6 py-3 text-md font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg shadow-lg transition-all duration-300"
+                  >
+                    Go to Dashboard
+                  </Button>
+                  <Button
+                    onClick={() => logout().catch(console.error)}
+                    variant="outline"
+                    className="px-6 py-3 text-md font-semibold border-2 border-red-500/50 text-red-300 hover:bg-red-500/10 hover:border-red-500 rounded-lg transition-all duration-300"
+                  >
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  onClick={handleGetStarted}
+                  className="px-6 py-3 text-md font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg shadow-lg transition-all duration-300"
+                >
+                  Sign In / Sign Up
+                </Button>
+              )}
             </nav>
           </div>
         </header>
@@ -181,22 +199,41 @@ export default function Home() {
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-              <Button
-                onClick={handleGetStarted}
-                className="px-8 py-6 text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 transform hover:scale-105"
-              >
-                <Rocket className="w-5 h-5 mr-2" />
-                Start Generating Now
-              </Button>
-              <Button
-                variant="outline"
-                className="px-8 py-6 text-lg font-bold border-2 border-purple-400/50 text-purple-300 hover:bg-purple-500/10 hover:border-purple-400 rounded-xl transition-all duration-300"
-              >
-                <ArrowRight className="w-5 h-5 mr-2" />
-                Watch Demo
-              </Button>
-            </div>
+            {!user ? (
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+                <Button
+                  onClick={() => window.location.href = getLoginUrl()}
+                  className="px-8 py-6 text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 transform hover:scale-105"
+                >
+                  <Rocket className="w-5 h-5 mr-2" />
+                  Sign In with Google
+                </Button>
+                <Button
+                  variant="outline"
+                  className="px-8 py-6 text-lg font-bold border-2 border-purple-400/50 text-purple-300 hover:bg-purple-500/10 hover:border-purple-400 rounded-xl transition-all duration-300"
+                >
+                  <ArrowRight className="w-5 h-5 mr-2" />
+                  Watch Demo
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+                <Button
+                  onClick={handleGetStarted}
+                  className="px-8 py-6 text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 transform hover:scale-105"
+                >
+                  <Rocket className="w-5 h-5 mr-2" />
+                  Start Generating Now
+                </Button>
+                <Button
+                  variant="outline"
+                  className="px-8 py-6 text-lg font-bold border-2 border-purple-400/50 text-purple-300 hover:bg-purple-500/10 hover:border-purple-400 rounded-xl transition-all duration-300"
+                >
+                  <ArrowRight className="w-5 h-5 mr-2" />
+                  Watch Demo
+                </Button>
+              </div>
+            )}
 
             {/* Trust indicators */}
             <div className="grid grid-cols-3 gap-4 md:gap-8 max-w-2xl mx-auto mb-20">
