@@ -1,23 +1,19 @@
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch, useLocation } from "wouter";
+import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { useAuth } from "./_core/hooks/useAuth";
-import LoginEnhanced from "./pages/LoginEnhanced";
 import Home from "./pages/Home";
-import LandingPremium from "./pages/LandingPremium";
-import LandingPage from "./pages/LandingPage";
-import Features from "./pages/Features";
+import LoginEnhanced from "./pages/LoginEnhanced";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import KimiDashboard from "./pages/KimiDashboard";
 import Settings from "./pages/Settings";
 import Payments from "./pages/Payments";
-import HomeNew from "./pages/HomeNew";
 import Generator from "./pages/Generator";
 import Pricing from "./pages/Pricing";
-import Dashboard from "./pages/Dashboard";
 import Automation from "./pages/Automation";
 import AdvancedAutomation from "./pages/AdvancedAutomation";
-import Analytics from "./pages/Analytics";
 import AutomationDashboardNew from "./pages/AutomationDashboardNew";
 import Credits from "./pages/Credits";
 import AutomationManager from "./pages/AutomationManager";
@@ -35,7 +31,6 @@ import PostScheduling from "./pages/PostScheduling";
 import DemoVideos from "./pages/DemoVideos";
 import { SimpleAutomation } from "./pages/SimpleAutomation";
 import KimiAdvancedHome from "./pages/KimiAdvancedHome";
-import KimiDashboard from "./pages/KimiDashboard";
 import { OAuthSettings } from "./pages/OAuthSettings";
 import AutoReplySystem from "./pages/AutoReplySystem";
 import ROIDashboard from "./pages/ROIDashboard";
@@ -43,201 +38,54 @@ import VideoRepurposingEngine from "./pages/VideoRepurposingEngine";
 import ContentFormattingAgent from "./pages/ContentFormattingAgent";
 import SentimentEscalation from "./pages/SentimentEscalation";
 import MediaGeneration from "./pages/MediaGeneration";
-import GoogleOAuthCallback from "./pages/GoogleOAuthCallback";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import TermsOfService from "./pages/TermsOfService";
-import { Loader2 } from "lucide-react";
-import { useEffect } from "react";
-
-// List of public routes that don't require authentication
-const PUBLIC_ROUTES = ["/", "/login", "/landing", "/privacy", "/terms"];
-
-// Protected Route Wrapper
-function ProtectedRoute({ component: Component, ...rest }: any) {
-  const { user, loading } = useAuth();
-  const [, navigate] = useLocation();
-
-  useEffect(() => {
-    // Redirect to login if not authenticated and not loading
-    if (!loading && !user) {
-      navigate("/login");
-    }
-  }, [user, loading, navigate]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null; // Will redirect via useEffect
-  }
-
-  return <Component {...rest} />;
-}
-
-// Public Route Wrapper
-function PublicRoute({ component: Component, path, ...rest }: any) {
-  const { user, loading } = useAuth();
-  const [, navigate] = useLocation();
-
-  useEffect(() => {
-    // Only redirect to dashboard if user is on the login page (not the landing page)
-    if (!loading && user && path === "/login") {
-      navigate("/dashboard");
-    }
-  }, [user, loading, navigate, path]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  return <Component {...rest} />;
-}
-
-function Router() {
-  return (
-    <>
-      <Switch>
-         {/* Public Routes - No login required */}
-        <Route path={"/"}>
-          {(params) => <PublicRoute component={Home} path="/" {...params} />}
-        </Route>
-        <Route path={"/login"}>
-          {(params) => <PublicRoute component={LoginEnhanced} path="/login" {...params} />}
-        </Route>
-        <Route path={"/landing"} component={LandingPage} />
-        <Route path={"/landing-premium"} component={LandingPremium} />
-        <Route path={"/privacy"} component={PrivacyPolicy} />
-        <Route path={"/terms"} component={TermsOfService} />
-
-        {/* Protected Routes - Login required */}
-        <Route path={"/home"}>
-          {(params) => <ProtectedRoute component={HomeNew} {...params} />}
-        </Route>
-        <Route path={"/dashboard"}>
-          {(params) => <ProtectedRoute component={KimiDashboard} {...params} />}
-        </Route>
-        <Route path={"/features"}>
-          {(params) => <ProtectedRoute component={Features} {...params} />}
-        </Route>
-        <Route path={"/settings"}>
-          {(params) => <ProtectedRoute component={Settings} {...params} />}
-        </Route>
-        <Route path={"/payments"}>
-          {(params) => <ProtectedRoute component={Payments} {...params} />}
-        </Route>
-        <Route path={"/generator"}>
-          {(params) => <ProtectedRoute component={Generator} {...params} />}
-        </Route>
-        <Route path={"/pricing"}>
-          {(params) => <ProtectedRoute component={Pricing} {...params} />}
-        </Route>
-        <Route path={"/automation"}>
-          {(params) => <ProtectedRoute component={Automation} {...params} />}
-        </Route>
-        <Route path={"/advanced-automation"}>
-          {(params) => <ProtectedRoute component={AdvancedAutomation} {...params} />}
-        </Route>
-        <Route path={"/automation-dashboard"}>
-          {(params) => <ProtectedRoute component={AutomationDashboardNew} {...params} />}
-        </Route>
-        <Route path={"/analytics"}>
-          {(params) => <ProtectedRoute component={Analytics} {...params} />}
-        </Route>
-        <Route path={"/credits"}>
-          {(params) => <ProtectedRoute component={Credits} {...params} />}
-        </Route>
-        <Route path={"/automation-manager"}>
-          {(params) => <ProtectedRoute component={AutomationManager} {...params} />}
-        </Route>
-        <Route path={"/viral-score"}>
-          {(params) => <ProtectedRoute component={ViralScoreGenerator} {...params} />}
-        </Route>
-        <Route path={"/rewriter"}>
-          {(params) => <ProtectedRoute component={ContentRewriter} {...params} />}
-        </Route>
-        <Route path={"/repurposing"}>
-          {(params) => <ProtectedRoute component={RepurposingEngine} {...params} />}
-        </Route>
-        <Route path={"/brand-voice"}>
-          {(params) => <ProtectedRoute component={BrandVoice} {...params} />}
-        </Route>
-        <Route path={"/analytics-dashboard"}>
-          {(params) => <ProtectedRoute component={AnalyticsDashboard} {...params} />}
-        </Route>
-        <Route path={"/content-calendar"}>
-          {(params) => <ProtectedRoute component={ContentCalendar} {...params} />}
-        </Route>
-        <Route path={"/ai-assistant"}>
-          {(params) => <ProtectedRoute component={AIAssistant} {...params} />}
-        </Route>
-        <Route path={"/personal-ai"}>
-          {(params) => <ProtectedRoute component={PersonalAI} {...params} />}
-        </Route>
-        <Route path={"/simple-automation"}>
-          {(params) => <ProtectedRoute component={SimpleAutomation} {...params} />}
-        </Route>
-        <Route path={"/social-automation"}>
-          {(params) => <ProtectedRoute component={SocialAutomation} {...params} />}
-        </Route>
-        <Route path={"/post-scheduling"}>
-          {(params) => <ProtectedRoute component={PostScheduling} {...params} />}
-        </Route>
-        <Route path={"/oauth-settings"}>
-          {(params) => <ProtectedRoute component={OAuthSettings} {...params} />}
-        </Route>
-        <Route path={"/demo-videos"}>
-          {(params) => <ProtectedRoute component={DemoVideos} {...params} />}
-        </Route>
-        <Route path={"/auto-reply"}>
-          {(params) => <ProtectedRoute component={AutoReplySystem} {...params} />}
-        </Route>
-        <Route path={"/roi-dashboard"}>
-          {(params) => <ProtectedRoute component={ROIDashboard} {...params} />}
-        </Route>
-        <Route path={"/video-repurposing"}>
-          {(params) => <ProtectedRoute component={VideoRepurposingEngine} {...params} />}
-        </Route>
-        <Route path={"/content-formatting"}>
-          {(params) => <ProtectedRoute component={ContentFormattingAgent} {...params} />}
-        </Route>
-        <Route path={"/sentiment-escalation"}>
-          {(params) => <ProtectedRoute component={SentimentEscalation} {...params} />}
-        </Route>
-        <Route path={"/media-generation"}>
-          {(params) => <ProtectedRoute component={MediaGeneration} {...params} />}
-        </Route>
-
-        {/* Google OAuth Callback - server redirects here after Google auth */}
-
-
-        {/* 404 Route */}
-        <Route path={"/404"} component={NotFound} />
-
-        {/* Fallback - redirect to landing */}
-        <Route component={LandingPremium} />
-      </Switch>
-    </>
-  );
-}
 
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="auto"
-        switchable
-      >
+      <ThemeProvider defaultTheme="auto" switchable>
         <TooltipProvider>
-          <Router />
+          <Switch>
+            {/* Public Routes */}
+            <Route path="/" component={Home} />
+            <Route path="/login" component={LoginEnhanced} />
+            <Route path="/privacy" component={PrivacyPolicy} />
+            <Route path="/terms" component={TermsOfService} />
+
+            {/* Protected Routes */}
+            <Route path="/dashboard" component={KimiDashboard} />
+            <Route path="/settings" component={Settings} />
+            <Route path="/payments" component={Payments} />
+            <Route path="/generator" component={Generator} />
+            <Route path="/pricing" component={Pricing} />
+            <Route path="/automation" component={Automation} />
+            <Route path="/advanced-automation" component={AdvancedAutomation} />
+            <Route path="/automation-dashboard" component={AutomationDashboardNew} />
+            <Route path="/credits" component={Credits} />
+            <Route path="/automation-manager" component={AutomationManager} />
+            <Route path="/viral-score" component={ViralScoreGenerator} />
+            <Route path="/content-rewriter" component={ContentRewriter} />
+            <Route path="/repurposing" component={RepurposingEngine} />
+            <Route path="/brand-voice" component={BrandVoice} />
+            <Route path="/analytics" component={AnalyticsDashboard} />
+            <Route path="/calendar" component={ContentCalendar} />
+            <Route path="/ai-assistant" component={AIAssistant} />
+            <Route path="/personal-ai" component={PersonalAI} />
+            <Route path="/social-automation-v3" component={SocialAutomationV3} />
+            <Route path="/social-automation" component={SocialAutomation} />
+            <Route path="/post-scheduling" component={PostScheduling} />
+            <Route path="/demo-videos" component={DemoVideos} />
+            <Route path="/simple-automation" component={SimpleAutomation} />
+            <Route path="/oauth-settings" component={OAuthSettings} />
+            <Route path="/auto-reply" component={AutoReplySystem} />
+            <Route path="/roi-dashboard" component={ROIDashboard} />
+            <Route path="/video-repurposing" component={VideoRepurposingEngine} />
+            <Route path="/content-formatting" component={ContentFormattingAgent} />
+            <Route path="/sentiment-escalation" component={SentimentEscalation} />
+            <Route path="/media-generation" component={MediaGeneration} />
+
+            {/* 404 Route */}
+            <Route component={NotFound} />
+          </Switch>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

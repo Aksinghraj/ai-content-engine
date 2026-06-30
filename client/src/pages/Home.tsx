@@ -1,25 +1,119 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
-import {
-  Sparkles,
-  Zap,
-  Target,
-  TrendingUp,
-  ArrowRight,
-  CheckCircle2,
-  Rocket,
-  Layers,
-  Clock,
-} from "lucide-react";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { Sparkles, Zap, Target, TrendingUp, ArrowRight, Rocket } from "lucide-react";
+import * as THREE from "three";
 
 export default function Home() {
-  const { isAuthenticated } = useAuth();
+  const { user, loading } = useAuth();
   const [, navigate] = useLocation();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!canvasRef.current) return;
+
+    try {
+      // Three.js setup
+      const canvas = canvasRef.current;
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(
+        75,
+        canvas.clientWidth / canvas.clientHeight,
+        0.1,
+        1000
+      );
+      const renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: true,
+        alpha: true,
+      });
+
+      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+      renderer.setClearColor(0x0f0a1a, 0);
+      camera.position.z = 5;
+
+      // Create rotating cubes
+      const geometry = new THREE.BoxGeometry(1, 1, 1);
+      const materials = [
+        new THREE.MeshPhongMaterial({ color: 0xa855f7 }),
+        new THREE.MeshPhongMaterial({ color: 0x7c3aed }),
+        new THREE.MeshPhongMaterial({ color: 0x6d28d9 }),
+        new THREE.MeshPhongMaterial({ color: 0x5b21b6 }),
+        new THREE.MeshPhongMaterial({ color: 0x4c1d95 }),
+        new THREE.MeshPhongMaterial({ color: 0x3730a3 }),
+      ];
+
+      const cubes: any[] = [];
+      for (let i = 0; i < 5; i++) {
+        const mesh = new THREE.Mesh(geometry, materials);
+        mesh.position.x = (Math.random() - 0.5) * 10;
+        mesh.position.y = (Math.random() - 0.5) * 10;
+        mesh.position.z = (Math.random() - 0.5) * 10;
+        mesh.rotation.x = Math.random() * Math.PI;
+        mesh.rotation.y = Math.random() * Math.PI;
+        scene.add(mesh);
+        cubes.push({
+          mesh,
+          rotationSpeed: {
+            x: (Math.random() - 0.5) * 0.01,
+            y: (Math.random() - 0.5) * 0.01,
+            z: (Math.random() - 0.5) * 0.01,
+          },
+        });
+      }
+
+      // Lighting
+      const light = new THREE.PointLight(0xffffff, 1);
+      light.position.set(5, 5, 5);
+      scene.add(light);
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+      scene.add(ambientLight);
+
+      // Animation loop
+      const animate = () => {
+        requestAnimationFrame(animate);
+
+        cubes.forEach((cube) => {
+          cube.mesh.rotation.x += cube.rotationSpeed.x;
+          cube.mesh.rotation.y += cube.rotationSpeed.y;
+          cube.mesh.rotation.z += cube.rotationSpeed.z;
+        });
+
+        renderer.render(scene, camera);
+      };
+
+      animate();
+
+      // Handle resize
+      const handleResize = () => {
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+      };
+
+      window.addEventListener("resize", handleResize);
+
+      return () => {
+        window.removeEventListener("resize", handleResize);
+        renderer.dispose();
+      };
+    } catch (error) {
+      console.error("Error initializing Three.js:", error);
+    }
+  }, []);
 
   const handleGetStarted = () => {
-    if (isAuthenticated) {
+    if (user) {
       navigate("/dashboard");
     } else {
       window.location.href = getLoginUrl();
@@ -28,34 +122,37 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white overflow-hidden">
-      {/* Animated background blobs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: "2s" }}></div>
-        <div className="absolute -bottom-8 left-1/2 w-96 h-96 bg-pink-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: "4s" }}></div>
-      </div>
+      {/* 3D Canvas Background */}
+      <canvas
+        ref={canvasRef}
+        className="fixed inset-0 w-full h-full opacity-40"
+        style={{ pointerEvents: "none" }}
+      />
 
-        {/* Content */}
-        <div className="relative z-10">
-          {/* Header */}
-          <header className="absolute top-0 left-0 right-0 z-20 p-4 md:p-8">
-            <div className="max-w-6xl mx-auto flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <img src="/manus-storage/ai-content-engine-logo_c06be0a7.png" alt="AI Content Engine Logo" className="h-10" />
-                <span className="text-2xl font-bold text-white">AI Content Engine</span>
+      {/* Content */}
+      <div className="relative z-10">
+        {/* Header */}
+        <header className="fixed top-0 left-0 right-0 z-20 p-4 md:p-8 backdrop-blur-md bg-slate-950/30">
+          <div className="max-w-6xl mx-auto flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-white" />
               </div>
-              <nav>
-                <Button
-                  onClick={handleGetStarted}
-                  className="px-6 py-3 text-md font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg shadow-lg transition-all duration-300"
-                >
-                  {isAuthenticated ? "Go to Dashboard" : "Sign In / Sign Up"}
-                </Button>
-              </nav>
+              <span className="text-2xl font-bold text-white">AI Content Engine</span>
             </div>
-          </header>
+            <nav>
+              <Button
+                onClick={handleGetStarted}
+                className="px-6 py-3 text-md font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg shadow-lg transition-all duration-300"
+              >
+                {user ? "Go to Dashboard" : "Sign In / Sign Up"}
+              </Button>
+            </nav>
+          </div>
+        </header>
+
         {/* Hero Section */}
-        <section className="min-h-screen flex items-center justify-center px-4 pt-20 pb-20">
+        <section className="min-h-screen flex items-center justify-center px-4 pt-32 pb-20">
           <div className="max-w-5xl mx-auto text-center">
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/30 mb-8 hover:border-purple-500/50 transition-colors">
@@ -121,63 +218,86 @@ export default function Home() {
                 Dominate Social Media
               </span>
             </h2>
-            <p className="text-center text-slate-400 text-lg mb-16 max-w-2xl mx-auto">
-              Complete content packages with viral ideas, scripts, hooks, captions, hashtags, and more
+            <p className="text-center text-slate-300 mb-16 max-w-2xl mx-auto">
+              All the tools creators and businesses need to generate, schedule, and automate content across every platform.
             </p>
 
-            <div className="grid md:grid-cols-3 gap-6">
-              {/* Feature 1 */}
-              <div className="group p-8 rounded-2xl bg-gradient-to-br from-purple-900/40 to-blue-900/40 border border-purple-500/20 hover:border-purple-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 cursor-pointer">
-                <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Zap className="w-7 h-7" />
+            {/* Feature Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[
+                {
+                  icon: Sparkles,
+                  title: "AI Content Generation",
+                  description: "Generate high-quality, platform-optimized content in seconds using advanced AI",
+                },
+                {
+                  icon: Zap,
+                  title: "Smart Scheduling",
+                  description: "Schedule posts across Instagram, YouTube, LinkedIn, Twitter, and more automatically",
+                },
+                {
+                  icon: Target,
+                  title: "Content Repurposing",
+                  description: "Turn one piece of content into multiple formats for different platforms",
+                },
+                {
+                  icon: TrendingUp,
+                  title: "Analytics & Insights",
+                  description: "Track engagement, reach, and performance across all your social channels",
+                },
+                {
+                  icon: Rocket,
+                  title: "Auto-Reply System",
+                  description: "Automate responses to comments and messages with AI-powered replies",
+                },
+                {
+                  icon: Zap,
+                  title: "Video Generation",
+                  description: "Create engaging videos and media content with AI assistance",
+                },
+              ].map((feature, index) => (
+                <div
+                  key={index}
+                  className="p-6 rounded-xl bg-purple-500/5 border border-purple-500/10 hover:border-purple-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20"
+                >
+                  <feature.icon className="w-12 h-12 text-purple-400 mb-4" />
+                  <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
+                  <p className="text-slate-400">{feature.description}</p>
                 </div>
-                <h3 className="text-xl font-bold mb-3">AI Content Generation</h3>
-                <p className="text-slate-300 leading-relaxed">Generate complete, high-engagement content ideas tailored to your niche, audience, and platform.</p>
-              </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
-              {/* Feature 2 */}
-              <div className="group p-8 rounded-2xl bg-gradient-to-br from-purple-900/40 to-blue-900/40 border border-purple-500/20 hover:border-purple-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 cursor-pointer">
-                <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-pink-500 to-red-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <TrendingUp className="w-7 h-7" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">AI Caption & Script Generation</h3>
-                <p className="text-slate-300 leading-relaxed">Craft compelling captions, engaging scripts, and viral hooks optimized for each social media platform.</p>
+        {/* Data Sharing Disclosure */}
+        <section className="py-20 px-4 bg-slate-900/30">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-3xl font-bold mb-8">Data Privacy & Sharing</h2>
+            <div className="space-y-6 text-slate-300">
+              <div>
+                <h3 className="text-xl font-semibold text-white mb-2">Google OAuth Integration</h3>
+                <p>
+                  We use Google OAuth to authenticate users securely. Your Google account information (name, email, profile picture) is used only for account creation and authentication.
+                </p>
               </div>
-
-              {/* Feature 3 */}
-              <div className="group p-8 rounded-2xl bg-gradient-to-br from-purple-900/40 to-blue-900/40 border border-purple-500/20 hover:border-purple-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 cursor-pointer">
-                <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Layers className="w-7 h-7" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Content Repurposing</h3>
-                <p className="text-slate-300 leading-relaxed">Transform a single piece of content into multiple formats for different platforms with one click.</p>
+              <div>
+                <h3 className="text-xl font-semibold text-white mb-2">Social Platform Data Sharing</h3>
+                <p>
+                  To provide content scheduling and automation services, we securely connect to your social media accounts:
+                </p>
+                <ul className="list-disc list-inside mt-3 space-y-2 ml-4">
+                  <li><strong>Instagram:</strong> We access your account to schedule posts and track engagement metrics</li>
+                  <li><strong>YouTube:</strong> We access your channel to upload and schedule videos</li>
+                  <li><strong>LinkedIn:</strong> We access your profile to schedule professional content</li>
+                  <li><strong>Twitter/X:</strong> We access your account to schedule tweets and monitor interactions</li>
+                  <li><strong>TikTok:</strong> We access your account for content scheduling (where available)</li>
+                </ul>
               </div>
-
-              {/* Feature 4 */}
-              <div className="group p-8 rounded-2xl bg-gradient-to-br from-purple-900/40 to-blue-900/40 border border-purple-500/20 hover:border-purple-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 cursor-pointer">
-                <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Clock className="w-7 h-7" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">AI Video & Media Generation</h3>
-                <p className="text-slate-300 leading-relaxed">Automatically generate stunning videos, images, and other media assets from your content ideas.</p>
-              </div>
-
-              {/* Feature 5 */}
-              <div className="group p-8 rounded-2xl bg-gradient-to-br from-purple-900/40 to-blue-900/40 border border-purple-500/20 hover:border-purple-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 cursor-pointer">
-                <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Sparkles className="w-7 h-7" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Scheduling & Auto-Reply Automation</h3>
-                <p className="text-slate-300 leading-relaxed">Schedule posts across all your social media platforms and automate replies to engage your audience 24/7.</p>
-              </div>
-
-              {/* Feature 6 */}
-              <div className="group p-8 rounded-2xl bg-gradient-to-br from-purple-900/40 to-blue-900/40 border border-purple-500/20 hover:border-purple-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 cursor-pointer">
-                <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Rocket className="w-7 h-7" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Advanced Analytics</h3>
-                <p className="text-slate-300 leading-relaxed">Gain deep insights into your content performance, audience engagement, and growth metrics across all platforms.</p>
+              <div>
+                <h3 className="text-xl font-semibold text-white mb-2">Data Retention & Deletion</h3>
+                <p>
+                  We retain your data only as long as your account is active. You can request data deletion at any time by contacting support@aicontent-engine.com. Upon deletion, all your content, scheduling history, and personal information will be permanently removed from our servers.
+                </p>
               </div>
             </div>
           </div>
@@ -185,43 +305,61 @@ export default function Home() {
 
         {/* CTA Section */}
         <section className="py-20 px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="rounded-3xl bg-gradient-to-r from-purple-600/30 to-blue-600/30 border border-purple-500/50 p-12 md:p-16 backdrop-blur-sm">
-              <h2 className="text-4xl md:text-5xl font-black text-center mb-6">
-                Ready to Transform Your Content Strategy?
-              </h2>
-              <p className="text-xl text-slate-300 text-center mb-8 leading-relaxed">
-                Join thousands of creators and businesses generating viral content every day. No credit card required.
-              </p>
-              <div className="flex justify-center">
-                <Button
-                  onClick={handleGetStarted}
-                  className="px-10 py-6 text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 transform hover:scale-105"
-                >
-                  <Rocket className="w-5 h-5 mr-2" />
-                  Start Free Today
-                </Button>
-              </div>
-            </div>
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-4xl font-bold mb-6">
+              Ready to Transform Your Content?
+            </h2>
+            <p className="text-xl text-slate-300 mb-8">
+              Join thousands of creators and businesses automating their social media presence with AI.
+            </p>
+            <Button
+              onClick={handleGetStarted}
+              className="px-10 py-6 text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 transform hover:scale-105"
+            >
+              <Rocket className="w-5 h-5 mr-2" />
+              Start Free Today
+            </Button>
           </div>
         </section>
 
         {/* Footer */}
-        <footer className="border-t border-purple-500/20 py-12 px-4 mt-20">
+        <footer className="py-12 px-4 border-t border-purple-500/10">
           <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-8">
-              <div className="flex items-center space-x-2">
-                <img src="/manus-storage/ai-content-engine-logo_c06be0a7.png" alt="AI Content Engine Logo" className="h-8" />
-                <span className="text-lg font-bold text-white">AI Content Engine</span>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+              <div>
+                <h4 className="font-bold mb-4">Product</h4>
+                <ul className="space-y-2 text-slate-400">
+                  <li><a href="#" className="hover:text-purple-400 transition">Features</a></li>
+                  <li><a href="#" className="hover:text-purple-400 transition">Pricing</a></li>
+                  <li><a href="#" className="hover:text-purple-400 transition">Security</a></li>
+                </ul>
               </div>
-              <nav className="flex flex-wrap gap-6 justify-center md:justify-end">
-                <a href="/privacy" className="text-slate-400 hover:text-purple-400 transition-colors">Privacy Policy</a>
-                <a href="/terms" className="text-slate-400 hover:text-purple-400 transition-colors">Terms of Service</a>
-                <a href="mailto:kiddotv1411@gmail.com" className="text-slate-400 hover:text-purple-400 transition-colors">Contact Us</a>
-              </nav>
+              <div>
+                <h4 className="font-bold mb-4">Company</h4>
+                <ul className="space-y-2 text-slate-400">
+                  <li><a href="#" className="hover:text-purple-400 transition">About</a></li>
+                  <li><a href="#" className="hover:text-purple-400 transition">Blog</a></li>
+                  <li><a href="#" className="hover:text-purple-400 transition">Contact</a></li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-bold mb-4">Legal</h4>
+                <ul className="space-y-2 text-slate-400">
+                  <li><a href="/privacy" className="hover:text-purple-400 transition">Privacy Policy</a></li>
+                  <li><a href="/terms" className="hover:text-purple-400 transition">Terms of Service</a></li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-bold mb-4">Follow</h4>
+                <ul className="space-y-2 text-slate-400">
+                  <li><a href="#" className="hover:text-purple-400 transition">Twitter</a></li>
+                  <li><a href="#" className="hover:text-purple-400 transition">LinkedIn</a></li>
+                  <li><a href="#" className="hover:text-purple-400 transition">Instagram</a></li>
+                </ul>
+              </div>
             </div>
-            <div className="border-t border-purple-500/20 pt-8 text-center text-slate-400 text-sm">
-              <p>© 2026 AI Content Engine. All rights reserved. | Powered by Advanced AI</p>
+            <div className="border-t border-purple-500/10 pt-8 text-center text-slate-400">
+              <p>&copy; 2026 AI Content Engine. All rights reserved.</p>
             </div>
           </div>
         </footer>
