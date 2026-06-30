@@ -26,19 +26,26 @@ export function useAuth(options?: UseAuthOptions) {
 
   const logout = useCallback(async () => {
     try {
+      // Set flag to prevent redirect loop during logout
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("is_logging_out", "true");
+      }
       await logoutMutation.mutateAsync();
     } catch (error: unknown) {
       if (
         error instanceof TRPCClientError &&
         error.data?.code === "UNAUTHORIZED"
       ) {
-        return;
+        // Expected error when already logged out
+      } else {
+        throw error;
       }
-      throw error;
     } finally {
       utils.auth.me.setData(undefined, null);
       await utils.auth.me.invalidate();
       if (typeof window !== "undefined") {
+        // Clear the flag and redirect to home
+        sessionStorage.removeItem("is_logging_out");
         window.location.href = "/";
       }
     }
