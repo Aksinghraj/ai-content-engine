@@ -3,6 +3,7 @@ import type { Express, Request, Response } from "express";
 import * as db from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
+import { sendVerificationEmail } from "./emailService";
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -171,6 +172,23 @@ export function registerOAuthRoutes(app: Express) {
         loginMethod: "google",
         lastSignedIn: new Date(),
       });
+
+      // Get the user to access their ID for email verification
+      const user = await db.getUserByOpenId(openId);
+      if (user && profile.email) {
+        // Generate email verification token
+        const verificationToken = await db.generateEmailVerificationToken(user.id);
+        const verificationUrl = `${origin}/verify-email?token=${verificationToken}`;
+        
+        // Send verification email
+        await sendVerificationEmail(
+          profile.email,
+          profile.name || "User",
+          verificationToken,
+          verificationUrl
+        );
+        console.log("[Google OAuth] Verification email sent to", profile.email);
+      }
 
       // Ensure name is never empty — verifySession rejects tokens with empty name
       const displayName = profile.name || profile.email?.split("@")[0] || "User";

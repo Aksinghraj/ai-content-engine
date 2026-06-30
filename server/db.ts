@@ -720,3 +720,69 @@ export async function deletePasswordResetToken(token: string) {
 
 // Duplicate functions removed - use addCredits() and deductCredits() instead
 
+
+
+// Email verification functions
+export async function generateEmailVerificationToken(userId: number): Promise<string> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  // Generate a random token
+  const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+  // Update user with verification token
+  await db.update(users)
+    .set({
+      emailVerificationToken: token,
+      emailVerificationTokenExpiresAt: expiresAt,
+    })
+    .where(eq(users.id, userId));
+
+  return token;
+}
+
+export async function verifyEmailToken(token: string): Promise<boolean> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const result = await db.select().from(users)
+    .where(eq(users.emailVerificationToken, token))
+    .limit(1);
+
+  if (result.length === 0) {
+    return false;
+  }
+
+  const user = result[0];
+  
+  // Check if token has expired
+  if (!user.emailVerificationTokenExpiresAt || new Date() > user.emailVerificationTokenExpiresAt) {
+    return false;
+  }
+
+  // Mark email as verified
+  await db.update(users)
+    .set({
+      emailVerified: true,
+      emailVerificationToken: null,
+      emailVerificationTokenExpiresAt: null,
+    })
+    .where(eq(users.id, user.id));
+
+  return true;
+}
+
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) {
+    return undefined;
+  }
+
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}

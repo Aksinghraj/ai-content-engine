@@ -38,6 +38,8 @@ import VideoRepurposingEngine from "./pages/VideoRepurposingEngine";
 import ContentFormattingAgent from "./pages/ContentFormattingAgent";
 import SentimentEscalation from "./pages/SentimentEscalation";
 import MediaGeneration from "./pages/MediaGeneration";
+import VerifyEmail from "./pages/VerifyEmail";
+import UsageAnalytics from "./pages/UsageAnalytics";
 
 function App() {
   return (
@@ -50,6 +52,7 @@ function App() {
             <Route path="/login" component={LoginEnhanced} />
             <Route path="/privacy" component={PrivacyPolicy} />
             <Route path="/terms" component={TermsOfService} />
+            <Route path="/verify-email" component={VerifyEmail} />
 
             {/* Protected Routes */}
             <Route path="/dashboard" component={KimiDashboard} />
@@ -82,6 +85,7 @@ function App() {
             <Route path="/content-formatting" component={ContentFormattingAgent} />
             <Route path="/sentiment-escalation" component={SentimentEscalation} />
             <Route path="/media-generation" component={MediaGeneration} />
+            <Route path="/usage-analytics" component={UsageAnalytics} />
 
             {/* 404 Route */}
             <Route component={NotFound} />

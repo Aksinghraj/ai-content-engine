@@ -38,6 +38,7 @@ const menuItems = [
   { icon: Zap, label: "Format Agent", path: "/content-formatting" },
   { icon: AlertTriangle, label: "Escalation", path: "/sentiment-escalation" },
   { icon: BarChart3, label: "Analytics", path: "/analytics-dashboard" },
+  { icon: TrendingUp, label: "Usage Analytics", path: "/usage-analytics" },
   { icon: DollarSign, label: "ROI Dashboard", path: "/roi-dashboard" },
   { icon: Wand2, label: "Content Rewriter", path: "/rewriter" },
   { icon: TrendingUp, label: "Viral Score", path: "/viral-score" },

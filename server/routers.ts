@@ -3,6 +3,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
+import * as db from "./db";
 import { saveContentHistory, getContentHistoryByUserId, getContentHistoryById, getTodayTokenUsage, trackTokenUsage } from "./db";
 import { generateContentPackage } from "./_core/contentGenerator";
 import { subscriptionRouter } from "./routers/subscription";
@@ -46,6 +47,12 @@ export const appRouter = router({
         success: true,
       } as const;
     }),
+    verifyEmail: publicProcedure
+      .input(z.object({ token: z.string() }))
+      .mutation(async ({ input }) => {
+        const success = await db.verifyEmailToken(input.token);
+        return { success };
+      }),
   }),
 
   subscription: subscriptionRouter,
