@@ -41,12 +41,18 @@ export function useAuth(options?: UseAuthOptions) {
         throw error;
       }
     } finally {
+      // Clear cache immediately
       utils.auth.me.setData(undefined, null);
+      // Invalidate to trigger a fresh fetch from server
       await utils.auth.me.invalidate();
+      
       if (typeof window !== "undefined") {
-        // Clear the flag and redirect to home
+        // Clear the flag
         sessionStorage.removeItem("is_logging_out");
-        window.location.href = "/";
+        // Use a small delay to ensure cache is cleared before navigation
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 100);
       }
     }
   }, [logoutMutation, utils]);
