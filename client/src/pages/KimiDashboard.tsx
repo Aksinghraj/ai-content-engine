@@ -151,21 +151,52 @@ function KimiDashboardContent() {
           </div>
         </div>
 
-        {/* Empty State for Recent Posts */}
+        {/* Empty State - Create First Post Welcome Section */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4">Recent Posts</h2>
-          <div className="p-12 rounded-xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-sm text-center">
-            <MessageSquare className="w-12 h-12 text-slate-500 mx-auto mb-4 opacity-50" />
-            <h3 className="text-xl font-semibold text-white mb-2">No posts yet</h3>
-            <p className="text-slate-400 mb-6">Start creating and scheduling content to see your posts here</p>
-            <Button
-              onClick={() => setLocation("/generator")}
-              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold px-6"
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              Generate Your First Post
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-900/40 via-slate-800/40 to-blue-900/40 border border-purple-500/30 backdrop-blur-sm p-12 md:p-20 text-center">
+            {/* Animated background blobs */}
+            <div className="absolute top-0 left-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl -translate-x-1/3 -translate-y-1/3 animate-pulse"></div>
+            <div className="absolute bottom-0 right-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl translate-x-1/3 translate-y-1/3 animate-pulse"></div>
+            
+            {/* Content */}
+            <div className="relative z-10">
+              {/* Illustration */}
+              <div className="w-32 h-32 mx-auto mb-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-2xl shadow-purple-500/50 transform hover:scale-110 transition-transform duration-300">
+                <Sparkles className="w-16 h-16 text-white" />
+              </div>
+              
+              <h2 className="text-5xl font-bold text-white mb-4 bg-gradient-to-r from-purple-300 via-pink-300 to-blue-300 bg-clip-text text-transparent">Ready to Create?</h2>
+              <p className="text-xl text-slate-300 mb-2">Your first viral post is just one click away</p>
+              <p className="text-slate-400 mb-10 max-w-2xl mx-auto">Generate engaging, platform-optimized content with AI and watch your audience grow instantly</p>
+              
+              {/* Main CTA Button */}
+              <Button
+                onClick={() => setLocation("/generator")}
+                className="bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 hover:from-purple-600 hover:via-pink-600 hover:to-blue-600 text-white font-bold py-5 px-12 rounded-xl text-lg shadow-xl shadow-purple-500/60 hover:shadow-purple-500/80 transition-all duration-300 transform hover:scale-105 mb-8 inline-block"
+              >
+                <Sparkles className="w-6 h-6 mr-3" />
+                Create Your First Post
+                <ArrowRight className="w-6 h-6 ml-3" />
+              </Button>
+              
+              {/* Feature highlights */}
+              <div className="mt-10 pt-10 border-t border-slate-700/50">
+                <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
+                  <div className="p-3 rounded-lg bg-slate-800/30 border border-slate-700/30">
+                    <div className="text-2xl mb-1">✨</div>
+                    <p className="text-xs text-slate-400">AI-Powered</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-slate-800/30 border border-slate-700/30">
+                    <div className="text-2xl mb-1">🚀</div>
+                    <p className="text-xs text-slate-400">Instant Scheduling</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-slate-800/30 border border-slate-700/30">
+                    <div className="text-2xl mb-1">📊</div>
+                    <p className="text-xs text-slate-400">Real Analytics</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
