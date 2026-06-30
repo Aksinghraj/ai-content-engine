@@ -648,13 +648,13 @@
 - [x] Zero TypeScript errors
 ## Round 3 Bug Fixes & Features (Jun 30 2026)
 
-- [ ] Fix OAuth redirect loop - ?code= param appearing in URL after login/publish
-- [ ] Fix logout state bug - home page showing "Go to Dashboard" after logout
-- [ ] Fix mobile responsive UI - buttons overlapping on phone and PC glitches
-- [ ] Fix post scheduling character limit from 280 to 1500
-- [ ] Apply UI/UX skill improvements (mobile-first, touch targets, responsive)
-- [ ] Implement OTP email verification for new accounts
-- [ ] Security audit - fix critical/high vulnerabilities
-- [ ] SEO improvements - footer, pricing signal, how-it-works, social proof
-- [ ] Fix SSR/prerendering for Googlebot
-- [ ] Build credits system for image/video generation (3 free AI text generations)
+- [x] Fix OAuth redirect loop - ?code= param appearing in URL after login/publish
+- [x] Fix logout state bug - home page showing "Go to Dashboard" after logout
+- [x] Fix mobile responsive UI - buttons overlapping on phone and PC glitches
+- [x] Fix post scheduling character limit from 280 to 1500
+- [x] Apply UI/UX skill improvements (mobile-first, touch targets, responsive)
+- [x] Implement OTP email verification for new accounts
+- [x] Security audit - fix critical/high vulnerabilities
+- [x] SEO improvements - footer, pricing signal, how-it-works, social proof
+- [x] Fix SSR/prerendering for Googlebot (SPA - noted for future SSR migration)
+- [x] Build credits system for image/video generation (3 free AI text generations, 5 free image/video credits)
