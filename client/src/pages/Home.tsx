@@ -134,10 +134,8 @@ export default function Home() {
         {/* Header */}
         <header className="fixed top-0 left-0 right-0 z-20 p-4 md:p-8 backdrop-blur-md bg-slate-950/30">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
+            <div className="flex items-center space-x-3">
+              <img src="/manus-storage/lumae-ai-logo_89565817.svg" alt="Lumae AI" className="w-10 h-10" />
               <span className="text-2xl font-bold text-white">Lumae AI</span>
             </div>
             <nav>
