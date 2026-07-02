@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 
 export default function SettingsPage() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
   const { theme, setTheme } = useTheme();
   const [, navigate] = useLocation();
   const [isSaving, setIsSaving] = useState(false);
@@ -24,12 +24,18 @@ export default function SettingsPage() {
     },
   });
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/login");
+    useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      navigate("/");
     }
-  }, [isAuthenticated, navigate]);
-
+  }, [loading, isAuthenticated, navigate]);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
   if (!isAuthenticated || !user) {
     return null;
   }

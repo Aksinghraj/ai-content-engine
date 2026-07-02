@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 
 export default function Payments() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
   const [, navigate] = useLocation();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -46,10 +46,18 @@ export default function Payments() {
   });
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/login");
+    if (!loading && !isAuthenticated) {
+      navigate("/");
     }
-  }, [isAuthenticated, navigate]);
+  }, [loading, isAuthenticated, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated || !user) {
     return null;

@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useEffect, useState, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 import {
   Brain,
   Send,
@@ -26,7 +27,7 @@ interface Message {
 }
 
 export default function PersonalAI() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [, navigate] = useLocation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -93,11 +94,24 @@ export default function PersonalAI() {
     setInput("");
   };
 
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-96">
+          <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   if (!user) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-96">
-          <p className="text-slate-400">Loading...</p>
+          <div className="text-center">
+            <p className="text-slate-400 mb-4">Please sign in to use the AI Assistant.</p>
+            <a href={getLoginUrl()} className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg inline-block">Sign In</a>
+          </div>
         </div>
       </DashboardLayout>
     );

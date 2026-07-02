@@ -1,4 +1,5 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 import { useLocation } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -13,14 +14,29 @@ import {
 } from "lucide-react";
 
 export default function SimpleDashboard() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [, navigate] = useLocation();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-10 h-10 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-400">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-slate-400 mb-4">Loading...</p>
+        <div className="text-center p-8">
+          <h2 className="text-2xl font-bold text-white mb-4">Sign in to access your Dashboard</h2>
+          <p className="text-slate-400 mb-6">You need to be logged in to view this page.</p>
+          <a href={getLoginUrl()} className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors">
+            Sign In
+          </a>
         </div>
       </div>
     );
