@@ -53,6 +53,10 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
 
+  // Trust the reverse proxy (Manus/Cloud Run) so req.protocol is correct
+  // This is required for cookies with secure:true and sameSite:none to work
+  app.set("trust proxy", 1);
+
   // Security headers
   app.use(helmet({
     contentSecurityPolicy: false, // Managed by Vite in dev; CSP set separately in prod
