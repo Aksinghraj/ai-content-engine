@@ -40,6 +40,7 @@ import SentimentEscalation from "./pages/SentimentEscalation";
 import MediaGeneration from "./pages/MediaGeneration";
 import VerifyEmail from "./pages/VerifyEmail";
 import UsageAnalytics from "./pages/UsageAnalytics";
+import TrendDiscovery from "./pages/TrendDiscovery";
 
 function App() {
   return (
@@ -86,6 +87,7 @@ function App() {
             <Route path="/sentiment-escalation" component={SentimentEscalation} />
             <Route path="/media-generation" component={MediaGeneration} />
             <Route path="/usage-analytics" component={UsageAnalytics} />
+            <Route path="/trend-discovery" component={TrendDiscovery} />
 
             {/* 404 Route */}
             <Route component={NotFound} />
