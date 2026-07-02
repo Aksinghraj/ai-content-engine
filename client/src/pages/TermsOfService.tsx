@@ -3,7 +3,7 @@ export default function TermsOfService() {
     <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-4xl mx-auto px-4 py-12">
         <h1 className="text-4xl font-bold mb-8">Terms of Service</h1>
-        <p className="text-sm text-muted-foreground mb-8">Last updated: June 26, 2026</p>
+        <p className="text-sm text-muted-foreground mb-8">Last updated: July 2, 2026</p>
 
         <div className="space-y-8">
           <section>
@@ -65,17 +65,49 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">8. Governing Law</h2>
             <p className="text-foreground/90 leading-relaxed">
-              These terms and conditions are governed by and construed in accordance with the laws of the jurisdiction in which the Service is operated, and you irrevocably submit to the exclusive jurisdiction of the courts in that location.
+              These terms and conditions are governed by and construed in accordance with the laws of India, and you irrevocably submit to the exclusive jurisdiction of the courts in that location.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-4">9. Contact Us</h2>
+            <h2 className="text-2xl font-semibold mb-4">9. User Responsibilities</h2>
+            <p className="text-foreground/90 leading-relaxed mb-4">
+              As a user of Lumae AI, you agree to:
+            </p>
+            <ul className="list-disc list-inside space-y-2 text-foreground/90">
+              <li>Provide accurate and complete information during registration</li>
+              <li>Maintain the confidentiality of your account credentials</li>
+              <li>Use the Service only for lawful purposes and in a way that does not infringe upon the rights of others</li>
+              <li>Not use the Service to generate content that is illegal, defamatory, or violates intellectual property rights</li>
+              <li>Not attempt to gain unauthorized access to the Service or its systems</li>
+              <li>Comply with all applicable laws and regulations</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold mb-4">10. Content Ownership</h2>
+            <p className="text-foreground/90 leading-relaxed">
+              You retain ownership of all content you create, generate, or upload through Lumae AI. By using our Service, you grant us a license to use, reproduce, and display your content solely for the purpose of providing and improving our Service.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold mb-4">11. Limitation of Liability</h2>
+            <p className="text-foreground/90 leading-relaxed">
+              To the fullest extent permitted by law, Lumae AI shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to damages for loss of profits, goodwill, use, data, or other intangible losses.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold mb-4">12. Contact Us</h2>
             <p className="text-foreground/90 leading-relaxed">
               If you have any questions about these Terms of Service, please contact us at:
             </p>
             <p className="text-foreground/90 mt-4">
-              Email: <a href="mailto:kiddotv1411@gmail.com" className="text-primary hover:underline">kiddotv1411@gmail.com</a>
+              Email: <a href="mailto:support@lumae.co.in" className="text-primary hover:underline">support@lumae.co.in</a>
+            </p>
+            <p className="text-foreground/90">
+              Website: <a href="https://lumae.co.in" className="text-primary hover:underline">https://lumae.co.in</a>
             </p>
           </section>
         </div>
