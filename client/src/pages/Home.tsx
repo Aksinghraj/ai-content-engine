@@ -1,45 +1,134 @@
-import { useRef, useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { useLocation } from "wouter";
-import { getLoginUrl } from "@/const";
+import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
-import {
-  Sparkles, Zap, Target, TrendingUp, ArrowRight, Rocket,
-  CheckCircle, Star, Shield, Clock, BarChart3, Bot, Calendar
-} from "lucide-react";
+import { getLoginUrl } from "@/const";
+import { Menu, X, Sun, LogOut, Search, Bookmark } from "lucide-react";
+
+const REGIONS = ["India", "USA", "UK", "Canada", "Australia", "Brazil"];
+
+const PLATFORMS = [
+  { id: "all", name: "All", icon: "🎯" },
+  { id: "instagram", name: "Instagram", icon: "📷" },
+  { id: "tiktok", name: "TikTok", icon: "🎵" },
+  { id: "youtube", name: "YouTube", icon: "📺" },
+  { id: "twitter", name: "X (Twitter)", icon: "𝕏" },
+  { id: "linkedin", name: "LinkedIn", icon: "💼" },
+];
+
+const CATEGORIES = [
+  "For You",
+  "Money & AI",
+  "Lifestyle",
+  "Health & Fitness",
+  "Viral Culture",
+  "Gaming",
+  "Learning",
+];
+
+const MOCK_TRENDS = [
+  {
+    id: 1,
+    title: "AI-Powered Content Creation",
+    score: 95,
+    growth: 156,
+    category: "Money & AI",
+    reach: "4.2M",
+    platforms: ["twitter", "linkedin", "youtube"],
+    summary: "Creators using AI tools to generate content at scale",
+    keywords: ["AI", "content", "automation", "ChatGPT"],
+    hooks: [
+      "I used AI to create 30 posts in 1 hour...",
+      "This AI tool just changed my content game",
+    ],
+  },
+  {
+    id: 2,
+    title: "Fitness Transformation Reels",
+    score: 92,
+    growth: 142,
+    category: "Health & Fitness",
+    reach: "3.8M",
+    platforms: ["instagram", "tiktok", "youtube"],
+    summary: "Short-form fitness transformation videos dominating social",
+    keywords: ["fitness", "transformation", "gym", "health"],
+    hooks: ["From 0 to fit in 90 days", "This one exercise changed everything"],
+  },
+  {
+    id: 3,
+    title: "Viral Business Ideas 2026",
+    score: 88,
+    growth: 128,
+    category: "Money & AI",
+    reach: "2.9M",
+    platforms: ["twitter", "linkedin", "tiktok"],
+    summary: "Entrepreneurs sharing latest side hustles",
+    keywords: ["business", "entrepreneurship", "passive income"],
+    hooks: ["I made $10k from this side hustle in 30 days"],
+  },
+  {
+    id: 4,
+    title: "Sustainable Fashion Movement",
+    score: 85,
+    growth: 115,
+    category: "Lifestyle",
+    reach: "2.5M",
+    platforms: ["instagram", "tiktok", "youtube"],
+    summary: "Eco-conscious fashion trending with Gen Z",
+    keywords: ["sustainable", "fashion", "eco-friendly"],
+    hooks: ["I only buy sustainable fashion now - here's why"],
+  },
+  {
+    id: 5,
+    title: "Mental Health & Wellness",
+    score: 82,
+    growth: 98,
+    category: "Health & Fitness",
+    reach: "3.2M",
+    platforms: ["instagram", "tiktok", "youtube"],
+    summary: "Mental health awareness content resonating strongly",
+    keywords: ["mental health", "wellness", "anxiety"],
+    hooks: ["I quit my job for my mental health - here's what happened"],
+  },
+];
 
 export default function Home() {
-  const { user, loading, logout } = useAuth();
-  const [, navigate] = useLocation();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { user, logout, loading } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [selectedRegion, setSelectedRegion] = useState("India");
+  const [selectedPlatform, setSelectedPlatform] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("For You");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [expandedTrend, setExpandedTrend] = useState<number | null>(null);
+  const [savedTrends, setSavedTrends] = useState<number[]>([]);
 
-  // Strip OAuth callback params from URL without reloading
+  // Handle window resize for responsive sidebar
   useEffect(() => {
-    const url = new URL(window.location.href);
-    if (url.searchParams.has("code") || url.searchParams.has("state") || url.searchParams.has("error")) {
-      url.searchParams.delete("code");
-      url.searchParams.delete("state");
-      url.searchParams.delete("error");
-      window.history.replaceState({}, "", url.toString());
-    }
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setSidebarOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const handleGetStarted = () => {
-    if (user) {
-      navigate("/dashboard");
-    } else {
-      window.location.href = getLoginUrl();
-    }
-  };
+  const filteredTrends = useMemo(() => {
+    return MOCK_TRENDS.filter((trend) => {
+      const matchesPlatform =
+        selectedPlatform === "all" || trend.platforms.includes(selectedPlatform);
+      const matchesCategory =
+        selectedCategory === "For You" || trend.category === selectedCategory;
+      const matchesSearch =
+        searchQuery === "" ||
+        trend.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        trend.keywords.some((k) => k.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  const handleLogout = async () => {
-    await logout();
-    window.location.href = "/";
-  };
+      return matchesPlatform && matchesCategory && matchesSearch;
+    });
+  }, [selectedPlatform, selectedCategory, searchQuery]);
 
   if (loading) {
     return (
-      <div className="min-h-dvh bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
           <p className="text-slate-400 text-sm">Loading...</p>
@@ -49,408 +138,329 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-dvh bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white">
-      {/* Subtle grid background */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white">
+      {/* Sidebar */}
       <div
-        className="fixed inset-0 opacity-[0.03] pointer-events-none"
-        style={{
-          backgroundImage: "linear-gradient(rgba(168,85,247,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(168,85,247,0.5) 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
-        }}
-      />
-
-      <div className="relative z-10">
-        {/* ── HEADER ─────────────────────────────────────────── */}
-        <header className="sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-purple-500/10">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3">
-            {/* Logo */}
-            <div className="flex items-center gap-2 shrink-0">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-              </div>
-              <span className="text-lg sm:text-xl font-bold text-white">Lumae AI</span>
+        className={`fixed left-0 top-0 h-screen w-64 bg-slate-900/80 backdrop-blur-xl border-r border-purple-500/20 transition-transform duration-300 z-40 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="p-6 flex flex-col h-full overflow-y-auto">
+          {/* Logo */}
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-lg">✨</span>
             </div>
+            <span className="font-bold text-xl">Lumae AI</span>
+          </div>
 
-            {/* Nav */}
-            <nav className="flex items-center gap-2 sm:gap-3">
-              {user ? (
-                <>
-                  <Button
-                    onClick={handleGetStarted}
-                    size="sm"
-                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white text-xs sm:text-sm px-3 sm:px-5 h-9"
-                  >
-                    Dashboard
-                  </Button>
-                  <Button
-                    onClick={handleLogout}
-                    variant="outline"
-                    size="sm"
-                    className="border-red-500/40 text-red-300 hover:bg-red-500/10 hover:border-red-500 text-xs sm:text-sm px-3 sm:px-5 h-9"
-                  >
-                    Sign Out
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  onClick={handleGetStarted}
-                  size="sm"
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white text-xs sm:text-sm px-4 sm:px-6 h-9"
+          {/* Search */}
+          <div className="mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 w-4 h-4 text-purple-400" />
+              <input
+                type="text"
+                placeholder="Search trends..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-slate-800/50 border border-purple-500/30 rounded-lg focus:outline-none focus:border-purple-500 text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <nav className="space-y-3 flex-1">
+            <NavItem icon="🔍" label="Keyword Search" active />
+            <NavItem icon="📊" label="Analyze Competitors" />
+            <NavItem icon="🎬" label="Analyze Video" />
+            <NavItem icon="💡" label="Viral Ideas" />
+            <NavItem icon="📌" label="Saved Posts" />
+          </nav>
+
+          {/* User Section */}
+          <div className="border-t border-purple-500/20 pt-4">
+            {user ? (
+              <div className="space-y-3">
+                <div className="px-3 py-2 bg-purple-500/10 rounded-lg">
+                  <p className="text-sm font-medium truncate">{user.name}</p>
+                  <p className="text-xs text-purple-300 truncate">{user.email}</p>
+                </div>
+                <button
+                  onClick={async () => {
+                    await logout();
+                    setSidebarOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-purple-500/10 rounded-lg transition"
                 >
-                  Sign In / Sign Up
-                </Button>
-              )}
-            </nav>
-          </div>
-        </header>
-
-        {/* ── HERO ───────────────────────────────────────────── */}
-        <section className="px-4 sm:px-6 pt-16 sm:pt-24 pb-16 sm:pb-20">
-          <div className="max-w-4xl mx-auto text-center">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/30 mb-6 text-xs sm:text-sm">
-              <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-              <span className="text-purple-300">Powered by Advanced AI · Free to Start</span>
-            </div>
-
-            {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-5 leading-tight tracking-tight">
-              Create Viral Content with
-              <span className="block bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
-                Lumae AI
-              </span>
-            </h1>
-
-            {/* Subheadline */}
-            <p className="text-base sm:text-lg md:text-xl text-slate-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-              The AI-powered platform that generates, schedules, and automates social media content across all platforms. Transform your strategy in seconds.
-            </p>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
-              <Button
-                onClick={handleGetStarted}
-                className="w-full sm:w-auto px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl shadow-2xl hover:shadow-purple-500/40 transition-all duration-300"
-              >
-                <Rocket className="w-5 h-5 mr-2 shrink-0" />
-                {user ? "Start Generating Now" : "Start Free — No Credit Card"}
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full sm:w-auto px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg font-bold border-2 border-purple-400/50 text-purple-300 hover:bg-purple-500/10 hover:border-purple-400 rounded-xl transition-all duration-300"
-                onClick={() => navigate("/pricing")}
-              >
-                <ArrowRight className="w-5 h-5 mr-2 shrink-0" />
-                View Pricing
-              </Button>
-            </div>
-
-            {/* Free tier signal */}
-            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-slate-400 mb-12">
-              <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-400 shrink-0" /> 3 free AI generations</span>
-              <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-400 shrink-0" /> No credit card required</span>
-              <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-400 shrink-0" /> Cancel anytime</span>
-            </div>
-
-            {/* Social proof stats */}
-            <div className="grid grid-cols-3 gap-3 sm:gap-6 max-w-xl mx-auto">
-              {[
-                { value: "10K+", label: "Content Pieces" },
-                { value: "98%", label: "Satisfaction Rate" },
-                { value: "24/7", label: "AI Available" },
-              ].map(({ value, label }) => (
-                <div key={label} className="text-center p-3 sm:p-4 rounded-xl bg-purple-500/5 border border-purple-500/10">
-                  <div className="text-2xl sm:text-3xl font-bold text-purple-400 mb-0.5">{value}</div>
-                  <div className="text-xs sm:text-sm text-slate-400">{label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── HOW IT WORKS ───────────────────────────────────── */}
-        <section className="py-16 sm:py-20 px-4 sm:px-6 bg-slate-900/30">
-          <div className="max-w-5xl mx-auto">
-            <h2 className="text-3xl sm:text-4xl font-black text-center mb-3">
-              How It Works
-            </h2>
-            <p className="text-center text-slate-400 mb-12 max-w-xl mx-auto text-sm sm:text-base">
-              From idea to published post in under 60 seconds
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 relative">
-              {/* Connector line on desktop */}
-              <div className="hidden sm:block absolute top-10 left-1/3 right-1/3 h-0.5 bg-gradient-to-r from-purple-500/30 to-blue-500/30" />
-
-              {[
-                {
-                  step: "1",
-                  icon: Target,
-                  title: "Tell us your niche",
-                  desc: "Enter your niche, target audience, and content goal. Lumae AI understands your brand voice.",
-                },
-                {
-                  step: "2",
-                  icon: Sparkles,
-                  title: "AI generates content",
-                  desc: "Our AI creates platform-optimized posts, captions, hashtags, and scripts in seconds.",
-                },
-                {
-                  step: "3",
-                  icon: Calendar,
-                  title: "Schedule & publish",
-                  desc: "Review, edit, and schedule posts to go live at the perfect time across all platforms.",
-                },
-              ].map(({ step, icon: Icon, title, desc }) => (
-                <div key={step} className="relative flex flex-col items-center text-center p-6 rounded-2xl bg-purple-500/5 border border-purple-500/10">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center mb-4 text-white font-bold text-lg">
-                    {step}
-                  </div>
-                  <Icon className="w-8 h-8 text-purple-400 mb-3" />
-                  <h3 className="font-bold text-lg mb-2">{title}</h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">{desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── FEATURES ───────────────────────────────────────── */}
-        <section className="py-16 sm:py-20 px-4 sm:px-6">
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-center mb-3">
-              Everything You Need
-              <span className="block text-transparent bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text">
-                to Grow Online
-              </span>
-            </h2>
-            <p className="text-center text-slate-400 mb-12 max-w-2xl mx-auto text-sm sm:text-base">
-              All the tools creators and businesses need to generate, schedule, and automate content across every platform.
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-              {[
-                {
-                  icon: Sparkles,
-                  title: "AI Content Generation",
-                  description: "Generate high-quality, platform-optimized content in seconds using advanced AI",
-                },
-                {
-                  icon: Calendar,
-                  title: "Smart Scheduling",
-                  description: "Schedule posts across Instagram, YouTube, LinkedIn, Twitter, and more automatically",
-                },
-                {
-                  icon: Target,
-                  title: "Content Repurposing",
-                  description: "Turn one piece of content into multiple formats for different platforms",
-                },
-                {
-                  icon: BarChart3,
-                  title: "Analytics & Insights",
-                  description: "Track engagement, reach, and performance across all your social channels",
-                },
-                {
-                  icon: Bot,
-                  title: "Auto-Reply System",
-                  description: "Automate responses to comments and messages with AI-powered replies",
-                },
-                {
-                  icon: Zap,
-                  title: "Video Generation",
-                  description: "Create engaging videos and media content with AI assistance",
-                },
-              ].map((feature, index) => (
-                <div
-                  key={index}
-                  className="p-5 sm:p-6 rounded-xl bg-purple-500/5 border border-purple-500/10 hover:border-purple-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10"
-                >
-                  <feature.icon className="w-10 h-10 text-purple-400 mb-3" />
-                  <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">{feature.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── PRICING SIGNAL ─────────────────────────────────── */}
-        <section className="py-16 sm:py-20 px-4 sm:px-6 bg-slate-900/30">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl sm:text-4xl font-black mb-3">Simple, Transparent Pricing</h2>
-            <p className="text-slate-400 mb-10 text-sm sm:text-base">Start free, upgrade when you're ready</p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 max-w-2xl mx-auto">
-              {/* Free tier */}
-              <div className="p-6 rounded-2xl bg-purple-500/5 border border-purple-500/20 text-left">
-                <div className="text-sm text-purple-400 font-semibold mb-1">FREE</div>
-                <div className="text-3xl font-black mb-1">$0</div>
-                <div className="text-slate-400 text-sm mb-5">Forever free</div>
-                <ul className="space-y-2.5 text-sm text-slate-300">
-                  {["3 AI content generations", "Basic scheduling", "1 social account", "Community support"].map(f => (
-                    <li key={f} className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-400 shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Button onClick={handleGetStarted} className="w-full mt-6 bg-purple-600 hover:bg-purple-700">
-                  Get Started Free
-                </Button>
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </button>
               </div>
+            ) : (
+              <a
+                href={getLoginUrl()}
+                className="w-full block px-3 py-2 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg text-center text-sm font-medium hover:shadow-lg hover:shadow-purple-500/50 transition"
+              >
+                Sign In
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
 
-              {/* Pro tier */}
-              <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-600/20 to-blue-600/20 border border-purple-500/40 text-left relative overflow-hidden">
-                <div className="absolute top-3 right-3 bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full font-semibold">POPULAR</div>
-                <div className="text-sm text-purple-400 font-semibold mb-1">PRO</div>
-                <div className="text-3xl font-black mb-1">$19<span className="text-lg font-normal text-slate-400">/mo</span></div>
-                <div className="text-slate-400 text-sm mb-5">Billed monthly</div>
-                <ul className="space-y-2.5 text-sm text-slate-300">
-                  {["Unlimited AI generations", "Advanced scheduling", "All social platforms", "Priority support", "Analytics & insights", "Team collaboration"].map(f => (
-                    <li key={f} className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-400 shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Button onClick={() => navigate("/pricing")} className="w-full mt-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
-                  Start Pro Trial
-                </Button>
+      {/* Main Content */}
+      <div className={`transition-all duration-300 ${sidebarOpen ? "md:ml-64" : "ml-0"}`}>
+        {/* Top Bar */}
+        <div className="sticky top-0 z-30 bg-slate-900/80 backdrop-blur-xl border-b border-purple-500/20 px-4 md:px-6 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="p-2 hover:bg-purple-500/10 rounded-lg transition md:hidden"
+              >
+                {sidebarOpen ? (
+                  <X className="w-5 h-5" />
+                ) : (
+                  <Menu className="w-5 h-5" />
+                )}
+              </button>
+              <h1 className="text-xl md:text-2xl font-bold">Keyword Search</h1>
+            </div>
+
+            <div className="flex items-center gap-4 flex-wrap md:flex-nowrap">
+              <div className="flex items-center gap-2 px-3 md:px-4 py-2 bg-slate-800/50 rounded-lg border border-purple-500/30 text-xs md:text-sm">
+                <Sun className="w-4 h-4 text-yellow-400 shrink-0" />
+                <span className="hidden sm:inline">Free Plan | 95 searches left</span>
+                <span className="sm:hidden">95 left</span>
               </div>
+              <button className="px-3 md:px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg font-medium text-xs md:text-sm hover:shadow-lg hover:shadow-purple-500/50 transition whitespace-nowrap">
+                Upgrade
+              </button>
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* ── TESTIMONIALS / SOCIAL PROOF ────────────────────── */}
-        <section className="py-16 sm:py-20 px-4 sm:px-6">
-          <div className="max-w-5xl mx-auto">
-            <h2 className="text-3xl sm:text-4xl font-black text-center mb-3">What Creators Say</h2>
-            <p className="text-center text-slate-400 mb-10 text-sm sm:text-base">Join thousands of creators growing with Lumae AI</p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {[
-                {
-                  name: "Priya S.",
-                  handle: "@priyacreates",
-                  text: "Lumae AI saved me 10+ hours a week. My Instagram engagement went up 3x in just one month!",
-                  stars: 5,
-                },
-                {
-                  name: "Rahul M.",
-                  handle: "@rahulmarketing",
-                  text: "The content repurposing feature is insane. One blog post becomes 20 social posts automatically.",
-                  stars: 5,
-                },
-                {
-                  name: "Anjali K.",
-                  handle: "@anjalilifestyle",
-                  text: "Finally an AI tool that understands my brand voice. The content feels authentic, not robotic.",
-                  stars: 5,
-                },
-              ].map(({ name, handle, text, stars }) => (
-                <div key={name} className="p-5 rounded-xl bg-purple-500/5 border border-purple-500/10">
-                  <div className="flex gap-0.5 mb-3">
-                    {Array.from({ length: stars }).map((_, i) => (
-                      <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                    ))}
-                  </div>
-                  <p className="text-slate-300 text-sm leading-relaxed mb-4">"{text}"</p>
-                  <div>
-                    <div className="font-semibold text-sm">{name}</div>
-                    <div className="text-slate-500 text-xs">{handle}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── DATA PRIVACY ───────────────────────────────────── */}
-        <section className="py-12 sm:py-16 px-4 sm:px-6 bg-slate-900/30">
+        {/* Hero Section */}
+        <div className="px-4 md:px-6 py-8 md:py-12">
           <div className="max-w-4xl mx-auto">
-            <div className="flex items-center gap-3 mb-6">
-              <Shield className="w-6 h-6 text-purple-400 shrink-0" />
-              <h2 className="text-2xl sm:text-3xl font-bold">Data Privacy & Security</h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-slate-300 text-sm leading-relaxed">
-              <div>
-                <h3 className="font-semibold text-white mb-2">Google OAuth Integration</h3>
-                <p>We use Google OAuth to authenticate users securely. Your Google account information is used only for account creation and authentication — never sold or shared.</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-white mb-2">Data Retention & Deletion</h3>
-                <p>We retain your data only as long as your account is active. You can request data deletion at any time by contacting support@lumae.co.in.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── FINAL CTA ──────────────────────────────────────── */}
-        <section className="py-16 sm:py-20 px-4 sm:px-6">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Ready to Transform Your Content?
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-pink-300 to-purple-300 bg-clip-text text-transparent">
+              Discover <span className="text-pink-400">Viral</span> Content Ideas
             </h2>
-            <p className="text-slate-300 mb-8 text-base sm:text-lg">
-              Join thousands of creators automating their social media presence with AI.
+            <p className="text-lg md:text-xl text-gray-300 mb-8">
+              Find scroll-stopping content ideas in seconds
             </p>
-            <Button
-              onClick={handleGetStarted}
-              className="w-full sm:w-auto px-8 sm:px-10 py-5 sm:py-6 text-base sm:text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl shadow-2xl hover:shadow-purple-500/40 transition-all duration-300"
-            >
-              <Rocket className="w-5 h-5 mr-2 shrink-0" />
-              {user ? "Go to Dashboard" : "Start Free Today"}
-            </Button>
-            <p className="text-slate-500 text-sm mt-4 flex items-center justify-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 shrink-0" />
-              Takes less than 60 seconds to set up
-            </p>
-          </div>
-        </section>
 
-        {/* ── FOOTER ─────────────────────────────────────────── */}
-        <footer className="py-10 sm:py-12 px-4 sm:px-6 border-t border-purple-500/10">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8 mb-8">
-              <div className="col-span-2 sm:col-span-1">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-7 h-7 bg-gradient-to-br from-purple-600 to-blue-600 rounded-md flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="font-bold text-white">Lumae AI</span>
+            {/* Platform Tabs */}
+            <div className="flex flex-wrap gap-2 md:gap-3 mb-6">
+              {PLATFORMS.map((platform) => (
+                <button
+                  key={platform.id}
+                  onClick={() => setSelectedPlatform(platform.id)}
+                  className={`px-3 md:px-4 py-2 rounded-full font-medium transition flex items-center gap-2 text-sm md:text-base ${
+                    selectedPlatform === platform.id
+                      ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white"
+                      : "bg-slate-800/50 border border-purple-500/30 hover:border-purple-500/50"
+                  }`}
+                >
+                  <span>{platform.icon}</span>
+                  <span className="hidden sm:inline">{platform.name}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Search & Region */}
+            <div className="space-y-4 mb-8">
+              <div className="flex flex-col md:flex-row gap-3">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-4 top-3.5 w-5 h-5 text-purple-400" />
+                  <input
+                    type="text"
+                    placeholder="Search viral content ideas..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-purple-500/30 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-gray-400 text-sm md:text-base"
+                  />
                 </div>
-                <p className="text-slate-500 text-xs leading-relaxed">AI-powered social media content generation and automation platform.</p>
+                <button className="px-6 md:px-8 py-3 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg font-medium hover:shadow-lg hover:shadow-purple-500/50 transition whitespace-nowrap text-sm md:text-base">
+                  Search
+                </button>
               </div>
-              <div>
-                <h4 className="font-semibold text-sm mb-3">Product</h4>
-                <ul className="space-y-2 text-slate-400 text-sm">
-                  <li><button onClick={() => navigate("/pricing")} className="hover:text-purple-400 transition text-left">Pricing</button></li>
-                  <li><button onClick={handleGetStarted} className="hover:text-purple-400 transition text-left">Features</button></li>
-                  <li><button onClick={handleGetStarted} className="hover:text-purple-400 transition text-left">Security</button></li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold text-sm mb-3">Company</h4>
-                <ul className="space-y-2 text-slate-400 text-sm">
-                  <li><a href="mailto:support@lumae.co.in" className="hover:text-purple-400 transition">Contact</a></li>
-                  <li><a href="mailto:support@lumae.co.in" className="hover:text-purple-400 transition">About</a></li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold text-sm mb-3">Legal</h4>
-                <ul className="space-y-2 text-slate-400 text-sm">
-                  <li><a href="/privacy" className="hover:text-purple-400 transition">Privacy Policy</a></li>
-                  <li><a href="/terms" className="hover:text-purple-400 transition">Terms of Service</a></li>
-                </ul>
+
+              {/* Region Selector */}
+              <div className="flex items-center gap-2 md:gap-4 flex-wrap">
+                <span className="text-xs md:text-sm text-gray-400">TRENDING NOW IN</span>
+                <select
+                  value={selectedRegion}
+                  onChange={(e) => setSelectedRegion(e.target.value)}
+                  className="px-3 md:px-4 py-2 bg-slate-800/50 border border-purple-500/30 rounded-lg focus:outline-none focus:border-purple-500 text-white text-sm md:text-base"
+                >
+                  {REGIONS.map((region) => (
+                    <option key={region} value={region}>
+                      {region}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-xs md:text-sm text-gray-400">Refreshes in 10:36:28</span>
               </div>
             </div>
-            <div className="border-t border-purple-500/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 text-xs">
-              <p>© 2026 Lumae AI. All rights reserved.</p>
-              <p>Made with ❤️ for creators worldwide</p>
+
+            {/* Category Filters */}
+            <div className="flex flex-wrap gap-2 md:gap-3">
+              {CATEGORIES.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-3 md:px-4 py-2 rounded-full font-medium transition text-xs md:text-sm ${
+                    selectedCategory === category
+                      ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white"
+                      : "bg-slate-800/50 border border-purple-500/30 hover:border-purple-500/50 text-gray-300"
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
             </div>
           </div>
-        </footer>
+        </div>
+
+        {/* Trending Topics */}
+        <div className="px-4 md:px-6 pb-12">
+          <div className="max-w-4xl mx-auto space-y-4">
+            {filteredTrends.map((trend, index) => (
+              <div
+                key={trend.id}
+                className="bg-slate-800/30 border border-purple-500/20 rounded-lg overflow-hidden hover:border-purple-500/50 transition"
+              >
+                <div
+                  onClick={() =>
+                    setExpandedTrend(expandedTrend === trend.id ? null : trend.id)
+                  }
+                  className="p-4 md:p-6 cursor-pointer"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-2 flex-wrap">
+                        <span className="text-2xl font-bold text-purple-400">
+                          #{index + 1}
+                        </span>
+                        <h3 className="text-lg md:text-xl font-bold break-words">
+                          {trend.title}
+                        </h3>
+                      </div>
+                      <p className="text-gray-400 text-sm">{trend.summary}</p>
+                    </div>
+                    <div className="flex items-center gap-2 md:gap-4 ml-2 shrink-0">
+                      <div className="text-right">
+                        <div className="text-xs md:text-sm text-gray-400">Score</div>
+                        <div className="text-xl md:text-2xl font-bold text-red-400">
+                          {trend.score}
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSavedTrends(
+                            savedTrends.includes(trend.id)
+                              ? savedTrends.filter((id) => id !== trend.id)
+                              : [...savedTrends, trend.id]
+                          );
+                        }}
+                        className={`p-2 rounded-lg transition shrink-0 ${
+                          savedTrends.includes(trend.id)
+                            ? "bg-pink-500/20 text-pink-400"
+                            : "bg-slate-700/50 text-gray-400 hover:text-pink-400"
+                        }`}
+                      >
+                        <Bookmark
+                          className="w-5 h-5"
+                          fill={savedTrends.includes(trend.id) ? "currentColor" : "none"}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Expanded Content */}
+                {expandedTrend === trend.id && (
+                  <div className="border-t border-purple-500/20 p-4 md:p-6 bg-purple-950/20 space-y-4">
+                    <div>
+                      <h4 className="font-semibold mb-2 text-purple-300 text-sm md:text-base">
+                        Related Keywords
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {trend.keywords.map((keyword) => (
+                          <span
+                            key={keyword}
+                            className="px-3 py-1 bg-slate-700/50 rounded-full text-xs md:text-sm"
+                          >
+                            {keyword}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-semibold mb-2 text-purple-300 text-sm md:text-base">
+                        Suggested Hooks
+                      </h4>
+                      <ul className="space-y-2">
+                        {trend.hooks.map((hook, i) => (
+                          <li key={i} className="text-xs md:text-sm text-gray-300">
+                            • {hook}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row gap-3 pt-4">
+                      {user ? (
+                        <>
+                          <button className="flex-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg font-medium hover:shadow-lg hover:shadow-purple-500/50 transition text-sm md:text-base">
+                            Generate Content
+                          </button>
+                          <button className="px-4 py-2 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition text-sm md:text-base">
+                            Share
+                          </button>
+                        </>
+                      ) : (
+                        <a
+                          href={getLoginUrl()}
+                          className="flex-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg font-medium hover:shadow-lg hover:shadow-purple-500/50 transition text-center text-sm md:text-base"
+                        >
+                          Sign In to Generate Content
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
+  );
+}
+
+function NavItem({
+  icon,
+  label,
+  active = false,
+}: {
+  icon: string;
+  label: string;
+  active?: boolean;
+}) {
+  return (
+    <button
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${
+        active
+          ? "bg-gradient-to-r from-pink-500/20 to-purple-600/20 border border-purple-500/50 text-white"
+          : "text-gray-400 hover:text-white hover:bg-slate-800/50"
+      }`}
+    >
+      <span className="text-lg">{icon}</span>
+      <span className="font-medium">{label}</span>
+    </button>
   );
 }
