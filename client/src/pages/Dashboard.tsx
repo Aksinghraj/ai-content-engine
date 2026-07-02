@@ -16,10 +16,18 @@ export default function Dashboard() {
   const subscriptionQuery = trpc.subscription.getStatus.useQuery(undefined, {
     enabled: isAuthenticated,
   });
-  const { data: contentHistory, isLoading: contentLoading } = trpc.content.history.useQuery(undefined);
-  const { data: credits, isLoading: creditsLoading } = trpc.credits.getBalance.useQuery(undefined);
-  const { data: generationStats } = trpc.credits.getGenerationStats.useQuery(undefined);
-  const { data: transactionHistory } = trpc.credits.getTransactionHistory.useQuery({ limit: 10 });
+  const { data: contentHistory, isLoading: contentLoading } = trpc.content.history.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+  const { data: credits, isLoading: creditsLoading } = trpc.credits.getBalance.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+  const { data: generationStats } = trpc.credits.getGenerationStats.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+  const { data: transactionHistory } = trpc.credits.getTransactionHistory.useQuery({ limit: 10 }, {
+    enabled: isAuthenticated,
+  });
 
   useEffect(() => {
     if (!isAuthenticated) {
