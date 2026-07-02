@@ -862,3 +862,150 @@ export async function addImageVideoCredits(userId: number, amount: number) {
     return false;
   }
 }
+
+
+// ============ SAVED TRENDS HELPERS ============
+
+export async function saveTrend(
+  userId: number,
+  trend: {
+    trendTitle: string;
+    trendScore: number;
+    growthPercentage: number;
+    category: string;
+    estimatedReach: string;
+    platforms: string[];
+    summary: string;
+    relatedKeywords: string[];
+    suggestedHooks: string[];
+    bestPostingTime?: string;
+    externalTrendId?: string;
+  }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { savedTrends } = await import("../drizzle/schema");
+  
+  const result = await db.insert(savedTrends).values({
+    userId,
+    trendTitle: trend.trendTitle,
+    trendScore: trend.trendScore,
+    growthPercentage: trend.growthPercentage,
+    category: trend.category,
+    estimatedReach: trend.estimatedReach,
+    platforms: JSON.stringify(trend.platforms),
+    summary: trend.summary,
+    relatedKeywords: JSON.stringify(trend.relatedKeywords),
+    suggestedHooks: JSON.stringify(trend.suggestedHooks),
+    bestPostingTime: trend.bestPostingTime,
+    externalTrendId: trend.externalTrendId,
+  });
+
+  return result;
+}
+
+export async function getSavedTrends(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { savedTrends } = await import("../drizzle/schema");
+  
+  const trends = await db
+    .select()
+    .from(savedTrends)
+    .where(eq(savedTrends.userId, userId))
+    .orderBy(desc(savedTrends.createdAt));
+
+  return trends.map((t) => ({
+    ...t,
+    platforms: JSON.parse(t.platforms as unknown as string),
+    relatedKeywords: JSON.parse(t.relatedKeywords as unknown as string),
+    suggestedHooks: JSON.parse(t.suggestedHooks as unknown as string),
+  }));
+}
+
+export async function removeSavedTrend(userId: number, trendId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { savedTrends } = await import("../drizzle/schema");
+  
+  await db
+    .delete(savedTrends)
+    .where(and(eq(savedTrends.userId, userId), eq(savedTrends.id, trendId)));
+}
+
+// ============ CONTENT IDEAS HELPERS ============
+
+export async function generateContentIdea(
+  userId: number,
+  savedTrendId: number,
+  idea: {
+    platform: string;
+    hook: string;
+    caption: string;
+    hashtags: string[];
+    contentType: string;
+    estimatedEngagement?: number;
+  }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { contentIdeas } = await import("../drizzle/schema");
+  
+  const result = await db.insert(contentIdeas).values({
+    userId,
+    savedTrendId,
+    platform: idea.platform,
+    hook: idea.hook,
+    caption: idea.caption,
+    hashtags: JSON.stringify(idea.hashtags),
+    contentType: idea.contentType,
+    estimatedEngagement: idea.estimatedEngagement,
+  });
+
+  return result;
+}
+
+export async function getContentIdeasForTrend(userId: number, savedTrendId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { contentIdeas } = await import("../drizzle/schema");
+  
+  const ideas = await db
+    .select()
+    .from(contentIdeas)
+    .where(
+      and(
+        eq(contentIdeas.userId, userId),
+        eq(contentIdeas.savedTrendId, savedTrendId)
+      )
+    )
+    .orderBy(desc(contentIdeas.createdAt));
+
+  return ideas.map((idea) => ({
+    ...idea,
+    hashtags: JSON.parse(idea.hashtags as unknown as string),
+  }));
+}
+
+export async function getAllContentIdeas(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { contentIdeas } = await import("../drizzle/schema");
+  
+  const ideas = await db
+    .select()
+    .from(contentIdeas)
+    .where(eq(contentIdeas.userId, userId))
+    .orderBy(desc(contentIdeas.createdAt));
+
+  return ideas.map((idea) => ({
+    ...idea,
+    hashtags: JSON.parse(idea.hashtags as unknown as string),
+  }));
+}
