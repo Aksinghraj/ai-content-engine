@@ -22,6 +22,7 @@ import ContentRewriter from "./pages/ContentRewriter";
 import RepurposingEngine from "./pages/RepurposingEngine";
 import BrandVoice from "./pages/BrandVoice";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
+import AnalyticsDashboardV2 from "./pages/AnalyticsDashboardV2";
 import ContentCalendar from "./pages/ContentCalendar";
 import AIAssistant from "./pages/AIAssistant";
 import PersonalAI from "./pages/PersonalAI";
@@ -87,6 +88,7 @@ function App() {
             <Route path="/sentiment-escalation" component={SentimentEscalation} />
             <Route path="/media-generation" component={MediaGeneration} />
             <Route path="/usage-analytics" component={UsageAnalytics} />
+            <Route path="/analytics-v2" component={AnalyticsDashboardV2} />
             <Route path="/trend-discovery" component={TrendDiscovery} />
 
             {/* 404 Route */}

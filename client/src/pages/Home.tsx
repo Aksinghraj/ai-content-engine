@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { Menu, X, Sun, LogOut, Search, Bookmark } from "lucide-react";
+import ContentGenerationModal from "@/components/ContentGenerationModal";
 
 const REGIONS = ["India", "USA", "UK", "Canada", "Australia", "Brazil"];
 
@@ -91,7 +92,7 @@ const MOCK_TRENDS = [
 ];
 
 export default function Home() {
-  const { user, logout, loading } = useAuth();
+  const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedRegion, setSelectedRegion] = useState("India");
   const [selectedPlatform, setSelectedPlatform] = useState("all");
@@ -99,6 +100,9 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedTrend, setExpandedTrend] = useState<number | null>(null);
   const [savedTrends, setSavedTrends] = useState<number[]>([]);
+  const [showContentModal, setShowContentModal] = useState(false);
+  const [selectedTrendForGeneration, setSelectedTrendForGeneration] = useState<typeof MOCK_TRENDS[0] | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Handle window resize for responsive sidebar
   useEffect(() => {
@@ -125,17 +129,6 @@ export default function Home() {
       return matchesPlatform && matchesCategory && matchesSearch;
     });
   }, [selectedPlatform, selectedCategory, searchQuery]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-slate-400 text-sm">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white">
