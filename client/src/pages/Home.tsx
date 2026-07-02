@@ -2,16 +2,29 @@ import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import {
   Sparkles, Zap, Target, TrendingUp, ArrowRight, Rocket,
   CheckCircle, Star, Shield, Clock, BarChart3, Bot, Calendar
 } from "lucide-react";
 
+// Animated section wrapper component
+function AnimatedSection({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const { ref, isVisible } = useScrollAnimation({ threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+  return (
+    <div
+      ref={ref}
+      className={`transition-all duration-1000 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"} ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
 export default function Home() {
-  const { user, loading, logout } = useAuth();
   const [, navigate] = useLocation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [user, setUser] = useState<any>(null);
 
   // Strip OAuth callback params from URL without reloading
   useEffect(() => {
@@ -33,20 +46,29 @@ export default function Home() {
   };
 
   const handleLogout = async () => {
-    await logout();
-    window.location.href = "/";
+    // Simple logout - just redirect
+    window.location.href = getLoginUrl();
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-dvh bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-slate-400 text-sm">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  // Check user status on mount (optional - for showing dashboard button if logged in)
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const response = await fetch("/api/trpc/auth.me?batch=1", {
+          credentials: "include",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data) && data[0]?.result?.data) {
+            setUser(data[0].result.data);
+          }
+        }
+      } catch (err) {
+        // Silently fail - user is not logged in
+      }
+    };
+    checkUser();
+  }, []);
 
   return (
     <div className="min-h-dvh bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white">
@@ -105,6 +127,7 @@ export default function Home() {
         </header>
 
         {/* ── HERO ───────────────────────────────────────────── */}
+        <AnimatedSection>
         <section className="px-4 sm:px-6 pt-16 sm:pt-24 pb-16 sm:pb-20">
           <div className="max-w-4xl mx-auto text-center">
             {/* Badge */}
@@ -167,9 +190,11 @@ export default function Home() {
             </div>
           </div>
         </section>
+        </AnimatedSection>
 
         {/* ── HOW IT WORKS ───────────────────────────────────── */}
-        <section className="py-16 sm:py-20 px-4 sm:px-6 bg-slate-900/30">
+        <AnimatedSection>
+          <section className="py-16 sm:py-20 px-4 sm:px-6 bg-slate-900/30">
           <div className="max-w-5xl mx-auto">
             <h2 className="text-3xl sm:text-4xl font-black text-center mb-3">
               How It Works
@@ -214,9 +239,11 @@ export default function Home() {
             </div>
           </div>
         </section>
+        </AnimatedSection>
 
-        {/* ── FEATURES ───────────────────────────────────────── */}
-        <section className="py-16 sm:py-20 px-4 sm:px-6">
+        <AnimatedSection>
+          {/* ── FEATURES ───────────────────────────────────────── */}
+          <section className="py-16 sm:py-20 px-4 sm:px-6">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-center mb-3">
               Everything You Need
@@ -273,10 +300,12 @@ export default function Home() {
             </div>
           </div>
         </section>
+        </AnimatedSection>
 
         {/* ── PRICING SIGNAL ─────────────────────────────────── */}
-        <section className="py-16 sm:py-20 px-4 sm:px-6 bg-slate-900/30">
-          <div className="max-w-4xl mx-auto text-center">
+        <AnimatedSection>
+          <section className="py-16 sm:py-20 px-4 sm:px-6 bg-slate-900/30">
+            <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl sm:text-4xl font-black mb-3">Simple, Transparent Pricing</h2>
             <p className="text-slate-400 mb-10 text-sm sm:text-base">Start free, upgrade when you're ready</p>
 
@@ -319,7 +348,8 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </section>
+          </section>
+        </AnimatedSection>
 
         {/* ── TESTIMONIALS / SOCIAL PROOF ────────────────────── */}
         <section className="py-16 sm:py-20 px-4 sm:px-6">

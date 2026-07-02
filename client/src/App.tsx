@@ -7,7 +7,7 @@ import Home from "./pages/Home";
 import LoginEnhanced from "./pages/LoginEnhanced";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
-import KimiDashboard from "./pages/KimiDashboard";
+import SimpleDashboard from "./pages/SimpleDashboard";
 import Settings from "./pages/Settings";
 import Payments from "./pages/Payments";
 import Generator from "./pages/Generator";
@@ -55,7 +55,7 @@ function App() {
             <Route path="/verify-email" component={VerifyEmail} />
 
             {/* Protected Routes */}
-            <Route path="/dashboard" component={KimiDashboard} />
+            <Route path="/dashboard" component={SimpleDashboard} />
             <Route path="/settings" component={Settings} />
             <Route path="/payments" component={Payments} />
             <Route path="/generator" component={Generator} />
