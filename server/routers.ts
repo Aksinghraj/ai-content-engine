@@ -36,7 +36,6 @@ import { socialPostingRouter } from "./routers/socialPosting";
 import { encryptionRouter } from "./routers/encryption";
 import { aiPostGenerationRouter } from "./routers/aiPostGeneration";
 import { aiMediaGeneration } from "./routers/aiMediaGeneration";
-import { trendsDiscoveryRouter } from "./routers/trendsDiscovery";
 
 export const appRouter = router({
   system: systemRouter,
@@ -89,8 +88,7 @@ export const appRouter = router({
   socialPosting: socialPostingRouter,
   encryption: encryptionRouter,
   aiPostGeneration: aiPostGenerationRouter,
-  aiMediaGeneration,
-  trendsDiscovery: trendsDiscoveryRouter,
+  aiMediaGeneration: aiMediaGeneration,
   contentRewriter: contentGenerationRouter.contentRewriter,
   contentRepurposer: contentGenerationRouter.contentRepurposer,
   aiAssistant: contentGenerationRouter.aiAssistant,
