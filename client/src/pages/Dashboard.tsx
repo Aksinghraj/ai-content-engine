@@ -1,19 +1,25 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
-import { Zap, CheckCircle, AlertCircle, ArrowLeft, Crown, Flame, Cog, Plus, Sparkles, Brain, ArrowRight, Wand2, Play } from "lucide-react";
+import { Zap, CheckCircle, AlertCircle, ArrowLeft, Crown, Flame, Cog, Plus, Sparkles, Brain, ArrowRight, Wand2, Play, TrendingUp, BookmarkPlus, ChevronDown, ChevronUp, BarChart3, Download, Filter } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
+  const [expandedTrend, setExpandedTrend] = useState<number | null>(null);
+  const [contentFilter, setContentFilter] = useState<"all" | "recent" | "top">("recent");
   const subscriptionQuery = trpc.subscription.getStatus.useQuery(undefined, {
     enabled: isAuthenticated,
   });
+  const { data: contentHistory, isLoading: contentLoading } = trpc.content.history.useQuery(undefined);
+  const { data: credits, isLoading: creditsLoading } = trpc.credits.getBalance.useQuery(undefined);
+  const { data: generationStats } = trpc.credits.getGenerationStats.useQuery(undefined);
+  const { data: transactionHistory } = trpc.credits.getTransactionHistory.useQuery({ limit: 10 });
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -26,6 +32,51 @@ export default function Dashboard() {
   }
 
   const status = subscriptionQuery.data;
+
+  // Mock saved trends data (in production, this would come from tRPC)
+  const mockSavedTrends = [
+    {
+      id: 1,
+      title: "#AIRevolution",
+      score: 94,
+      growth: 156,
+      category: "Technology",
+      reach: "2.5M",
+      platforms: ["TikTok", "Instagram", "Twitter"],
+      keywords: ["AI", "Machine Learning", "ChatGPT", "Automation"],
+      hooks: ["The AI takeover is here...", "This AI feature just changed everything..."],
+    },
+    {
+      id: 2,
+      title: "#SideHustleLife",
+      score: 87,
+      growth: 124,
+      category: "Business",
+      reach: "1.8M",
+      platforms: ["Instagram", "YouTube", "LinkedIn"],
+      keywords: ["Passive Income", "Entrepreneurship", "Freelance"],
+      hooks: ["I made $5k this week with this...", "The best side hustle in 2026..."],
+    },
+    {
+      id: 3,
+      title: "#WellnessJourney",
+      score: 79,
+      growth: 98,
+      category: "Health",
+      reach: "1.2M",
+      platforms: ["TikTok", "Instagram"],
+      keywords: ["Mental Health", "Fitness", "Meditation"],
+      hooks: ["This wellness hack changed my life...", "5 things I do every morning..."],
+    },
+  ];
+
+  // Filter content history
+  const filteredContent = contentHistory ? [...contentHistory].sort((a, b) => {
+    if (contentFilter === "recent") {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+    return 0;
+  }).slice(0, 6) : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -425,6 +476,310 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </div>
+        </div>
+
+        {/* Saved Trends Section */}
+        <div className="mt-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+              <TrendingUp className="w-6 h-6 text-purple-400" />
+              Trending Topics
+            </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/trending")}
+              className="text-purple-400 border-purple-500/30 hover:border-purple-500/60"
+            >
+              View All Trends
+            </Button>
+          </div>
+
+          <div className="space-y-3">
+            {mockSavedTrends.map((trend) => (
+              <div
+                key={trend.id}
+                className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden hover:border-purple-500/30 transition-all"
+              >
+                {/* Trend Header */}
+                <button
+                  onClick={() => setExpandedTrend(expandedTrend === trend.id ? null : trend.id)}
+                  className="w-full p-4 flex items-center justify-between hover:bg-slate-800 transition-colors"
+                >
+                  <div className="flex items-center gap-4 flex-1 text-left">
+                    <div className="flex items-center gap-2">
+                      <Flame className="w-5 h-5 text-orange-400" />
+                      <div>
+                        <h3 className="font-bold text-lg text-white">{trend.title}</h3>
+                        <p className="text-slate-400 text-sm">{trend.category}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-6 mr-4">
+                    <div className="text-right">
+                      <div className="flex items-center gap-1 text-green-400 font-semibold">
+                        <TrendingUp className="w-4 h-4" />
+                        +{trend.growth}%
+                      </div>
+                      <p className="text-slate-400 text-sm">Trend Score: {trend.score}</p>
+                    </div>
+                    {expandedTrend === trend.id ? (
+                      <ChevronUp className="w-5 h-5 text-slate-400" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-slate-400" />
+                    )}
+                  </div>
+                </button>
+
+                {/* Expanded Content */}
+                {expandedTrend === trend.id && (
+                  <div className="border-t border-slate-700 p-4 bg-slate-900/30 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-slate-400 text-sm mb-2">Platforms</p>
+                        <div className="flex flex-wrap gap-2">
+                          {trend.platforms.map((platform) => (
+                            <span
+                              key={platform}
+                              className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-sm border border-purple-500/30"
+                            >
+                              {platform}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-slate-400 text-sm mb-2">Estimated Reach</p>
+                        <p className="text-xl font-bold text-blue-400">{trend.reach}</p>
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <p className="text-slate-400 text-sm mb-2">Related Keywords</p>
+                        <div className="flex flex-wrap gap-2">
+                          {trend.keywords.map((keyword) => (
+                            <span
+                              key={keyword}
+                              className="px-3 py-1 bg-slate-700 text-slate-300 rounded-full text-sm"
+                            >
+                              {keyword}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <p className="text-slate-400 text-sm mb-2">Suggested Hooks</p>
+                        <ul className="space-y-2">
+                          {trend.hooks.map((hook, idx) => (
+                            <li key={idx} className="text-slate-300 text-sm flex gap-2">
+                              <span className="text-purple-400">•</span>
+                              {hook}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-4 border-t border-slate-700">
+                      <Button
+                        size="sm"
+                        className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+                        onClick={() => navigate("/generator")}
+                      >
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Generate Content
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 border-slate-600 hover:bg-slate-800"
+                      >
+                        <BookmarkPlus className="w-4 h-4 mr-2" />
+                        Save
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Generated Content Gallery */}
+        <div className="mt-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-purple-400" />
+              Your Generated Content
+            </h2>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant={contentFilter === "recent" ? "default" : "outline"}
+                onClick={() => setContentFilter("recent")}
+                className={contentFilter === "recent" ? "bg-purple-600" : ""}
+              >
+                Recent
+              </Button>
+              <Button
+                size="sm"
+                variant={contentFilter === "top" ? "default" : "outline"}
+                onClick={() => setContentFilter("top")}
+                className={contentFilter === "top" ? "bg-purple-600" : ""}
+              >
+                Top Performing
+              </Button>
+            </div>
+          </div>
+
+          {contentLoading ? (
+            <div className="text-center py-12">
+              <p className="text-slate-400">Loading your content...</p>
+            </div>
+          ) : filteredContent.length === 0 ? (
+            <Card className="border-slate-700 bg-slate-800/50 backdrop-blur-sm">
+              <CardContent className="py-12 text-center">
+                <Sparkles className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                <p className="text-slate-400 mb-4">No content generated yet</p>
+                <Button
+                  onClick={() => navigate("/generator")}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                >
+                  Create Your First Content
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredContent.map((content: any) => {
+                const parsedContent = typeof content.generatedContent === "string"
+                  ? JSON.parse(content.generatedContent)
+                  : content.generatedContent;
+
+                return (
+                  <Card key={content.id} className="border-slate-700 bg-slate-800/50 backdrop-blur-sm hover:border-purple-500/30 transition-all">
+                    <CardContent className="pt-6">
+                      <div className="mb-3">
+                        <p className="text-xs text-slate-400 mb-1">
+                          {new Date(content.createdAt).toLocaleDateString()}
+                        </p>
+                        <p className="text-sm font-semibold text-purple-400 capitalize">
+                          {content.platform}
+                        </p>
+                      </div>
+
+                      <p className="text-slate-300 text-sm line-clamp-3 mb-4">
+                        {parsedContent?.text || parsedContent?.caption || "Generated content"}
+                      </p>
+
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 text-xs border-slate-600 hover:bg-slate-700"
+                          onClick={() => {
+                            navigator.clipboard.writeText(
+                              parsedContent?.text || parsedContent?.caption || ""
+                            );
+                          }}
+                        >
+                          Copy
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 text-xs border-slate-600 hover:bg-slate-700"
+                        >
+                          <Download className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Credit Usage Analytics */}
+        <div className="mt-12 mb-12">
+          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+            <BarChart3 className="w-6 h-6 text-purple-400" />
+            Credit Usage
+          </h2>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+            {/* Balance Card */}
+            <Card className="border-purple-500/30 bg-gradient-to-br from-purple-900/20 to-slate-800/50 backdrop-blur-sm">
+              <CardContent className="pt-6">
+                <p className="text-slate-400 text-sm mb-2">Total Balance</p>
+                <p className="text-4xl font-bold text-transparent bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text mb-2">
+                  {credits?.balance || 0}
+                </p>
+                <p className="text-slate-400 text-sm">
+                  {credits?.totalPurchased || 0} purchased • {credits?.totalUsed || 0} used
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Purchased Card */}
+            <Card className="border-slate-700 bg-slate-800/50 backdrop-blur-sm">
+              <CardContent className="pt-6">
+                <p className="text-slate-400 text-sm mb-2">Total Purchased</p>
+                <p className="text-4xl font-bold text-blue-400">{credits?.totalPurchased || 0}</p>
+                <p className="text-slate-400 text-sm mt-2">credits</p>
+              </CardContent>
+            </Card>
+
+            {/* Used Card */}
+            <Card className="border-slate-700 bg-slate-800/50 backdrop-blur-sm">
+              <CardContent className="pt-6">
+                <p className="text-slate-400 text-sm mb-2">Total Used</p>
+                <p className="text-4xl font-bold text-orange-400">{credits?.totalUsed || 0}</p>
+                <p className="text-slate-400 text-sm mt-2">credits</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Transaction History */}
+          {transactionHistory && transactionHistory.length > 0 && (
+            <Card className="border-slate-700 bg-slate-800/50 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-white">Recent Transactions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {transactionHistory.slice(0, 5).map((transaction: any) => (
+                    <div
+                      key={transaction.id}
+                      className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg border border-slate-700"
+                    >
+                      <div>
+                        <p className="font-semibold text-white capitalize">
+                          {transaction.type === "purchase" && "✓ Purchase"}
+                          {transaction.type === "usage" && "✗ Usage"}
+                          {transaction.type === "refund" && "↶ Refund"}
+                        </p>
+                        <p className="text-sm text-slate-400">
+                          {new Date(transaction.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <p className={`font-bold ${
+                        transaction.type === "usage"
+                          ? "text-red-400"
+                          : "text-green-400"
+                      }`}>
+                        {transaction.type === "usage" ? "-" : "+"}
+                        {transaction.amount}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </main>
     </div>
