@@ -75,6 +75,7 @@ function App() {
             <Route path="/repurposing" component={RepurposingEngine} />
             <Route path="/brand-voice" component={BrandVoice} />
             <Route path="/analytics" component={AnalyticsDashboard} />
+            <Route path="/analytics-dash" component={AnalyticsDashboard} />
             <Route path="/calendar" component={ContentCalendar} />
             <Route path="/ai-assistant" component={AIAssistant} />
             <Route path="/personal-ai" component={PersonalAI} />
