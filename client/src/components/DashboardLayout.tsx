@@ -46,6 +46,8 @@ const menuItems = [
   { icon: Users, label: "Connected Accounts", path: "/connected-accounts" },
   { icon: MessageCircle, label: "Auto-Reply AI", path: "/auto-reply-advanced" },
   { icon: Sparkles, label: "Create Post Pro", path: "/create-post-advanced" },
+  { icon: Users, label: "My Profile", path: "/profile-advanced" },
+  { icon: Settings, label: "Settings", path: "/settings-advanced" },
   { icon: Settings, label: "OAuth Settings", path: "/oauth-settings" },
 ];
 

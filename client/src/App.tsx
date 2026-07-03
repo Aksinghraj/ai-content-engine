@@ -43,6 +43,8 @@ import UsageAnalytics from "./pages/UsageAnalytics";
 import ConnectedAccounts from "./pages/ConnectedAccounts";
 import AutoReplyAdvanced from "./pages/AutoReplyAdvanced";
 import CreatePostAdvanced from "./pages/CreatePostAdvanced";
+import SettingsAdvanced from "./pages/SettingsAdvanced";
+import ProfileAdvanced from "./pages/ProfileAdvanced";
 
 function App() {
   return (
@@ -92,6 +94,8 @@ function App() {
             <Route path="/connected-accounts" component={ConnectedAccounts} />
             <Route path="/auto-reply-advanced" component={AutoReplyAdvanced} />
             <Route path="/create-post-advanced" component={CreatePostAdvanced} />
+            <Route path="/settings-advanced" component={SettingsAdvanced} />
+            <Route path="/profile-advanced" component={ProfileAdvanced} />
             <Route path="*" component={NotFound} />
           </Switch>
         </TooltipProvider>
