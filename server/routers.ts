@@ -36,6 +36,7 @@ import { socialPostingRouter } from "./routers/socialPosting";
 import { encryptionRouter } from "./routers/encryption";
 import { aiPostGenerationRouter } from "./routers/aiPostGeneration";
 import { aiMediaGeneration } from "./routers/aiMediaGeneration";
+import { oauthCallbackRouter } from "./routers/oauthCallback";
 
 export const appRouter = router({
   system: systemRouter,
@@ -89,6 +90,7 @@ export const appRouter = router({
   encryption: encryptionRouter,
   aiPostGeneration: aiPostGenerationRouter,
   aiMediaGeneration: aiMediaGeneration,
+  oauth: oauthCallbackRouter,
   contentRewriter: contentGenerationRouter.contentRewriter,
   contentRepurposer: contentGenerationRouter.contentRepurposer,
   aiAssistant: contentGenerationRouter.aiAssistant,
