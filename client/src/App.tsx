@@ -41,6 +41,8 @@ import MediaGeneration from "./pages/MediaGeneration";
 import VerifyEmail from "./pages/VerifyEmail";
 import UsageAnalytics from "./pages/UsageAnalytics";
 import ConnectedAccounts from "./pages/ConnectedAccounts";
+import AutoReplyAdvanced from "./pages/AutoReplyAdvanced";
+import CreatePostAdvanced from "./pages/CreatePostAdvanced";
 
 function App() {
   return (
@@ -88,6 +90,8 @@ function App() {
             <Route path="/media-generation" component={MediaGeneration} />
             <Route path="/usage-analytics" component={UsageAnalytics} />
             <Route path="/connected-accounts" component={ConnectedAccounts} />
+            <Route path="/auto-reply-advanced" component={AutoReplyAdvanced} />
+            <Route path="/create-post-advanced" component={CreatePostAdvanced} />
             <Route path="*" component={NotFound} />
           </Switch>
         </TooltipProvider>
