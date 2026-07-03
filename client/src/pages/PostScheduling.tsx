@@ -310,7 +310,7 @@ function PostSchedulingContent() {
         </div>
 
         {/* Analytics Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="bg-slate-800/50 border-purple-500/20 hover:border-purple-500/50 transition">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -359,7 +359,7 @@ function PostSchedulingContent() {
 
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-slate-800/50 border border-purple-500/20">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-2 bg-slate-800/50 border border-purple-500/20 p-2 h-auto">
             <TabsTrigger value="create" className="data-[state=active]:bg-purple-600">
               <Plus className="w-4 h-4 mr-2" />
               Create Post
@@ -380,7 +380,7 @@ function PostSchedulingContent() {
 
           {/* Create Post Tab */}
           <TabsContent value="create" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Post Editor */}
               <div className="lg:col-span-2 space-y-6">
                 <Card className="bg-slate-800/50 border-purple-500/20">
@@ -500,7 +500,7 @@ function PostSchedulingContent() {
                     {/* Platform Selection */}
                     <div className="space-y-3">
                       <Label className="text-white">Select Platforms</Label>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                         {mockAccounts.map((account) => (
                           <button
                             key={account.id}
@@ -524,7 +524,7 @@ function PostSchedulingContent() {
                     </div>
 
                     {/* Schedule Settings */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-white">Date</Label>
                         <Input
@@ -652,7 +652,7 @@ function PostSchedulingContent() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="md:col-span-1 space-y-2">
                     <Label className="text-white">Topic / Idea *</Label>
                     <Input
@@ -713,7 +713,7 @@ function PostSchedulingContent() {
                       <CheckCircle2 className="w-5 h-5 text-green-400" />
                       Generated Content — Ready to Use!
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {platformList.map((platform) => {
                         const content = generatedPlatformPosts[platform];
                         const limit = PLATFORM_CHAR_LIMITS[platform];
@@ -790,7 +790,7 @@ function PostSchedulingContent() {
 
                 {/* Empty state - show platform cards for individual generation */}
                 {Object.keys(generatedPlatformPosts).length === 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {platformList.map((platform) => (
                       <Card key={platform} className="bg-slate-700/30 border-purple-500/10 hover:border-purple-500/30 transition cursor-pointer"
                         onClick={() => aiTopic.trim() && handleGenerateSingle(platform)}>
@@ -900,7 +900,7 @@ function PostSchedulingContent() {
 
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
               <Card className="bg-slate-800/50 border-purple-500/20">
                 <CardHeader>
                   <CardTitle className="text-white">Top Performing Post</CardTitle>
@@ -908,7 +908,7 @@ function PostSchedulingContent() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p className="text-white line-clamp-3">{mockAnalytics.topPerformingPost.content}</p>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="p-3 bg-slate-700/50 rounded-lg">
                       <p className="text-xs text-purple-300 mb-1">Engagement Rate</p>
                       <p className="text-2xl font-bold text-white">{getEngagementRate(mockAnalytics.topPerformingPost)}%</p>
@@ -949,7 +949,7 @@ function PostSchedulingContent() {
                 <CardDescription className="text-purple-200">Optimal times to post for maximum engagement</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 overflow-x-auto">
                   {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, idx) => (
                     <div key={day} className="p-4 bg-slate-700/50 rounded-lg border border-purple-500/20 text-center">
                       <p className="text-sm font-medium text-white mb-2">{day}</p>

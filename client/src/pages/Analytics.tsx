@@ -1,4 +1,5 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
@@ -42,8 +43,8 @@ export default function Analytics() {
 
   if (user?.subscriptionTier !== "pro") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
-        <div className="max-w-4xl mx-auto">
+      <DashboardLayout>
+        <div className="space-y-6">
           <Card className="bg-slate-800/50 border-purple-500/20 p-8 text-center">
             <Eye className="w-12 h-12 text-blue-400 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-white mb-2">Pro Feature</h2>
@@ -53,13 +54,14 @@ export default function Analytics() {
             </Button>
           </Card>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
-      <div className="max-w-7xl mx-auto">
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">Analytics & Performance</h1>
           <p className="text-slate-300">Track your content performance across all platforms</p>
@@ -186,7 +188,8 @@ export default function Analytics() {
             </div>
           </Card>
         </div>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
