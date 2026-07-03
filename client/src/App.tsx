@@ -22,6 +22,7 @@ import ContentRewriter from "./pages/ContentRewriter";
 import RepurposingEngine from "./pages/RepurposingEngine";
 import BrandVoice from "./pages/BrandVoice";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
+import AnalyticsDashboardEnhanced from "./pages/AnalyticsDashboardEnhanced";
 import ContentCalendar from "./pages/ContentCalendar";
 import AIAssistant from "./pages/AIAssistant";
 import PersonalAI from "./pages/PersonalAI";
@@ -74,8 +75,8 @@ function App() {
             <Route path="/content-rewriter" component={ContentRewriter} />
             <Route path="/repurposing" component={RepurposingEngine} />
             <Route path="/brand-voice" component={BrandVoice} />
-            <Route path="/analytics" component={AnalyticsDashboard} />
-            <Route path="/analytics-dash" component={AnalyticsDashboard} />
+            <Route path="/analytics" component={AnalyticsDashboardEnhanced} />
+            <Route path="/analytics-dash" component={AnalyticsDashboardEnhanced} />
             <Route path="/calendar" component={ContentCalendar} />
             <Route path="/ai-assistant" component={AIAssistant} />
             <Route path="/personal-ai" component={PersonalAI} />
