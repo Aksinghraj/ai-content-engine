@@ -185,9 +185,8 @@ function DashboardLayoutContent({
               </button>
               {!isCollapsed ? (
                 <div className="flex items-center gap-2 min-w-0">
-                  <img src="/manus-storage/lumae-logo_a0be4803.png" alt="Lumae AI" className="h-8 w-8 object-contain" />
                   <span className="font-semibold tracking-tight truncate">
-                    Lumae AI
+                    Navigation
                   </span>
                 </div>
               ) : null}
