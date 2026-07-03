@@ -43,6 +43,7 @@ const menuItems = [
   { icon: Wand2, label: "Content Rewriter", path: "/rewriter" },
   { icon: TrendingUp, label: "Viral Score", path: "/viral-score" },
   { icon: Users, label: "Social Automation", path: "/social-automation" },
+  { icon: Users, label: "Connected Accounts", path: "/connected-accounts" },
   { icon: Settings, label: "OAuth Settings", path: "/oauth-settings" },
 ];
 
