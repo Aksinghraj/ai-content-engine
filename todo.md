@@ -684,3 +684,10 @@
 - [x] Add "Subscription Plans" link with Crown icon to DashboardLayout sidebar
 - [x] Verify all 484 tests passing (0 failures)
 - [x] Zero TypeScript errors
+
+## Session & Login UX Improvements (COMPLETED ✅)
+- [x] Session already set to 1 year (ONE_YEAR_MS) — users stay logged in without re-auth
+- [x] Added "Back to Home" button (top-left corner) on LoginEnhanced.tsx
+- [x] Added "Back to Home" link at the bottom of LoginEnhanced.tsx
+- [x] Added "Back to Home" button on the DashboardLayout redirect spinner screen
+- [x] All 484 tests passing, zero TypeScript errors

@@ -53,6 +53,18 @@ export default function LoginEnhanced() {
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
       </div>
 
+      {/* Back to Home - top left corner */}
+      <div className="absolute top-6 left-6 z-20">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/")}
+          className="text-slate-300 hover:text-white hover:bg-slate-700/50 gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Home
+        </Button>
+      </div>
+
       <div className="relative z-10 w-full max-w-md">
         {/* Logo Section */}
         <div className="text-center mb-12">
@@ -247,8 +259,16 @@ export default function LoginEnhanced() {
         </div>
 
         {/* Footer */}
-        <div className="mt-12 text-center text-xs text-slate-500">
-          <p>By signing in, you agree to our Terms of Service and Privacy Policy</p>
+        <div className="mt-8 text-center">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/")}
+            className="text-slate-400 hover:text-white hover:bg-slate-700/50 gap-2 mb-4"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </Button>
+          <p className="text-xs text-slate-500">By signing in, you agree to our Terms of Service and Privacy Policy</p>
         </div>
       </div>
     </div>

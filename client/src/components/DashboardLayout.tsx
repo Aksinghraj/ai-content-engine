@@ -88,9 +88,16 @@ export default function DashboardLayout({
     // Show spinner while redirect is in progress
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-6">
           <div className="w-10 h-10 rounded-full border-4 border-purple-500 border-t-transparent animate-spin" />
           <p className="text-sm text-muted-foreground">Redirecting to login...</p>
+          <Button
+            variant="ghost"
+            onClick={() => { window.location.href = "/"; }}
+            className="text-muted-foreground hover:text-foreground gap-2 text-sm"
+          >
+            ← Back to Home
+          </Button>
         </div>
       </div>
     );
