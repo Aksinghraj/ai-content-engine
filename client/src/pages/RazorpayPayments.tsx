@@ -63,7 +63,7 @@ export default function RazorpayPayments() {
 
       // Initialize Razorpay payment
       const options = {
-        key: process.env.VITE_RAZORPAY_KEY_ID,
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: pkg.price * 100, // Amount in paise
         currency: "INR",
         name: "Lumae AI",
@@ -132,7 +132,7 @@ export default function RazorpayPayments() {
       setError(null);
 
       const options = {
-        key: process.env.VITE_RAZORPAY_KEY_ID,
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: parseFloat(customAmount) * 100,
         currency: "INR",
         name: "Lumae AI",
