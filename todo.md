@@ -737,3 +737,22 @@
 - [x] Fixed: webhook handler now actually updates DB (addCredits + updateUserSubscription)
 - [x] Fixed: webhook payload parsing for both old and new Razorpay event formats
 - [x] All 480/484 tests passing (4 pre-existing network timeout failures unrelated to payment)
+
+## My Credits Page & Free Trial Grant (IN PROGRESS)
+- [ ] Create /my-credits page with credit balance, transaction history, Buy More button
+- [ ] Add sidebar link for My Credits in DashboardLayout
+- [ ] Add /my-credits route in App.tsx
+- [ ] Implement 50 free credits grant for new users on first login
+- [ ] Ensure free credits are only granted once per user (idempotent)
+- [ ] Show welcome toast after free credits are granted
+
+## My Credits Page & Free Trial Credits (COMPLETED ✅)
+- [x] Created /my-credits page with current balance, total purchased, total used stats
+- [x] Added paginated transaction history with type badges (purchase/usage/refund)
+- [x] Added Quick Buy packages section linking to /razorpay-payments
+- [x] Added My Credits sidebar link in DashboardLayout (Wallet icon)
+- [x] Added /my-credits route in App.tsx
+- [x] Implemented 50 free trial credit grant for new users on first login (Google OAuth)
+- [x] Implemented 50 free trial credit grant for new users on first login (Manus OAuth)
+- [x] Fixed new user detection order (check BEFORE upsert, not after)
+- [x] All 484 tests passing, zero TypeScript errors

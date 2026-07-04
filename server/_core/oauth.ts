@@ -165,6 +165,10 @@ export function registerOAuthRoutes(app: Express) {
       // Use "google:<id>" as the openId so it doesn't clash with Manus openIds
       const openId = `google:${profile.id}`;
 
+      // Detect new user BEFORE upsert so isNewGoogleUser is accurate
+      const existingGoogleUser = await db.getUserByOpenId(openId);
+      const isNewGoogleUser = !existingGoogleUser;
+
       await db.upsertUser({
         openId,
         name: profile.name || null,
@@ -195,6 +199,29 @@ export function registerOAuthRoutes(app: Express) {
             console.warn("[Google OAuth] Failed to send verification email:", emailErr);
             // Don't block login if email fails
           }
+        }
+      }
+
+      // Grant 50 free trial credits to brand new Google users
+      if (isNewGoogleUser) {
+        try {
+          const freshUser = await db.getUserByOpenId(openId);
+          if (freshUser) {
+            const existingCredits = await db.getUserCredits(freshUser.id);
+            if (!existingCredits) {
+              await db.initializeUserCredits(freshUser.id);
+              await db.addCredits(
+                freshUser.id,
+                50,
+                "Welcome gift: 50 free trial credits",
+                undefined
+              );
+              console.log(`[Google OAuth] Granted 50 free trial credits to new user: ${freshUser.id}`);
+            }
+          }
+        } catch (credErr) {
+          console.warn("[Google OAuth] Failed to grant free trial credits:", credErr);
+          // Don't block login if credit grant fails
         }
       }
 
@@ -280,6 +307,10 @@ export function registerOAuthRoutes(app: Express) {
         return;
       }
 
+      // Detect new user BEFORE upsert
+      const existingManusUser = await db.getUserByOpenId(userInfo.openId);
+      const isNewManusUser = !existingManusUser;
+
       await db.upsertUser({
         openId: userInfo.openId,
         name: userInfo.name || null,
@@ -287,6 +318,29 @@ export function registerOAuthRoutes(app: Express) {
         loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
         lastSignedIn: new Date(),
       });
+
+      // Grant 50 free trial credits to brand new Manus users
+      if (isNewManusUser) {
+        try {
+          const freshUser = await db.getUserByOpenId(userInfo.openId);
+          if (freshUser) {
+            const existingCredits = await db.getUserCredits(freshUser.id);
+            if (!existingCredits) {
+              await db.initializeUserCredits(freshUser.id);
+              await db.addCredits(
+                freshUser.id,
+                50,
+                "Welcome gift: 50 free trial credits",
+                undefined
+              );
+              console.log(`[OAuth] Granted 50 free trial credits to new user: ${freshUser.id}`);
+            }
+          }
+        } catch (credErr) {
+          console.warn("[OAuth] Failed to grant free trial credits:", credErr);
+          // Don't block login if credit grant fails
+        }
+      }
 
       const sessionToken = await sdk.createSessionToken(userInfo.openId, {
         name: userInfo.name || "",

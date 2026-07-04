@@ -48,6 +48,7 @@ import SettingsAdvanced from "./pages/SettingsAdvanced";
 import ProfileAdvanced from "./pages/ProfileAdvanced";
 import RazorpayPayments from "./pages/RazorpayPayments";
 import SubscriptionPlans from "./pages/SubscriptionPlans";
+import MyCredits from "./pages/MyCredits";
 import AboutUs from "./pages/AboutUs";
 import Contact from "./pages/Contact";
 
@@ -107,6 +108,7 @@ function App() {
             <Route path="/profile-advanced" component={ProfileAdvanced} />
             <Route path="/razorpay-payments" component={RazorpayPayments} />
             <Route path="/subscription-plans" component={SubscriptionPlans} />
+            <Route path="/my-credits" component={MyCredits} />
             <Route path="*" component={NotFound} />
           </Switch>
         </TooltipProvider>
