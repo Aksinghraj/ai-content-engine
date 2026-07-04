@@ -48,6 +48,8 @@ import SettingsAdvanced from "./pages/SettingsAdvanced";
 import ProfileAdvanced from "./pages/ProfileAdvanced";
 import RazorpayPayments from "./pages/RazorpayPayments";
 import SubscriptionPlans from "./pages/SubscriptionPlans";
+import AboutUs from "./pages/AboutUs";
+import Contact from "./pages/Contact";
 
 function App() {
   return (
@@ -59,7 +61,10 @@ function App() {
             <Route path="/" component={Home} />
             <Route path="/login" component={LoginEnhanced} />
             <Route path="/privacy" component={PrivacyPolicy} />
+            <Route path="/privacy-policy" component={PrivacyPolicy} />
             <Route path="/terms" component={TermsOfService} />
+            <Route path="/about" component={AboutUs} />
+            <Route path="/contact" component={Contact} />
             <Route path="/verify-email" component={VerifyEmail} />
 
             {/* Protected Routes */}

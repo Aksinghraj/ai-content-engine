@@ -462,21 +462,22 @@ export default function Home() {
               <div>
                 <h4 className="font-semibold text-sm mb-3">Company</h4>
                 <ul className="space-y-2 text-slate-400 text-sm">
-                  <li><a href="mailto:support@lumae.co.in" className="hover:text-purple-400 transition">Contact</a></li>
-                  <li><a href="mailto:support@lumae.co.in" className="hover:text-purple-400 transition">About</a></li>
+                  <li><button onClick={() => navigate("/about")} className="hover:text-purple-400 transition text-left">About Us</button></li>
+                  <li><button onClick={() => navigate("/contact")} className="hover:text-purple-400 transition text-left">Contact</button></li>
+                  <li><a href="mailto:imankitsingh.in@gmail.com" className="hover:text-purple-400 transition">Support</a></li>
                 </ul>
               </div>
               <div>
                 <h4 className="font-semibold text-sm mb-3">Legal</h4>
                 <ul className="space-y-2 text-slate-400 text-sm">
-                  <li><a href="/privacy" className="hover:text-purple-400 transition">Privacy Policy</a></li>
-                  <li><a href="/terms" className="hover:text-purple-400 transition">Terms of Service</a></li>
+                  <li><button onClick={() => navigate("/privacy-policy")} className="hover:text-purple-400 transition text-left">Privacy Policy</button></li>
+                  <li><button onClick={() => navigate("/terms")} className="hover:text-purple-400 transition text-left">Terms & Conditions</button></li>
                 </ul>
               </div>
             </div>
             <div className="border-t border-purple-500/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 text-xs">
-              <p>© 2026 Lumae AI. All rights reserved.</p>
-              <p>Made with ❤️ for creators worldwide</p>
+              <p>© 2026 Lumae AI. All rights reserved. Owned by <a href="/about" className="hover:text-purple-400 transition">Ankit Singh</a>.</p>
+              <p><a href="mailto:imankitsingh.in@gmail.com" className="hover:text-purple-400 transition">imankitsingh.in@gmail.com</a></p>
             </div>
           </div>
         </footer>

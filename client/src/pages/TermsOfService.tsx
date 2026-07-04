@@ -1,117 +1,90 @@
+import { useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+
 export default function TermsOfService() {
+  const [, navigate] = useLocation();
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="max-w-4xl mx-auto px-4 py-12">
-        <h1 className="text-4xl font-bold mb-8">Terms of Service</h1>
-        <p className="text-sm text-muted-foreground mb-8">Last updated: July 2, 2026</p>
-
-        <div className="space-y-8">
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">1. Acceptance of Terms</h2>
-            <p className="text-foreground/90 leading-relaxed">
-              By accessing and using the Lumae AI application ("Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">2. Use License</h2>
-            <p className="text-foreground/90 leading-relaxed mb-4">
-              Permission is granted to temporarily download one copy of the materials (information or software) on Lumae AI for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:
-            </p>
-            <ul className="list-disc list-inside space-y-2 text-foreground/90">
-              <li>Modifying or copying the materials</li>
-              <li>Using the materials for any commercial purpose or for any public display</li>
-              <li>Attempting to decompile or reverse engineer any software contained on the Service</li>
-              <li>Removing any copyright or other proprietary notations from the materials</li>
-              <li>Transferring the materials to another person or "mirroring" the materials on any other server</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">3. Disclaimer</h2>
-            <p className="text-foreground/90 leading-relaxed">
-              The materials on Lumae AI are provided on an 'as is' basis. Lumae AI makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">4. Limitations</h2>
-            <p className="text-foreground/90 leading-relaxed">
-              In no event shall Lumae AI or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on Lumae AI, even if Lumae AI or an authorized representative has been notified orally or in writing of the possibility of such damage.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">5. Accuracy of Materials</h2>
-            <p className="text-foreground/90 leading-relaxed">
-              The materials appearing on Lumae AI could include technical, typographical, or photographic errors. Lumae AI does not warrant that any of the materials on the Service are accurate, complete, or current. Lumae AI may make changes to the materials contained on the Service at any time without notice.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">6. Links</h2>
-            <p className="text-foreground/90 leading-relaxed">
-              Lumae AI has not reviewed all of the sites linked to its website and is not responsible for the contents of any such linked site. The inclusion of any link does not imply endorsement by Lumae AI of the site. Use of any such linked website is at the user's own risk.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">7. Modifications</h2>
-            <p className="text-foreground/90 leading-relaxed">
-              Lumae AI may revise these terms of service for the Service at any time without notice. By using this Service, you are agreeing to be bound by the then current version of these terms of service.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">8. Governing Law</h2>
-            <p className="text-foreground/90 leading-relaxed">
-              These terms and conditions are governed by and construed in accordance with the laws of India, and you irrevocably submit to the exclusive jurisdiction of the courts in that location.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">9. User Responsibilities</h2>
-            <p className="text-foreground/90 leading-relaxed mb-4">
-              As a user of Lumae AI, you agree to:
-            </p>
-            <ul className="list-disc list-inside space-y-2 text-foreground/90">
-              <li>Provide accurate and complete information during registration</li>
-              <li>Maintain the confidentiality of your account credentials</li>
-              <li>Use the Service only for lawful purposes and in a way that does not infringe upon the rights of others</li>
-              <li>Not use the Service to generate content that is illegal, defamatory, or violates intellectual property rights</li>
-              <li>Not attempt to gain unauthorized access to the Service or its systems</li>
-              <li>Comply with all applicable laws and regulations</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">10. Content Ownership</h2>
-            <p className="text-foreground/90 leading-relaxed">
-              You retain ownership of all content you create, generate, or upload through Lumae AI. By using our Service, you grant us a license to use, reproduce, and display your content solely for the purpose of providing and improving our Service.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">11. Limitation of Liability</h2>
-            <p className="text-foreground/90 leading-relaxed">
-              To the fullest extent permitted by law, Lumae AI shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to damages for loss of profits, goodwill, use, data, or other intangible losses.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">12. Contact Us</h2>
-            <p className="text-foreground/90 leading-relaxed">
-              If you have any questions about these Terms of Service, please contact us at:
-            </p>
-            <p className="text-foreground/90 mt-4">
-              Email: <a href="mailto:support@lumae.co.in" className="text-primary hover:underline">support@lumae.co.in</a>
-            </p>
-            <p className="text-foreground/90">
-              Website: <a href="https://lumae.co.in" className="text-primary hover:underline">https://lumae.co.in</a>
-            </p>
-          </section>
+    <div className="min-h-screen bg-slate-900 text-slate-200">
+      <div className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-700">
+        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="text-slate-300 hover:text-white">
+            <ArrowLeft className="w-4 h-4 mr-2" />Back to Home
+          </Button>
+          <h1 className="text-xl font-bold text-white">Terms & Conditions</h1>
         </div>
       </div>
+      <main className="max-w-4xl mx-auto px-4 py-12">
+        <h1 className="text-3xl font-bold text-white mb-2">Terms & Conditions</h1>
+        <p className="text-slate-400 mb-8">Last updated: July 4, 2026</p>
+        <div className="space-y-8">
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">1. Agreement to Terms</h2>
+            <p className="text-slate-300 leading-relaxed">By accessing and using Lumae AI, operated by <strong className="text-white">Ankit Singh</strong> at <strong className="text-white">lumae.co.in</strong>, you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our service.</p>
+          </section>
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">2. Description of Service</h2>
+            <p className="text-slate-300 leading-relaxed">Lumae AI is an AI-powered content generation and social media automation platform. The Service allows users to generate viral content, schedule posts, automate social media publishing, and analyze content performance across multiple platforms including Instagram, Twitter/X, LinkedIn, Facebook, YouTube, and TikTok.</p>
+          </section>
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">3. User Accounts</h2>
+            <p className="text-slate-300 leading-relaxed mb-3">When you create an account with us, you must provide accurate, complete, and current information. You are responsible for maintaining the confidentiality of your account and password, and for all activities that occur under your account. Notify us immediately of any unauthorized use at <a href="mailto:imankitsingh.in@gmail.com" className="text-purple-400 hover:text-purple-300 underline">imankitsingh.in@gmail.com</a>.</p>
+          </section>
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">4. Subscription Plans and Payments</h2>
+            <p className="text-slate-300 leading-relaxed mb-3">Lumae AI offers both free and paid subscription plans. By subscribing to a paid plan, you agree to pay the applicable fees. Payments are processed securely through Razorpay. Subscriptions automatically renew unless cancelled before the renewal date. Refunds are provided within 7 days of purchase if the service is not functioning as described.</p>
+          </section>
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">5. Free Tier Limitations</h2>
+            <p className="text-slate-300 leading-relaxed">The free tier provides up to 5 AI content generations per day. Users who exceed the free tier limits will be prompted to upgrade to a paid subscription plan. We reserve the right to modify free tier limits at any time.</p>
+          </section>
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">6. Acceptable Use Policy</h2>
+            <p className="text-slate-300 leading-relaxed mb-3">You agree not to use the Service to generate illegal, harmful, or defamatory content; violate any applicable laws; infringe on intellectual property rights; spam or engage in deceptive practices; attempt to gain unauthorized access to any part of the Service; or reverse engineer any part of the platform.</p>
+          </section>
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">7. Intellectual Property</h2>
+            <p className="text-slate-300 leading-relaxed">The Service and its original content, features, and functionality are the exclusive property of Ankit Singh and Lumae AI. You retain ownership of any content you create using our platform, but grant us a limited license to process and store your content to provide the Service.</p>
+          </section>
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">8. Disclaimer of Warranties</h2>
+            <p className="text-slate-300 leading-relaxed">The Service is provided on an "AS IS" basis without any warranties of any kind. AI-generated content may not always be accurate or appropriate. You are responsible for reviewing all AI-generated content before publishing.</p>
+          </section>
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">9. Limitation of Liability</h2>
+            <p className="text-slate-300 leading-relaxed">To the maximum extent permitted by applicable law, Lumae AI and Ankit Singh shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the Service. Our total liability shall not exceed the amount you paid us in the 12 months preceding the claim.</p>
+          </section>
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">10. Governing Law</h2>
+            <p className="text-slate-300 leading-relaxed">These Terms shall be governed by and construed in accordance with the laws of India. Any disputes shall be subject to the exclusive jurisdiction of the courts located in India.</p>
+          </section>
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">11. Changes to Terms</h2>
+            <p className="text-slate-300 leading-relaxed">We reserve the right to modify these Terms at any time. We will provide notice of significant changes by updating the "Last updated" date. Your continued use of the Service after changes constitutes acceptance of the new Terms.</p>
+          </section>
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">12. Contact Us</h2>
+            <p className="text-slate-300 leading-relaxed">If you have any questions about these Terms, please contact us:</p>
+            <div className="bg-slate-800 border border-slate-700 rounded-lg p-5 mt-3 space-y-2">
+              <p className="text-slate-300"><strong className="text-white">Owner:</strong> Ankit Singh</p>
+              <p className="text-slate-300"><strong className="text-white">Website:</strong> lumae.co.in</p>
+              <p className="text-slate-300"><strong className="text-white">Email:</strong> <a href="mailto:imankitsingh.in@gmail.com" className="text-purple-400 hover:text-purple-300 underline">imankitsingh.in@gmail.com</a></p>
+            </div>
+          </section>
+        </div>
+      </main>
+      <footer className="border-t border-slate-700 py-6 mt-8">
+        <div className="max-w-4xl mx-auto px-4 text-center text-slate-400 text-sm">
+          <p>© 2026 Lumae AI. All rights reserved. Owned by Ankit Singh.</p>
+          <div className="flex justify-center gap-4 mt-2 flex-wrap">
+            <button onClick={() => navigate("/privacy-policy")} className="hover:text-white transition-colors">Privacy Policy</button>
+            <button onClick={() => navigate("/terms")} className="hover:text-white transition-colors">Terms & Conditions</button>
+            <button onClick={() => navigate("/contact")} className="hover:text-white transition-colors">Contact</button>
+            <button onClick={() => navigate("/about")} className="hover:text-white transition-colors">About Us</button>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
