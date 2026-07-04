@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Check, X, Zap, Crown, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { SUBSCRIPTION_PLANS_DISPLAY } from "../../../shared/pricing";
 
 export default function Pricing() {
   const { user, isAuthenticated } = useAuth();
@@ -90,7 +91,7 @@ export default function Pricing() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <div className="text-4xl font-bold text-white mb-2">$0</div>
+                <div className="text-4xl font-bold text-white mb-2">{SUBSCRIPTION_PLANS_DISPLAY.free.currency}{SUBSCRIPTION_PLANS_DISPLAY.free.priceMonthly}</div>
                 <p className="text-slate-400">Forever free, no credit card required</p>
               </div>
 
@@ -145,7 +146,7 @@ export default function Pricing() {
             <CardContent className="space-y-6">
               <div>
                 <div className="text-4xl font-bold text-white mb-2">
-                  $29<span className="text-lg text-slate-400">/month</span>
+                  {SUBSCRIPTION_PLANS_DISPLAY.pro.currency}{SUBSCRIPTION_PLANS_DISPLAY.pro.priceMonthly.toLocaleString('en-IN')}<span className="text-lg text-slate-400">/month</span>
                 </div>
                 <p className="text-slate-400">Billed monthly, cancel anytime</p>
               </div>
@@ -243,7 +244,7 @@ export default function Pricing() {
             </div>
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-6 border border-slate-700 hover:border-slate-600 transition-colors">
               <h4 className="font-semibold text-white mb-2">What payment methods do you accept?</h4>
-              <p className="text-slate-400">We accept all major credit cards via Stripe. Your payment information is secure and encrypted.</p>
+              <p className="text-slate-400">We accept UPI, debit/credit cards, net banking, and wallets via Razorpay. Your payment information is secure and encrypted.</p>
             </div>
           </div>
         </div>

@@ -62,8 +62,8 @@ export default function AnalyticsDashboardEnhanced() {
     );
   }
 
-  // Prepare chart data from analytics
-  const analyticsData = (dashboardData || []) as any[];
+  // Prepare chart data from analytics — backend returns { success, data: [...] }
+  const analyticsData = (dashboardData?.data || []) as any[];
   const chartData = analyticsData.slice(0, 10).map((item: any) => ({
     date: new Date(item.date).toLocaleDateString(),
     engagement: item.engagement || 0,

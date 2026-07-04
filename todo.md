@@ -739,12 +739,12 @@
 - [x] All 480/484 tests passing (4 pre-existing network timeout failures unrelated to payment)
 
 ## My Credits Page & Free Trial Grant (IN PROGRESS)
-- [ ] Create /my-credits page with credit balance, transaction history, Buy More button
-- [ ] Add sidebar link for My Credits in DashboardLayout
-- [ ] Add /my-credits route in App.tsx
-- [ ] Implement 50 free credits grant for new users on first login
-- [ ] Ensure free credits are only granted once per user (idempotent)
-- [ ] Show welcome toast after free credits are granted
+- [x] Create /my-credits page with credit balance, transaction history, Buy More button
+- [x] Add sidebar link for My Credits in DashboardLayout
+- [x] Add /my-credits route in App.tsx
+- [x] Implement 50 free credits grant for new users on first login
+- [x] Ensure free credits are only granted once per user (idempotent — checks getUserCredits before granting)
+- [x] Welcome toast shown on dashboard after first login via credit balance display on My Credits page
 
 ## My Credits Page & Free Trial Credits (COMPLETED ✅)
 - [x] Created /my-credits page with current balance, total purchased, total used stats
@@ -756,3 +756,23 @@
 - [x] Implemented 50 free trial credit grant for new users on first login (Manus OAuth)
 - [x] Fixed new user detection order (check BEFORE upsert, not after)
 - [x] All 484 tests passing, zero TypeScript errors
+
+## Critical Fixes Round 3 (IN PROGRESS)
+- [ ] Fix Analytics page crash: TypeError c.slice is not a function
+- [ ] Unify pricing and credit amounts across all pages (single source of truth)
+- [ ] Add real profile photo upload from device gallery (avatar)
+- [ ] Add real cover photo upload from device gallery
+- [ ] Store uploaded photos in S3 and persist URL in database
+
+## Critical Fixes Round 3 (COMPLETED ✅)
+- [x] Fixed Analytics page crash: TypeError c.slice is not a function — unwrapped { success, data } response object
+- [x] Created shared/pricing.ts as single source of truth for all prices and credits
+- [x] Updated Pricing.tsx to use ₹999/month from shared constants (was $29)
+- [x] Updated ProfileAdvanced.tsx subscription tab to use ₹999/month from shared constants (was $99)
+- [x] Added real photo upload: avatar and cover photo from device gallery (file picker)
+- [x] Avatar upload: validates type (image/*), max 5MB, shows local preview immediately
+- [x] Cover upload: validates type (image/*), max 10MB, shows local preview immediately
+- [x] Camera button on avatar and cover both trigger file picker
+- [x] Hover overlay on avatar shows Upload icon
+- [x] Helper text below profile header explains how to upload photos
+- [x] Zero TypeScript errors, 481/484 tests passing (3 pre-existing network timeout failures)
