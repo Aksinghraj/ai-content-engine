@@ -2,8 +2,39 @@ import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getUserCredits, initializeUserCredits, addCredits, getCreditTransactions, getCreditPackages, getUserGenerationStats } from "../db";
 import Stripe from "stripe";
+import crypto from "crypto";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", { apiVersion: "2026-04-22.dahlia" });
+
+// ─── Razorpay HTTP helper ────────────────────────────────────────────────────
+function razorpayAuth() {
+  const keyId = process.env.RAZORPAY_KEY_ID || "";
+  const keySecret = process.env.RAZORPAY_KEY_SECRET || "";
+  return `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString("base64")}`;
+}
+
+async function razorpayRequest(path: string, method = "GET", body?: object) {
+  const res = await fetch(`https://api.razorpay.com/v1${path}`, {
+    method,
+    headers: {
+      Authorization: razorpayAuth(),
+      "Content-Type": "application/json",
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Razorpay API error (${res.status}): ${err}`);
+  }
+  return res.json();
+}
+
+// ─── Credit packages with INR pricing ────────────────────────────────────────
+const CREDIT_PACKAGES_INR = [
+  { id: "starter", name: "Starter Pack", credits: 100, priceINR: 499, amountPaise: 49900 },
+  { id: "pro", name: "Pro Pack", credits: 500, priceINR: 1999, amountPaise: 199900 },
+  { id: "enterprise", name: "Enterprise Pack", credits: 2000, priceINR: 5999, amountPaise: 599900 },
+] as const;
 
 export const creditsRouter = router({
   /**
@@ -11,13 +42,12 @@ export const creditsRouter = router({
    */
   getBalance: protectedProcedure.query(async ({ ctx }) => {
     const credits = await getUserCredits(ctx.user.id);
-    
+
     if (!credits) {
-      // Initialize credits if not exists
       await initializeUserCredits(ctx.user.id);
       return { balance: 0, totalPurchased: 0, totalUsed: 0 };
     }
-    
+
     return {
       balance: credits.balance,
       totalPurchased: credits.totalPurchased,
@@ -55,7 +85,7 @@ export const creditsRouter = router({
     }),
 
   /**
-   * Get available credit packages
+   * Get available credit packages (Stripe)
    */
   getPackages: publicProcedure.query(async () => {
     const packages = await getCreditPackages();
@@ -69,6 +99,119 @@ export const creditsRouter = router({
   }),
 
   /**
+   * Get Razorpay credit packages (INR pricing)
+   */
+  getRazorpayPackages: publicProcedure.query(() => {
+    return CREDIT_PACKAGES_INR.map(p => ({
+      id: p.id,
+      name: p.name,
+      credits: p.credits,
+      priceINR: p.priceINR,
+      popular: p.id === "pro",
+    }));
+  }),
+
+  /**
+   * Create Razorpay order for credit purchase (India payments)
+   */
+  createRazorpayOrder: protectedProcedure
+    .input(z.object({
+      packageId: z.enum(["starter", "pro", "enterprise"]),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+        throw new Error("Payment service not configured. Please contact support.");
+      }
+
+      const pkg = CREDIT_PACKAGES_INR.find(p => p.id === input.packageId);
+      if (!pkg) throw new Error("Package not found");
+
+      // Ensure user credits are initialized
+      const credits = await getUserCredits(ctx.user.id);
+      if (!credits) await initializeUserCredits(ctx.user.id);
+
+      const receiptId = `credits_${ctx.user.id}_${input.packageId}_${Date.now()}`;
+      const order = await razorpayRequest("/orders", "POST", {
+        amount: pkg.amountPaise,
+        currency: "INR",
+        receipt: receiptId,
+        notes: {
+          userId: ctx.user.id.toString(),
+          userEmail: ctx.user.email || "",
+          userName: ctx.user.name || "",
+          packageId: input.packageId,
+          credits: pkg.credits.toString(),
+          packageName: pkg.name,
+        },
+      });
+
+      return {
+        orderId: order.id,
+        amount: order.amount,
+        currency: order.currency,
+        keyId: process.env.RAZORPAY_KEY_ID,
+        packageName: pkg.name,
+        credits: pkg.credits,
+        priceINR: pkg.priceINR,
+      };
+    }),
+
+  /**
+   * Verify Razorpay payment signature and add credits
+   */
+  verifyRazorpayPayment: protectedProcedure
+    .input(z.object({
+      orderId: z.string(),
+      paymentId: z.string(),
+      signature: z.string(),
+      packageId: z.enum(["starter", "pro", "enterprise"]),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!process.env.RAZORPAY_KEY_SECRET) {
+        throw new Error("Payment service not configured.");
+      }
+
+      // HMAC-SHA256 signature verification
+      const expectedSignature = crypto
+        .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+        .update(`${input.orderId}|${input.paymentId}`)
+        .digest("hex");
+
+      const isValid = crypto.timingSafeEqual(
+        Buffer.from(input.signature),
+        Buffer.from(expectedSignature)
+      );
+
+      if (!isValid) {
+        throw new Error("Invalid payment signature — possible tampering detected");
+      }
+
+      // Fetch payment from Razorpay to confirm captured status
+      const payment = await razorpayRequest(`/payments/${input.paymentId}`);
+      if (payment.status !== "captured") {
+        throw new Error(`Payment not captured. Status: ${payment.status}`);
+      }
+
+      const pkg = CREDIT_PACKAGES_INR.find(p => p.id === input.packageId);
+      if (!pkg) throw new Error("Package not found");
+
+      // Add credits to user account
+      await addCredits(
+        ctx.user.id,
+        pkg.credits,
+        `Razorpay credit purchase: ${pkg.name} (${pkg.credits} credits)`,
+        input.paymentId
+      );
+
+      return {
+        success: true,
+        message: `Payment verified! ${pkg.credits} credits added to your account.`,
+        creditsAdded: pkg.credits,
+        paymentId: input.paymentId,
+      };
+    }),
+
+  /**
    * Create Stripe checkout session for credit purchase
    */
   createCheckoutSession: protectedProcedure
@@ -77,18 +220,16 @@ export const creditsRouter = router({
       try {
         const packages = await getCreditPackages();
         const selectedPackage = packages.find(p => p.id === input.packageId);
-        
+
         if (!selectedPackage) {
           throw new Error("Package not found");
         }
 
-        // Ensure user has credits initialized
         const credits = await getUserCredits(ctx.user.id);
         if (!credits) {
           await initializeUserCredits(ctx.user.id);
         }
 
-        // Create Stripe checkout session
         const session = await stripe.checkout.sessions.create({
           payment_method_types: ["card"],
           line_items: [
@@ -124,12 +265,11 @@ export const creditsRouter = router({
     .mutation(async ({ ctx, input }) => {
       try {
         const session = await stripe.checkout.sessions.retrieve(input.sessionId);
-        
+
         if (!session || session.payment_status !== "paid") {
           throw new Error("Payment not completed");
         }
 
-        // Extract metadata safely
         const metadata = session.metadata || {};
         const packageId = parseInt(metadata.packageId || "0");
         const creditsAmount = parseInt(metadata.credits || "0");
@@ -138,12 +278,10 @@ export const creditsRouter = router({
           throw new Error("Invalid session metadata");
         }
 
-        // Get payment intent ID safely
-        const paymentIntentId = typeof session.payment_intent === "string" 
-          ? session.payment_intent 
+        const paymentIntentId = typeof session.payment_intent === "string"
+          ? session.payment_intent
           : (session.payment_intent?.id || undefined);
 
-        // Add credits to user account
         await addCredits(
           ctx.user.id,
           creditsAmount,
@@ -165,9 +303,6 @@ export const creditsRouter = router({
     if (ctx.user.role !== "admin") {
       throw new Error("Unauthorized");
     }
-
-    // This would normally insert default packages into the database
-    // For now, return a message
     return { message: "Packages initialized" };
   }),
 });

@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import RazorpayPaymentService from "./razorpayService";
+import { getUserByEmail, addCredits, updateUserSubscription } from "../db";
 
 /**
  * Secure Razorpay Webhook Handler
@@ -73,90 +74,127 @@ export async function handleRazorpayWebhook(req: Request, res: Response): Promis
 
 async function handlePaymentCaptured(payload: any): Promise<void> {
   try {
-    const paymentId = payload.entity.id;
-    const amount = payload.entity.amount / 100;
-    const customerId = payload.entity.notes?.customerId;
+    const entity = payload.payload?.payment?.entity || payload.entity || {};
+    const paymentId = entity.id;
+    const amount = entity.amount / 100; // paise to rupees
+    const notes = entity.notes || {};
 
-    console.log(`[Razorpay] Processing payment.captured: ${paymentId}`, {
+    const userEmail = notes.userEmail;
+    const userId = notes.userId ? parseInt(notes.userId) : null;
+    const credits = notes.credits ? parseInt(notes.credits) : null;
+    const planId = notes.planId || null;
+
+    console.log(`[Razorpay Webhook] payment.captured: ${paymentId}`, {
       amount,
-      customerId,
+      userId,
+      userEmail,
+      credits,
+      planId,
     });
 
-    if (!customerId) {
-      console.error("[Razorpay] Missing customerId in payment notes");
+    // Resolve user by ID or email
+    let resolvedUserId: number | null = userId;
+    if (!resolvedUserId && userEmail) {
+      const user = await getUserByEmail(userEmail);
+      resolvedUserId = user?.id ?? null;
+    }
+
+    if (!resolvedUserId) {
+      console.error("[Razorpay Webhook] Cannot resolve user for payment", {
+        paymentId,
+        userEmail,
+        userId,
+      });
       return;
     }
 
-    const creditsToAdd = Math.floor(amount * 100);
+    // Subscription upgrade (pro_monthly or pro_yearly)
+    if (planId && (planId === "pro_monthly" || planId === "pro_yearly")) {
+      await updateUserSubscription(resolvedUserId, "pro", paymentId);
+      console.log(
+        `[Razorpay Webhook] Upgraded user ${resolvedUserId} to Pro (plan: ${planId})`
+      );
+    }
+
+    // Credit purchase — add credits to account
+    if (credits && credits > 0) {
+      await addCredits(
+        resolvedUserId,
+        credits,
+        `Razorpay webhook: ${credits} credits purchased (payment: ${paymentId})`,
+        paymentId
+      );
+      console.log(
+        `[Razorpay Webhook] Added ${credits} credits to user ${resolvedUserId}`
+      );
+    }
 
     razorpayService?.logAuditEvent("payment_captured", {
       paymentId,
-      customerId,
+      userId: resolvedUserId,
       amount,
-      creditsAdded: creditsToAdd,
-    });
-
-    console.log(`[Razorpay] Payment processed successfully`, {
-      paymentId,
-      customerId,
-      creditsAdded: creditsToAdd,
+      credits,
+      planId,
     });
   } catch (error) {
-    console.error("[Razorpay] Error processing payment.captured:", error);
+    console.error("[Razorpay Webhook] Error processing payment.captured:", error);
   }
 }
 
 async function handlePaymentFailed(payload: any): Promise<void> {
   try {
-    const paymentId = payload.entity.id;
-    const customerId = payload.entity.notes?.customerId;
-    const errorCode = payload.entity.error_code;
-    const errorDescription = payload.entity.error_description;
+    const entity = payload.payload?.payment?.entity || payload.entity || {};
+    const paymentId = entity.id;
+    const userEmail = entity.notes?.userEmail;
+    const errorCode = entity.error_code;
+    const errorDescription = entity.error_description;
 
-    console.error(`[Razorpay] Payment failed: ${paymentId}`, {
-      customerId,
+    console.error(`[Razorpay Webhook] Payment failed: ${paymentId}`, {
+      userEmail,
       errorCode,
       errorDescription,
     });
 
     razorpayService?.logAuditEvent("payment_failed", {
       paymentId,
-      customerId,
+      userEmail,
       errorCode,
       errorDescription,
     });
   } catch (error) {
-    console.error("[Razorpay] Error processing payment.failed:", error);
+    console.error("[Razorpay Webhook] Error processing payment.failed:", error);
   }
 }
 
 async function handleOrderPaid(payload: any): Promise<void> {
   try {
-    const orderId = payload.entity.id;
-    console.log(`[Razorpay] Order paid: ${orderId}`);
+    const entity = payload.payload?.order?.entity || payload.entity || {};
+    const orderId = entity.id;
+    console.log(`[Razorpay Webhook] Order paid: ${orderId}`);
 
     razorpayService?.logAuditEvent("order_paid", {
       orderId,
-      amount: payload.entity.amount,
-      currency: payload.entity.currency,
+      amount: entity.amount,
+      currency: entity.currency,
     });
   } catch (error) {
-    console.error("[Razorpay] Error processing order.paid:", error);
+    console.error("[Razorpay Webhook] Error processing order.paid:", error);
   }
 }
 
 async function handleRefundProcessed(payload: any): Promise<void> {
   try {
-    const refundId = payload.entity.id;
-    console.log(`[Razorpay] Refund processed: ${refundId}`);
+    const entity = payload.payload?.refund?.entity || payload.entity || {};
+    const refundId = entity.id;
+    console.log(`[Razorpay Webhook] Refund processed: ${refundId}`);
 
     razorpayService?.logAuditEvent("refund_processed", {
       refundId,
-      amount: payload.entity.amount,
-      status: payload.entity.status,
+      amount: entity.amount,
+      status: entity.status,
     });
   } catch (error) {
-    console.error("[Razorpay] Error processing refund.processed:", error);
+    console.error("[Razorpay Webhook] Error processing refund.processed:", error);
   }
 }
 

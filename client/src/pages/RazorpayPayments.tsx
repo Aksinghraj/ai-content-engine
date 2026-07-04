@@ -2,202 +2,158 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import DashboardLayout from "@/components/DashboardLayout";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, Zap, Star, Crown } from "lucide-react";
 import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 
-interface PaymentPackage {
-  id: string;
-  name: string;
-  credits: number;
-  price: number;
-  popular?: boolean;
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
 }
 
-const PAYMENT_PACKAGES: PaymentPackage[] = [
-  { id: "starter", name: "Starter", credits: 100, price: 499 },
-  { id: "pro", name: "Pro", credits: 500, price: 1999, popular: true },
-  { id: "enterprise", name: "Enterprise", credits: 2000, price: 5999 },
-];
-
-export default function RazorpayPayments() {
-  const [selectedPackage, setSelectedPackage] = useState<PaymentPackage | null>(null);
-  const [customAmount, setCustomAmount] = useState<string>("");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-
-  const loadRazorpayScript = (): Promise<boolean> => {
-    return new Promise((resolve) => {
-      if ((window as any).Razorpay) {
-        resolve(true);
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.async = true;
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
-
-  const handlePayment = async (pkg: PaymentPackage) => {
-    try {
-      setIsProcessing(true);
-      setError(null);
-      setSelectedPackage(pkg);
-
-      const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
-      if (!razorpayKey) {
-        throw new Error("Payment service not configured");
-      }
-
-      const scriptLoaded = await loadRazorpayScript();
-      if (!scriptLoaded) {
-        throw new Error("Failed to load payment gateway");
-      }
-
-      const options = {
-        key: razorpayKey,
-        amount: pkg.price * 100,
-        currency: "INR",
-        name: "Lumae AI",
-        description: `Purchase ${pkg.credits} credits`,
-        image: "/logo.png",
-        handler: async (response: any) => {
-          try {
-            const verifyResponse = await fetch("/api/payments/verify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-                packageId: pkg.id,
-              }),
-            });
-
-            if (verifyResponse.ok) {
-              setSuccess(true);
-              toast.success("Payment successful! Credits added to your account.");
-              setTimeout(() => {
-                window.location.href = "/dashboard";
-              }, 2000);
-            } else {
-              throw new Error("Payment verification failed");
-            }
-          } catch (err) {
-            setError("Payment verification failed");
-            toast.error("Payment verification failed");
-            setIsProcessing(false);
-          }
-        },
-        prefill: {
-          name: "User",
-          email: "",
-          contact: "",
-        },
-        notes: {
-          packageId: pkg.id,
-          credits: pkg.credits,
-        },
-        theme: {
-          color: "#9333ea",
-        },
-      };
-
-      const razorpay = new (window as any).Razorpay(options);
-      razorpay.open();
-      setIsProcessing(false);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to initiate payment";
-      setError(message);
-      toast.error(message);
-      setIsProcessing(false);
-    }
-  };
-
-  const handleCustomPayment = async () => {
-    if (!customAmount || parseFloat(customAmount) < 100) {
-      setError("Minimum amount is ₹100");
-      toast.error("Minimum amount is ₹100");
+const loadRazorpayScript = (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
       return;
     }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
+const PACKAGE_ICONS: Record<string, React.ReactNode> = {
+  starter: <Zap className="w-6 h-6 text-blue-400" />,
+  pro: <Star className="w-6 h-6 text-purple-400" />,
+  enterprise: <Crown className="w-6 h-6 text-yellow-400" />,
+};
+
+export default function RazorpayPayments() {
+  const [processingPackage, setProcessingPackage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<{ credits: number; packageName: string } | null>(null);
+
+  const { data: packages, isLoading } = trpc.credits.getRazorpayPackages.useQuery();
+  const createOrder = trpc.credits.createRazorpayOrder.useMutation();
+  const verifyPayment = trpc.credits.verifyRazorpayPayment.useMutation();
+
+  const handlePayment = async (packageId: "starter" | "pro" | "enterprise") => {
+    setProcessingPackage(packageId);
+    setError(null);
 
     try {
-      setIsProcessing(true);
-      setError(null);
-
-      const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
-      if (!razorpayKey) {
-        throw new Error("Payment service not configured");
+      // Step 1: Load Razorpay SDK
+      const loaded = await loadRazorpayScript();
+      if (!loaded) {
+        throw new Error("Failed to load payment gateway. Please check your internet connection.");
       }
 
-      const scriptLoaded = await loadRazorpayScript();
-      if (!scriptLoaded) {
-        throw new Error("Failed to load payment gateway");
-      }
+      // Step 2: Create order on server (gets real Razorpay order_id)
+      const order = await createOrder.mutateAsync({ packageId });
 
-      const options = {
-        key: razorpayKey,
-        amount: parseFloat(customAmount) * 100,
-        currency: "INR",
-        name: "Lumae AI",
-        description: "Purchase credits",
-        image: "/logo.png",
-        handler: async (response: any) => {
-          try {
-            const verifyResponse = await fetch("/api/payments/verify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-                customAmount: parseFloat(customAmount),
-              }),
-            });
+      // Step 3: Open Razorpay checkout with real order_id
+      await new Promise<void>((resolve, reject) => {
+        const rzp = new window.Razorpay({
+          key: order.keyId,
+          amount: order.amount,
+          currency: order.currency,
+          name: "Lumae AI",
+          description: `${order.packageName} — ${order.credits} Credits`,
+          image: "/logo.png",
+          order_id: order.orderId,
+          prefill: {
+            name: "",
+            email: "",
+            contact: "",
+          },
+          notes: {
+            packageId,
+            credits: order.credits,
+          },
+          theme: {
+            color: "#7c3aed",
+            backdrop_color: "rgba(0,0,0,0.85)",
+          },
+          modal: {
+            ondismiss: () => {
+              toast("Payment cancelled. No charges were made.");
+              setProcessingPackage(null);
+              resolve();
+            },
+          },
+          handler: async (response: {
+            razorpay_order_id: string;
+            razorpay_payment_id: string;
+            razorpay_signature: string;
+          }) => {
+            try {
+              // Step 4: Verify signature and add credits
+              const result = await verifyPayment.mutateAsync({
+                orderId: response.razorpay_order_id,
+                paymentId: response.razorpay_payment_id,
+                signature: response.razorpay_signature,
+                packageId,
+              });
 
-            if (verifyResponse.ok) {
-              setSuccess(true);
-              toast.success("Payment successful! Credits added to your account.");
-              setTimeout(() => {
-                window.location.href = "/dashboard";
-              }, 2000);
-            } else {
-              throw new Error("Payment verification failed");
+              if (result.success) {
+                setSuccess({ credits: result.creditsAdded, packageName: order.packageName });
+                toast.success(result.message);
+              }
+              resolve();
+            } catch (err: any) {
+              const msg = err.message || "Payment verification failed. Please contact support.";
+              setError(msg);
+              toast.error(msg);
+              reject(err);
+            } finally {
+              setProcessingPackage(null);
             }
-          } catch (err) {
-            setError("Payment verification failed");
-            toast.error("Payment verification failed");
-            setIsProcessing(false);
-          }
-        },
-        theme: {
-          color: "#9333ea",
-        },
-      };
+          },
+        });
 
-      const razorpay = new (window as any).Razorpay(options);
-      razorpay.open();
-      setIsProcessing(false);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to initiate payment";
+        rzp.on("payment.failed", (response: any) => {
+          const msg = response.error?.description || "Payment failed. Please try again.";
+          setError(msg);
+          toast.error(msg);
+          setProcessingPackage(null);
+          resolve();
+        });
+
+        rzp.open();
+      });
+    } catch (err: any) {
+      const message = err.message || "Failed to initiate payment. Please try again.";
       setError(message);
       toast.error(message);
-      setIsProcessing(false);
+      setProcessingPackage(null);
     }
   };
 
   if (success) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <Card className="p-8 max-w-md w-full text-center">
-            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Payment Successful!</h2>
-            <p className="text-gray-600">Your credits have been added to your account.</p>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Card className="p-10 max-w-md w-full text-center space-y-4">
+            <div className="flex justify-center">
+              <CheckCircle className="w-20 h-20 text-green-500" />
+            </div>
+            <h2 className="text-2xl font-bold">Payment Successful!</h2>
+            <p className="text-muted-foreground">
+              <span className="font-semibold text-foreground">{success.credits} credits</span> from{" "}
+              <span className="font-semibold text-foreground">{success.packageName}</span> have been
+              added to your account.
+            </p>
+            <Button
+              className="w-full"
+              onClick={() => (window.location.href = "/dashboard")}
+            >
+              Go to Dashboard
+            </Button>
           </Card>
         </div>
       </DashboardLayout>
@@ -206,58 +162,103 @@ export default function RazorpayPayments() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
+      <div className="space-y-8 max-w-4xl mx-auto">
         <div>
           <h1 className="text-3xl font-bold">Buy Credits</h1>
-          <p className="text-gray-600 mt-2">Secure payment powered by Razorpay</p>
+          <p className="text-muted-foreground mt-2">
+            Secure payment powered by Razorpay · UPI, Cards, Net Banking &amp; Wallets accepted
+          </p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex gap-3">
+          <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-4 flex gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div>
-              <h3 className="font-semibold text-red-900">Payment Error</h3>
-              <p className="text-red-700 text-sm">{error}</p>
+              <h3 className="font-semibold text-red-900 dark:text-red-300">Payment Error</h3>
+              <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
             </div>
           </div>
         )}
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {PAYMENT_PACKAGES.map((pkg) => (
-            <Card key={pkg.id} className={`p-6 ${pkg.popular ? "ring-2 ring-purple-500" : ""}`}>
-              {pkg.popular && (
-                <div className="bg-purple-500 text-white px-3 py-1 rounded-full text-sm font-semibold w-fit mb-4">
-                  Most Popular
-                </div>
-              )}
-              <h3 className="text-xl font-bold mb-2">{pkg.name}</h3>
-              <p className="text-3xl font-bold text-purple-600 mb-4">₹{pkg.price}</p>
-              <p className="text-gray-600 mb-6">{pkg.credits} credits</p>
-              <Button
-                onClick={() => handlePayment(pkg)}
-                disabled={isProcessing}
-                className="w-full"
+        {isLoading ? (
+          <div className="grid md:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="p-6 animate-pulse">
+                <div className="h-6 bg-muted rounded w-1/2 mb-4" />
+                <div className="h-10 bg-muted rounded w-3/4 mb-4" />
+                <div className="h-4 bg-muted rounded w-1/3 mb-6" />
+                <div className="h-10 bg-muted rounded" />
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-6">
+            {packages?.map((pkg) => (
+              <Card
+                key={pkg.id}
+                className={`p-6 relative ${
+                  pkg.popular
+                    ? "ring-2 ring-purple-500 shadow-lg shadow-purple-500/10"
+                    : ""
+                }`}
               >
-                {isProcessing && selectedPackage?.id === pkg.id ? "Processing..." : "Buy Now"}
-              </Button>
-            </Card>
-          ))}
-        </div>
+                {pkg.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <span className="bg-purple-600 text-white px-4 py-1 rounded-full text-xs font-semibold">
+                      Most Popular
+                    </span>
+                  </div>
+                )}
 
-        <Card className="p-6">
-          <h3 className="text-lg font-bold mb-4">Custom Amount</h3>
-          <div className="flex gap-2">
-            <input
-              type="number"
-              min="100"
-              placeholder="Enter amount in ₹"
-              value={customAmount}
-              onChange={(e) => setCustomAmount(e.target.value)}
-              className="flex-1 px-4 py-2 border rounded-lg"
-            />
-            <Button onClick={handleCustomPayment} disabled={isProcessing}>
-              {isProcessing ? "Processing..." : "Pay Now"}
-            </Button>
+                <div className="flex items-center gap-3 mb-4">
+                  {PACKAGE_ICONS[pkg.id]}
+                  <h3 className="text-xl font-bold">{pkg.name}</h3>
+                </div>
+
+                <p className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">
+                  ₹{pkg.priceINR.toLocaleString("en-IN")}
+                </p>
+                <p className="text-muted-foreground text-sm mb-6">
+                  {pkg.credits.toLocaleString()} credits ·{" "}
+                  ₹{(pkg.priceINR / pkg.credits).toFixed(2)}/credit
+                </p>
+
+                <Button
+                  onClick={() => handlePayment(pkg.id as "starter" | "pro" | "enterprise")}
+                  disabled={processingPackage !== null}
+                  className={`w-full ${pkg.popular ? "bg-purple-600 hover:bg-purple-700" : ""}`}
+                  variant={pkg.popular ? "default" : "outline"}
+                >
+                  {processingPackage === pkg.id ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                      </svg>
+                      Opening checkout...
+                    </span>
+                  ) : (
+                    `Buy ${pkg.credits} Credits`
+                  )}
+                </Button>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        <Card className="p-6 bg-muted/40">
+          <div className="flex items-start gap-3">
+            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-muted-foreground space-y-1">
+              <p className="font-semibold text-foreground">Secure &amp; Instant</p>
+              <p>
+                All payments are processed by Razorpay with bank-grade 256-bit SSL encryption.
+                Credits are added to your account immediately after payment confirmation.
+              </p>
+              <p>
+                Supported: UPI (GPay, PhonePe, Paytm), Debit/Credit Cards, Net Banking, Wallets.
+              </p>
+            </div>
           </div>
         </Card>
       </div>
