@@ -670,6 +670,13 @@
 - [x] Save checkpoint and deliver dashboard
 
 
+## Dashboard Auth Redirect Fix (COMPLETED ✅)
+- [x] Fixed blank black "Sign in to continue" screen on /dashboard when not logged in
+- [x] DashboardLayout now auto-redirects unauthenticated users to Razorpay login flow
+- [x] Shows a purple spinner "Redirecting to login..." instead of blank black screen
+- [x] Fixed React hooks-in-conditional violation (moved useEffect before early returns)
+- [x] All 484 tests passing, zero TypeScript errors
+
 ## Subscription Plans Page (COMPLETED ✅)
 - [x] Fix SubscriptionPlans.tsx toast import (was using non-existent @/hooks/use-toast, fixed to sonner)
 - [x] Remove unused Badge import and isPro variable
