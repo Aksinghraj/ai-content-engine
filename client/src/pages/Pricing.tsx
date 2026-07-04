@@ -1,6 +1,5 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
-import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +9,6 @@ import { toast } from "sonner";
 export default function Pricing() {
   const { user, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
-  const createCheckoutMutation = trpc.subscription.createCheckoutSession.useMutation();
 
   const handleUpgrade = async () => {
     if (!isAuthenticated) {
@@ -18,18 +16,8 @@ export default function Pricing() {
       return;
     }
 
-    try {
-      const result = await createCheckoutMutation.mutateAsync({
-        priceId: "price_1234567890",
-      });
-
-      if (result.orderId) {
-        toast.success("Payment order created. Razorpay integration coming soon...");
-      }
-    } catch (error) {
-      toast.error("Failed to start checkout");
-      console.error(error);
-    }
+    // Redirect to payment page
+    navigate("/razorpay-payments");
   };
 
   const features = [
@@ -164,13 +152,11 @@ export default function Pricing() {
 
               <Button
                 onClick={handleUpgrade}
-                disabled={createCheckoutMutation.isPending || user?.subscriptionTier === "pro"}
+                disabled={user?.subscriptionTier === "pro"}
                 className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold"
               >
                 {user?.subscriptionTier === "pro" ? (
                   "Current Plan"
-                ) : createCheckoutMutation.isPending ? (
-                  "Processing..."
                 ) : (
                   <>
                     <Zap className="w-4 h-4 mr-2" />
