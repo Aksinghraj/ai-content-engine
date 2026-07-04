@@ -9,6 +9,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { handleStripeWebhook, verifyStripeSignature } from "./stripeWebhook";
+import { handleRazorpayWebhook, initializeRazorpayService } from "./razorpayWebhook";
 import { initializeAutomationEngine } from "./automationEngine";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -76,6 +77,33 @@ async function startServer() {
     });
   }
   
+  // Initialize Razorpay service if credentials are available
+  const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
+  const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET;
+  const razorpayWebhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+  if (razorpayKeyId && razorpayKeySecret && razorpayWebhookSecret) {
+    initializeRazorpayService({
+      keyId: razorpayKeyId,
+      keySecret: razorpayKeySecret,
+      webhookSecret: razorpayWebhookSecret,
+    });
+    console.log("[Razorpay] Payment service initialized");
+  } else {
+    console.warn("[Razorpay] Missing credentials - payment service not initialized");
+  }
+
+  // Razorpay webhook - must be registered BEFORE express.json() to access raw body
+  app.post(
+    "/api/webhooks/razorpay",
+    express.raw({ type: "application/json" }),
+    async (req, res) => {
+      // Parse raw body for signature verification
+      const rawBody = req.body.toString("utf8");
+      req.body = JSON.parse(rawBody);
+      await handleRazorpayWebhook(req, res);
+    }
+  );
+
   // Stripe webhook must be registered BEFORE express.json() to access raw body
   app.post(
     "/api/stripe/webhook",

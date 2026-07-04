@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, Calendar, Settings, Bot, TrendingUp, Repeat, Sparkles, BarChart3, Zap, Wand2, DollarSign, Youtube, AlertTriangle, Image, ChevronDown, MessageCircle, CreditCard } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, Calendar, Settings, Bot, TrendingUp, Repeat, Sparkles, BarChart3, Zap, Wand2, DollarSign, Youtube, AlertTriangle, Image, ChevronDown, MessageCircle, CreditCard, Crown } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -50,6 +50,7 @@ const menuItems = [
   { icon: Settings, label: "Settings", path: "/settings-advanced" },
   { icon: Settings, label: "OAuth Settings", path: "/oauth-settings" },
   { icon: CreditCard, label: "Buy Credits", path: "/razorpay-payments" },
+  { icon: Crown, label: "Subscription Plans", path: "/subscription-plans" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";

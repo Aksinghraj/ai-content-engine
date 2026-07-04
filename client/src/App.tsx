@@ -47,6 +47,7 @@ import CreatePostAdvanced from "./pages/CreatePostAdvanced";
 import SettingsAdvanced from "./pages/SettingsAdvanced";
 import ProfileAdvanced from "./pages/ProfileAdvanced";
 import RazorpayPayments from "./pages/RazorpayPayments";
+import SubscriptionPlans from "./pages/SubscriptionPlans";
 
 function App() {
   return (
@@ -100,6 +101,7 @@ function App() {
             <Route path="/settings-advanced" component={SettingsAdvanced} />
             <Route path="/profile-advanced" component={ProfileAdvanced} />
             <Route path="/razorpay-payments" component={RazorpayPayments} />
+            <Route path="/subscription-plans" component={SubscriptionPlans} />
             <Route path="*" component={NotFound} />
           </Switch>
         </TooltipProvider>
