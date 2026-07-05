@@ -758,11 +758,11 @@
 - [x] All 484 tests passing, zero TypeScript errors
 
 ## Critical Fixes Round 3 (IN PROGRESS)
-- [ ] Fix Analytics page crash: TypeError c.slice is not a function
-- [ ] Unify pricing and credit amounts across all pages (single source of truth)
-- [ ] Add real profile photo upload from device gallery (avatar)
-- [ ] Add real cover photo upload from device gallery
-- [ ] Store uploaded photos in S3 and persist URL in database
+- [x] Fix Analytics page crash: TypeError c.slice is not a function
+- [x] Unify pricing and credit amounts across all pages (single source of truth)
+- [x] Add real profile photo upload from device gallery (avatar)
+- [x] Add real cover photo upload from device gallery
+- [x] Store uploaded photos in S3 and persist URL in database (uploads via /api/profile/upload-avatar and /api/profile/upload-cover)
 
 ## Critical Fixes Round 3 (COMPLETED ✅)
 - [x] Fixed Analytics page crash: TypeError c.slice is not a function — unwrapped { success, data } response object
