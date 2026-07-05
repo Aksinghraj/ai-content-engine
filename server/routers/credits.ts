@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getUserCredits, initializeUserCredits, addCredits, getCreditTransactions, getCreditPackages, getUserGenerationStats } from "../db";
 import Stripe from "stripe";
 import crypto from "crypto";
+import { sendPaymentReceiptEmail } from "../_core/emailService";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", { apiVersion: "2026-04-22.dahlia" });
 
@@ -203,11 +204,26 @@ export const creditsRouter = router({
         input.paymentId
       );
 
+      // Send payment receipt email
+      const emailSent = ctx.user.email ? await sendPaymentReceiptEmail(
+        ctx.user.email,
+        ctx.user.name || "User",
+        {
+          orderId: input.orderId,
+          amount: pkg.amountPaise,
+          currency: "INR",
+          creditsAdded: pkg.credits,
+          paymentMethod: payment.method || "Unknown",
+          transactionDate: new Date(payment.created_at * 1000).toISOString(),
+        }
+      ) : false;
+
       return {
         success: true,
         message: `Payment verified! ${pkg.credits} credits added to your account.`,
         creditsAdded: pkg.credits,
         paymentId: input.paymentId,
+        emailSent,
       };
     }),
 

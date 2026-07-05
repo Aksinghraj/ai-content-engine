@@ -133,3 +133,116 @@ export async function sendVerificationEmail(
     htmlContent,
   });
 }
+
+
+/**
+ * Sends a payment receipt email after successful Razorpay payment
+ */
+export async function sendPaymentReceiptEmail(
+  email: string,
+  userName: string,
+  paymentDetails: {
+    orderId: string;
+    amount: number;
+    currency: string;
+    creditsAdded: number;
+    paymentMethod: string;
+    transactionDate: string;
+  }
+): Promise<boolean> {
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; background: #f4f4f4; margin: 0; padding: 0; }
+          .wrapper { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .card { background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+          .header { background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%); color: white; padding: 32px 24px; text-align: center; }
+          .header h1 { margin: 0; font-size: 24px; font-weight: 700; }
+          .header p { margin: 8px 0 0; opacity: 0.85; font-size: 14px; }
+          .content { padding: 32px 24px; }
+          .success-badge { background: #d1fae5; border: 2px solid #10b981; border-radius: 12px; padding: 16px; text-align: center; margin: 20px 0; }
+          .success-badge .icon { font-size: 32px; margin-bottom: 8px; }
+          .success-badge .text { color: #065f46; font-weight: 600; font-size: 16px; }
+          .receipt-section { background: #f9fafb; border-radius: 8px; padding: 20px; margin: 20px 0; }
+          .receipt-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e5e7eb; }
+          .receipt-row:last-child { border-bottom: none; }
+          .receipt-label { color: #6b7280; font-size: 14px; }
+          .receipt-value { color: #1f2937; font-weight: 600; font-size: 14px; }
+          .credits-highlight { background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 16px; text-align: center; margin: 20px 0; }
+          .credits-amount { font-size: 28px; font-weight: 900; color: #d97706; }
+          .credits-label { font-size: 12px; color: #92400e; margin-top: 4px; }
+          .footer { padding: 20px 24px; background: #f9fafb; text-align: center; font-size: 12px; color: #9ca3af; border-top: 1px solid #e5e7eb; }
+          .cta-button { display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%); color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; margin-top: 16px; }
+        </style>
+      </head>
+      <body>
+        <div class="wrapper">
+          <div class="card">
+            <div class="header">
+              <h1>✨ Lumae AI</h1>
+              <p>Payment Receipt</p>
+            </div>
+            <div class="content">
+              <p>Hi <strong>${userName || "there"}</strong>,</p>
+              <p>Thank you for your purchase! Your payment has been processed successfully.</p>
+              
+              <div class="success-badge">
+                <div class="icon">✅</div>
+                <div class="text">Payment Successful</div>
+              </div>
+
+              <div class="receipt-section">
+                <div class="receipt-row">
+                  <span class="receipt-label">Transaction ID</span>
+                  <span class="receipt-value">${paymentDetails.orderId}</span>
+                </div>
+                <div class="receipt-row">
+                  <span class="receipt-label">Amount Paid</span>
+                  <span class="receipt-value">${paymentDetails.currency} ${(paymentDetails.amount / 100).toFixed(2)}</span>
+                </div>
+                <div class="receipt-row">
+                  <span class="receipt-label">Payment Method</span>
+                  <span class="receipt-value">${paymentDetails.paymentMethod}</span>
+                </div>
+                <div class="receipt-row">
+                  <span class="receipt-label">Date & Time</span>
+                  <span class="receipt-value">${new Date(paymentDetails.transactionDate).toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+
+              <div class="credits-highlight">
+                <div class="credits-amount">+${paymentDetails.creditsAdded}</div>
+                <div class="credits-label">Credits Added to Your Account</div>
+              </div>
+
+              <p>Your credits are now available in your Lumae AI account. You can use them to:</p>
+              <ul>
+                <li>Generate AI content across all platforms</li>
+                <li>Create unlimited social media posts</li>
+                <li>Access advanced analytics</li>
+                <li>Automate content scheduling</li>
+              </ul>
+
+              <p style="text-align: center;">
+                <a href="https://lumae.co.in/my-credits" class="cta-button">View My Credits</a>
+              </p>
+            </div>
+            <div class="footer">
+              <p>© 2026 Lumae AI. All rights reserved.</p>
+              <p>If you have any questions, contact us at imankitsingh.in@gmail.com</p>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  return sendEmail({
+    to: email,
+    subject: `Payment Receipt: ${paymentDetails.creditsAdded} Credits Added to Your Lumae AI Account`,
+    htmlContent,
+  });
+}
