@@ -11,10 +11,21 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", { apiVersion: "20
 function razorpayAuth() {
   const keyId = process.env.RAZORPAY_KEY_ID || "";
   const keySecret = process.env.RAZORPAY_KEY_SECRET || "";
-  return `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString("base64")}`;
+  
+  if (!keyId || !keySecret) {
+    console.error("[Razorpay] Missing credentials for auth header", {
+      hasKeyId: !!keyId,
+      hasKeySecret: !!keySecret,
+    });
+  }
+  
+  const auth = `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString("base64")}`;
+  console.log(`[Razorpay] Auth header: ${auth.substring(0, 20)}...`);
+  return auth;
 }
 
 async function razorpayRequest(path: string, method = "GET", body?: object) {
+  console.log(`[Razorpay] ${method} ${path}`);
   const res = await fetch(`https://api.razorpay.com/v1${path}`, {
     method,
     headers: {
@@ -25,6 +36,7 @@ async function razorpayRequest(path: string, method = "GET", body?: object) {
   });
   if (!res.ok) {
     const err = await res.text();
+    console.error(`[Razorpay] API error (${res.status}):`, err);
     throw new Error(`Razorpay API error (${res.status}): ${err}`);
   }
   return res.json();

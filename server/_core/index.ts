@@ -81,15 +81,28 @@ async function startServer() {
   const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
   const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET;
   const razorpayWebhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+  
+  // Log first few characters of keys for verification (LIVE keys start with rzp_live_)
+  if (razorpayKeyId) {
+    const keyPrefix = razorpayKeyId.substring(0, 12);
+    const isLive = razorpayKeyId.startsWith('rzp_live_');
+    console.log(`[Razorpay] Key ID loaded: ${keyPrefix}... (${isLive ? 'LIVE' : 'TEST'} mode)`);
+  } else {
+    console.warn("[Razorpay] Key ID not found in environment");
+  }
+  
   if (razorpayKeyId && razorpayKeySecret && razorpayWebhookSecret) {
     initializeRazorpayService({
       keyId: razorpayKeyId,
       keySecret: razorpayKeySecret,
       webhookSecret: razorpayWebhookSecret,
     });
-    console.log("[Razorpay] Payment service initialized");
+    console.log("[Razorpay] Payment service initialized successfully");
   } else {
     console.warn("[Razorpay] Missing credentials - payment service not initialized");
+    if (!razorpayKeyId) console.warn("  - Missing: RAZORPAY_KEY_ID");
+    if (!razorpayKeySecret) console.warn("  - Missing: RAZORPAY_KEY_SECRET");
+    if (!razorpayWebhookSecret) console.warn("  - Missing: RAZORPAY_WEBHOOK_SECRET");
   }
 
   // Razorpay webhook - must be registered BEFORE express.json() to access raw body
