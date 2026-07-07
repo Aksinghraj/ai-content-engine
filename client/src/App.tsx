@@ -51,12 +51,15 @@ import SubscriptionPlans from "./pages/SubscriptionPlans";
 import MyCredits from "./pages/MyCredits";
 import AboutUs from "./pages/AboutUs";
 import Contact from "./pages/Contact";
+import CookiePolicy from "./pages/CookiePolicy";
+import CookieConsentBanner from "./components/CookieConsentBanner";
 
 function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="auto" switchable>
         <TooltipProvider>
+          <CookieConsentBanner />
           <Switch>
             {/* Public Routes */}
             <Route path="/" component={Home} />
@@ -66,6 +69,8 @@ function App() {
             <Route path="/terms" component={TermsOfService} />
             <Route path="/about" component={AboutUs} />
             <Route path="/contact" component={Contact} />
+            <Route path="/cookie-policy" component={CookiePolicy} />
+            <Route path="/cookies" component={CookiePolicy} />
             <Route path="/verify-email" component={VerifyEmail} />
 
             {/* Protected Routes */}

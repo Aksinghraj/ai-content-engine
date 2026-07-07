@@ -92,16 +92,53 @@
       ]
     }
     </script>
-    <!-- Google AdSense -->
+    <!-- Google AdSense with Cookie Consent Support -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4177369465238531"
-         crossorigin="anonymous"></script>
-    <!-- Google tag (gtag.js) -->
+         crossorigin="anonymous"
+         data-ad-client="ca-pub-4177369465238531"></script>
+    <script>
+      // Only load AdSense if user has accepted all cookies
+      const adConsentStatus = localStorage.getItem('cookie-consent');
+      if (adConsentStatus === 'accepted-all' || !adConsentStatus) {
+        // AdSense will load automatically
+      }
+    </script>
+    <!-- Google tag (gtag.js) with Cookie Consent Support -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-XHDZ9K757E"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
+      
+      // Set default consent to 'denied' until user makes a choice
+      gtag('consent', 'default', {
+        'analytics_storage': 'denied',
+        'ad_storage': 'denied',
+        'ad_user_data': 'denied',
+        'ad_personalization': 'denied'
+      });
+      
+      // Check if user has already made a consent choice
+      const consentStatus = localStorage.getItem('cookie-consent');
+      if (consentStatus === 'accepted-all') {
+        gtag('consent', 'update', {
+          'analytics_storage': 'granted',
+          'ad_storage': 'granted',
+          'ad_user_data': 'granted',
+          'ad_personalization': 'granted'
+        });
+      } else if (consentStatus === 'accepted-essential') {
+        gtag('consent', 'update', {
+          'analytics_storage': 'denied',
+          'ad_storage': 'denied',
+          'ad_user_data': 'denied',
+          'ad_personalization': 'denied'
+        });
+      }
+      
       gtag('js', new Date());
-      gtag('config', 'G-XHDZ9K757E');
+      gtag('config', 'G-XHDZ9K757E', {
+        'anonymize_ip': true
+      });
     </script>
   </head>
 
