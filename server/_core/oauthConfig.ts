@@ -1,71 +1,76 @@
 /**
  * OAuth Configuration for Social Media Platforms
- * This file contains OAuth app credentials and URLs for each platform
- * 
- * For development/testing, using mock credentials that redirect to callback handler
- * In production, replace with real OAuth app credentials from each platform
+ * Credentials are loaded from environment variables (Lumae's developer apps).
+ * Users are redirected to each provider's consent page using these credentials.
+ * Access tokens are stored encrypted in the database per user.
  */
+
+const BASE_URL = process.env.FRONTEND_URL || "https://lumae.co.in";
 
 export const OAUTH_CONFIG = {
   instagram: {
-    clientId: process.env.INSTAGRAM_CLIENT_ID || "mock_instagram_app_id_dev",
-    clientSecret: process.env.INSTAGRAM_CLIENT_SECRET || "mock_instagram_secret_dev",
-    redirectUri: `${process.env.FRONTEND_URL || "https://aicontent-femeuybh.manus.space"}/auth/instagram/callback`,
+    clientId: process.env.INSTAGRAM_CLIENT_ID || "",
+    clientSecret: process.env.INSTAGRAM_CLIENT_SECRET || "",
+    redirectUri: `${BASE_URL}/auth/instagram/callback`,
     authUrl: "https://api.instagram.com/oauth/authorize",
     tokenUrl: "https://graph.instagram.com/v18.0/access_token",
     scope: "user_profile,user_media",
-    isMock: true,
+    isMock: false,
   },
   twitter: {
-    clientId: process.env.TWITTER_CLIENT_ID || "mock_twitter_client_id_dev",
-    clientSecret: process.env.TWITTER_CLIENT_SECRET || "mock_twitter_secret_dev",
-    redirectUri: `${process.env.FRONTEND_URL || "https://aicontent-femeuybh.manus.space"}/auth/twitter/callback`,
+    clientId: process.env.TWITTER_CLIENT_ID || "",
+    clientSecret: process.env.TWITTER_CLIENT_SECRET || "",
+    redirectUri: `${BASE_URL}/auth/twitter/callback`,
     authUrl: "https://twitter.com/i/oauth2/authorize",
     tokenUrl: "https://api.twitter.com/2/oauth2/token",
     scope: "tweet.read tweet.write users.read follows.manage follows.read",
-    isMock: true,
+    isMock: false,
   },
   linkedin: {
-    clientId: process.env.LINKEDIN_CLIENT_ID || "mock_linkedin_client_id_dev",
-    clientSecret: process.env.LINKEDIN_CLIENT_SECRET || "mock_linkedin_secret_dev",
-    redirectUri: `${process.env.FRONTEND_URL || "https://aicontent-femeuybh.manus.space"}/auth/linkedin/callback`,
+    clientId: process.env.LINKEDIN_CLIENT_ID || "",
+    clientSecret: process.env.LINKEDIN_CLIENT_SECRET || "",
+    redirectUri: `${BASE_URL}/auth/linkedin/callback`,
     authUrl: "https://www.linkedin.com/oauth/v2/authorization",
     tokenUrl: "https://www.linkedin.com/oauth/v2/accessToken",
     scope: "r_basicprofile w_member_social",
-    isMock: true,
+    isMock: false,
   },
   facebook: {
-    clientId: process.env.FACEBOOK_CLIENT_ID || "mock_facebook_app_id_dev",
-    clientSecret: process.env.FACEBOOK_CLIENT_SECRET || "mock_facebook_secret_dev",
-    redirectUri: `${process.env.FRONTEND_URL || "https://aicontent-femeuybh.manus.space"}/auth/facebook/callback`,
+    clientId: process.env.FACEBOOK_CLIENT_ID || "",
+    clientSecret: process.env.FACEBOOK_CLIENT_SECRET || "",
+    redirectUri: `${BASE_URL}/auth/facebook/callback`,
     authUrl: "https://www.facebook.com/v18.0/dialog/oauth",
     tokenUrl: "https://graph.facebook.com/v18.0/oauth/access_token",
     scope: "public_profile,pages_manage_posts,pages_read_engagement",
-    isMock: true,
+    isMock: false,
   },
   youtube: {
-    clientId: process.env.YOUTUBE_CLIENT_ID || "mock_youtube_client_id_dev",
-    clientSecret: process.env.YOUTUBE_CLIENT_SECRET || "mock_youtube_secret_dev",
-    redirectUri: `${process.env.FRONTEND_URL || "https://aicontent-femeuybh.manus.space"}/auth/youtube/callback`,
+    clientId: process.env.YOUTUBE_CLIENT_ID || "",
+    clientSecret: process.env.YOUTUBE_CLIENT_SECRET || "",
+    redirectUri: `${BASE_URL}/auth/youtube/callback`,
     authUrl: "https://accounts.google.com/o/oauth2/v2/auth",
     tokenUrl: "https://oauth2.googleapis.com/token",
     scope: "https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly",
-    isMock: true,
+    isMock: false,
   },
   tiktok: {
-    clientId: process.env.TIKTOK_CLIENT_ID || "mock_tiktok_client_key_dev",
-    clientSecret: process.env.TIKTOK_CLIENT_SECRET || "mock_tiktok_secret_dev",
-    redirectUri: `${process.env.FRONTEND_URL || "https://aicontent-femeuybh.manus.space"}/auth/tiktok/callback`,
+    clientId: process.env.TIKTOK_CLIENT_ID || "",
+    clientSecret: process.env.TIKTOK_CLIENT_SECRET || "",
+    redirectUri: `${BASE_URL}/auth/tiktok/callback`,
     authUrl: "https://www.tiktok.com/v1/oauth/authorize",
     tokenUrl: "https://open.tiktokapis.com/v1/oauth/token",
     scope: "user.info.basic,video.upload,video.publish",
-    isMock: true,
+    isMock: !process.env.TIKTOK_CLIENT_ID,
   },
 };
 
 export function getOAuthUrl(platform: string, state: string): string {
   const config = OAUTH_CONFIG[platform as keyof typeof OAUTH_CONFIG];
   if (!config) throw new Error(`Unknown platform: ${platform}`);
+
+  if (!config.clientId) {
+    throw new Error(`OAuth not configured for ${platform}. Missing CLIENT_ID.`);
+  }
 
   const params = new URLSearchParams({
     client_id: config.clientId,
@@ -75,7 +80,18 @@ export function getOAuthUrl(platform: string, state: string): string {
     state: state,
   });
 
+  // YouTube requires offline access for refresh tokens
+  if (platform === "youtube") {
+    params.set("access_type", "offline");
+    params.set("prompt", "consent");
+  }
+
   return `${config.authUrl}?${params.toString()}`;
+}
+
+export function isOAuthConfigured(platform: string): boolean {
+  const config = OAUTH_CONFIG[platform as keyof typeof OAUTH_CONFIG];
+  return !!(config?.clientId && config?.clientSecret);
 }
 
 export function generateOAuthState(): string {
@@ -83,6 +99,5 @@ export function generateOAuthState(): string {
 }
 
 export function getRedirectUri(platform: string): string {
-  const baseUrl = process.env.FRONTEND_URL || "https://aicontent-femeuybh.manus.space";
-  return `${baseUrl}/auth/${platform}/callback`;
+  return OAUTH_CONFIG[platform as keyof typeof OAUTH_CONFIG]?.redirectUri || `${BASE_URL}/auth/${platform}/callback`;
 }
