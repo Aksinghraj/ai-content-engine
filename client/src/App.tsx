@@ -53,6 +53,7 @@ import AboutUs from "./pages/AboutUs";
 import Contact from "./pages/Contact";
 import CookiePolicy from "./pages/CookiePolicy";
 import CookieConsentBanner from "./components/CookieConsentBanner";
+import Footer from "./components/Footer";
 
 function App() {
   return (
@@ -116,6 +117,7 @@ function App() {
             <Route path="/my-credits" component={MyCredits} />
             <Route path="*" component={NotFound} />
           </Switch>
+          <Footer />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
