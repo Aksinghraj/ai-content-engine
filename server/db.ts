@@ -862,3 +862,66 @@ export async function addImageVideoCredits(userId: number, amount: number) {
     return false;
   }
 }
+
+// Social Media OAuth Connection Management
+
+/** Get all connected social accounts for a user */
+export async function getConnectedSocialAccounts(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  try {
+    const { socialConnections } = await import("../drizzle/schema");
+    const result = await db
+      .select()
+      .from(socialConnections)
+      .where(and(eq(socialConnections.userId, userId), eq(socialConnections.isConnected, true)));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get connected accounts:", error);
+    return [];
+  }
+}
+
+/** Get a specific social connection */
+export async function getSocialConnection(userId: number, platform: string) {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    const { socialConnections } = await import("../drizzle/schema");
+    const result = await db
+      .select()
+      .from(socialConnections)
+      .where(and(eq(socialConnections.userId, userId), eq(socialConnections.platform, platform)))
+      .limit(1);
+    return result[0] || null;
+  } catch (error) {
+    console.error("[Database] Failed to get social connection:", error);
+    return null;
+  }
+}
+
+/** Update social connection token */
+export async function updateSocialConnectionToken(
+  connectionId: number,
+  accessToken: string,
+  tokenExpiresAt?: Date
+) {
+  const db = await getDb();
+  if (!db) return false;
+  try {
+    const { socialConnections } = await import("../drizzle/schema");
+    await db
+      .update(socialConnections)
+      .set({
+        accessToken,
+        tokenExpiresAt,
+        lastValidationAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(socialConnections.id, connectionId));
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to update social connection token:", error);
+    return false;
+  }
+}

@@ -2,23 +2,46 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Mail, Globe, Clock, Send, CheckCircle, AlertCircle } from "lucide-react";
+import { ArrowLeft, Mail, Globe, Clock, Send, CheckCircle, AlertCircle, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 
 export default function Contact() {
   const [, navigate] = useLocation();
   const [formData, setFormData] = useState({ name: "", email: "", subject: "", message: "" });
+  const [honeypot, setHoneypot] = useState(""); // Honeypot field for spam detection
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   // tRPC mutation for sending contact form
   const sendContactMessage = trpc.system.sendContactMessage.useMutation();
 
+  // Simple math CAPTCHA
+  const [captcha, setCaptcha] = useState(() => generateCaptcha());
+
+  function generateCaptcha() {
+    const num1 = Math.floor(Math.random() * 10) + 1;
+    const num2 = Math.floor(Math.random() * 10) + 1;
+    return {
+      question: `${num1} + ${num2} = ?`,
+      answer: num1 + num2,
+      userAnswer: "",
+    };
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // Check honeypot field - if filled, it's likely a bot
+    if (honeypot.trim() !== "") {
+      console.warn("Honeypot field filled - likely spam bot");
+      // Silently fail to confuse bots
+      setSubmitted(true);
+      return;
+    }
 
     if (!formData.name || !formData.email || !formData.message) {
       toast.error("Please fill in all required fields");
@@ -29,6 +52,13 @@ export default function Contact() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       toast.error("Please enter a valid email address");
+      return;
+    }
+
+    // Validate CAPTCHA
+    if (parseInt(captcha.userAnswer) !== captcha.answer) {
+      toast.error("CAPTCHA answer is incorrect. Please try again.");
+      setCaptcha(generateCaptcha());
       return;
     }
 
@@ -56,6 +86,8 @@ export default function Contact() {
   const resetForm = () => {
     setSubmitted(false);
     setFormData({ name: "", email: "", subject: "", message: "" });
+    setHoneypot("");
+    setCaptcha(generateCaptcha());
     setError(null);
   };
 
@@ -246,6 +278,35 @@ export default function Contact() {
                       placeholder="Tell us how we can help you..."
                       rows={5}
                       className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-600 resize-none transition-colors"
+                      required
+                    />
+                  </div>
+
+                  {/* Honeypot Field - Hidden from users */}
+                  <input
+                    type="text"
+                    name="website"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                    style={{ display: "none" }}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                  />
+
+                  {/* Math CAPTCHA */}
+                  <div className="bg-purple-950/20 border border-purple-900/30 rounded-lg p-4">
+                    <label className="block text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-purple-600" />
+                      Verify you're human <span className="text-red-600">*</span>
+                    </label>
+                    <p className="text-foreground font-medium mb-3">{captcha.question}</p>
+                    <input
+                      type="number"
+                      value={captcha.userAnswer}
+                      onChange={(e) => setCaptcha({ ...captcha, userAnswer: e.target.value })}
+                      placeholder="Enter your answer"
+                      className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-600 transition-colors"
                       required
                     />
                   </div>

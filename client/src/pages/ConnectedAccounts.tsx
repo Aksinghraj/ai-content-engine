@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -69,12 +67,15 @@ export default function ConnectedAccounts() {
   const [connections, setConnections] = useState<Record<string, any>>({});
 
   // Fetch connected accounts
-  const { data: connectedAccounts, isLoading, refetch } = trpc.oauth.getConnectedAccounts.useQuery();
+  const { data: connectedAccounts, isLoading, refetch } = trpc.socialOAuthIntegration.getConnectedAccounts.useQuery();
 
   // Mutations
-  const handleCallbackMutation = trpc.oauth.handleCallback.useMutation();
-  const disconnectMutation = trpc.oauth.disconnectAccount.useMutation();
-  const refreshTokenMutation = trpc.oauth.refreshToken.useMutation();
+  const getAuthUrlMutation = trpc.socialOAuthIntegration.getAuthorizationUrl.useQuery(
+    { platform: "instagram" },
+    { enabled: false }
+  );
+  const disconnectMutation = trpc.socialOAuthIntegration.disconnectAccount.useMutation();
+  const refreshTokenMutation = trpc.socialOAuthIntegration.refreshToken.useMutation();
 
   // Build connections map
   useEffect(() => {
@@ -90,12 +91,28 @@ export default function ConnectedAccounts() {
   const handleConnect = async (platformId: string) => {
     setConnecting(platformId);
     try {
-      // In production, call getAuthorizationUrl mutation to get the OAuth URL
-      // For now, show a placeholder
-      toast.info(`OAuth setup for ${platformId} coming soon`);
+      // Get the authorization URL from the backend
+      const response = await fetch(`/api/trpc/socialOAuthIntegration.getAuthorizationUrl?input=${JSON.stringify({ platform: platformId })}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get authorization URL");
+      }
+
+      const data = await response.json();
+      
+      // Redirect to OAuth provider
+      if (data.result?.data?.url) {
+        window.location.href = data.result.data.url;
+      } else {
+        throw new Error("No authorization URL provided");
+      }
     } catch (error) {
-      toast.error(`Failed to start OAuth flow: ${(error as Error)?.message || "Unknown error"}`);
-    } finally {
+      toast.error(`Failed to connect ${platformId}: ${(error as Error)?.message || "Unknown error"}`);
       setConnecting(null);
     }
   };
@@ -218,9 +235,10 @@ export default function ConnectedAccounts() {
                   </div>
                 ) : (
                   <Button
-                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => handleConnect(platform.id)}
                     disabled={isConnecting}
+                    type="button"
                   >
                     {isConnecting ? (
                       <>
@@ -247,8 +265,20 @@ export default function ConnectedAccounts() {
             <div>
               <h4 className="font-semibold text-blue-200">How it works</h4>
               <p className="text-sm text-blue-300 mt-1">
-                Click "Connect Account" to authenticate with each platform. Your access tokens are securely stored and used
-                only to post content and manage your accounts. You can disconnect anytime.
+                Click "Connect Account" to authenticate with each platform. Your access tokens are securely stored and encrypted. You can manage, refresh, or disconnect accounts at any time.
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Security Notice */}
+        <Card className="bg-amber-500/10 border-amber-500/30 p-4">
+          <div className="flex gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-amber-200">Security & Privacy</h4>
+              <p className="text-sm text-amber-300 mt-1">
+                We never store your passwords. All tokens are encrypted and stored securely. You maintain full control and can revoke access at any time from your social media account settings.
               </p>
             </div>
           </div>
