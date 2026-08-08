@@ -4,6 +4,7 @@ import * as db from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
 import { sendVerificationEmail } from "./emailService";
+import oauthCallbackRouter from "../routes/oauthCallbackSecure";
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -250,46 +251,11 @@ export function registerOAuthRoutes(app: Express) {
   });
 
   // ─── Social Media OAuth Callbacks ──────────────────────────────────────────
-  const platforms = ["instagram", "twitter", "linkedin", "facebook", "youtube", "tiktok"];
-
-  platforms.forEach((platform) => {
-    app.get(`/auth/${platform}/callback`, async (req: Request, res: Response) => {
-      try {
-        const { code, state, error } = req.query;
-        const codeStr = typeof code === "string" ? code : undefined;
-        const stateStr = typeof state === "string" ? state : undefined;
-
-        if (error) {
-          const errorMsg = typeof error === "string" ? error : "Unknown error";
-          return res.redirect(
-            `/social-automation?error=${encodeURIComponent(errorMsg)}&platform=${platform}`
-          );
-        }
-
-        if (!codeStr || !stateStr) {
-          return res.redirect(
-            `/social-automation?error=${encodeURIComponent("Missing authorization code")}&platform=${platform}`
-          );
-        }
-
-        const { handleOAuthCallback } = await import("./oauthFlow");
-        const baseUrl = process.env.APP_URL || "http://localhost:3000";
-
-        const result = await handleOAuthCallback(baseUrl, platform, codeStr, stateStr);
-        return res.redirect(
-          `/social-automation?platform=${platform}&success=true&username=${encodeURIComponent(result.userInfo.username || result.userInfo.name)}&token=${encodeURIComponent(result.accessToken)}`
-        );
-      } catch (error) {
-        console.error(`${platform} OAuth callback error:`, error);
-        return res.redirect(
-          `/social-automation?error=${encodeURIComponent("OAuth callback failed")}&platform=${platform}`
-        );
-      }
-    });
-  });
+  // Register secure OAuth callbacks for all social platforms
+  app.use("/api/oauth/callback", oauthCallbackRouter);
 
   // ─── Manus OAuth Callback ──────────────────────────────────────────────────
-  app.get("/api/oauth/callback", async (req: Request, res: Response) => {
+  app.get("/api/oauth/manus/callback", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
 
