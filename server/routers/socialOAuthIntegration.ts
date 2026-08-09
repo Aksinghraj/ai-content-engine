@@ -13,6 +13,8 @@ import {
   decryptToken,
   verifyStateToken,
 } from "../_core/oauthService";
+import { revokeOAuthToken } from "../_core/oauthRevocation";
+import { deleteSocialConnection } from "../db/social";
 
 // OAuth credentials stored in environment variables (Lumae's developer apps)
 const OAUTH_CREDENTIALS = {
@@ -48,42 +50,27 @@ export const socialOAuthIntegrationRouter = router({
     .input(z.object({ platform: z.enum(["instagram", "facebook", "twitter", "linkedin", "youtube", "tiktok"]) }))
     .query(({ input, ctx }) => {
       const credentials = OAUTH_CREDENTIALS[input.platform];
-
-      if (!credentials.clientId || !credentials.clientSecret) {
+      if (!credentials.clientId) {
         throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: `OAuth not configured for ${input.platform}. Please contact support.`,
+          code: "PRECONDITION_FAILED",
+          message: `OAuth not configured for ${input.platform}`,
         });
       }
-
-      const redirectUri = `${process.env.VITE_APP_URL || "http://localhost:3000"}/api/oauth/${input.platform}/callback`;
-
-      const authUrl = getAuthorizationUrl(
-        input.platform,
-        ctx.user.id,
-        credentials.clientId,
-        redirectUri
-      );
-
-      return {
-        url: authUrl,
-        platform: input.platform,
-      };
+      const url = getAuthorizationUrl(input.platform, ctx.user.id.toString());
+      return { url };
     }),
 
-  // Get connected accounts for user
+  // Get list of connected accounts for current user
   getConnectedAccounts: protectedProcedure.query(async ({ ctx }) => {
     try {
-      const connections = await db.getConnectedSocialAccounts(ctx.user.id);
-
-
-      return connections.map((conn: any) => ({
+      const connections = await db.getUserSocialConnections(ctx.user.id);
+      return connections.map((conn) => ({
         id: conn.id,
         platform: conn.platform,
         username: conn.username,
-        followers: conn.followers || 0,
-        isValidated: conn.isValidated,
-        connectedAt: conn.createdAt,
+        isConnected: conn.isConnected,
+        createdAt: conn.createdAt,
+        platformUserId: conn.platformUserId,
       }));
     } catch (error) {
       throw new TRPCError({
@@ -93,116 +80,19 @@ export const socialOAuthIntegrationRouter = router({
     }
   }),
 
-  // Handle OAuth callback (called from backend)
-  handleCallback: protectedProcedure
-    .input(
-      z.object({
-        platform: z.enum(["instagram", "facebook", "twitter", "linkedin", "youtube", "tiktok"]),
-        code: z.string(),
-        state: z.string(),
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      try {
-        // Verify state token
-        if (!verifyStateToken(input.state, ctx.user.id, input.platform)) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "Invalid or expired state token",
-          });
-        }
-
-        const credentials = OAUTH_CREDENTIALS[input.platform];
-        const redirectUri = `${process.env.VITE_APP_URL || "http://localhost:3000"}/api/oauth/${input.platform}/callback`;
-
-        // Exchange code for token
-        const tokenData = await exchangeCodeForToken(
-          input.platform,
-          input.code,
-          credentials.clientId,
-          credentials.clientSecret,
-          redirectUri
-        );
-
-        // Get user info
-        const userInfo = await getUserInfo(input.platform, tokenData.accessToken);
-
-        // Check if connection already exists
-        const existingConnection = await db.getSocialConnection(ctx.user.id, input.platform);
-
-        // Encrypt tokens before storing
-        const encryptedAccessToken = encryptToken(tokenData.accessToken);
-        const encryptedRefreshToken = tokenData.refreshToken ? encryptToken(tokenData.refreshToken) : null;
-
-        if (existingConnection) {
-          // Update existing connection
-          await db.updateSocialConnectionToken(
-            existingConnection.id,
-            encryptedAccessToken,
-            tokenData.expiresIn ? new Date(Date.now() + tokenData.expiresIn * 1000) : undefined
-          );
-        } else {
-          // Create new connection - use raw insert
-          const { getDb } = await import("../db");
-          const database = await getDb();
-          if (database) {
-            await database.insert(socialConnections).values({
-              userId: ctx.user.id,
-              platform: input.platform,
-              username: userInfo.username,
-              accessToken: encryptedAccessToken,
-              refreshToken: encryptedRefreshToken,
-              tokenExpiresAt: tokenData.expiresIn
-                ? new Date(Date.now() + tokenData.expiresIn * 1000)
-                : null,
-              platformUserId: userInfo.id,
-              isConnected: true,
-              isValidated: true,
-              autoPost: false,
-              autoReply: false,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            });
-          }
-        }
-
-        return {
-          success: true,
-          platform: input.platform,
-          username: userInfo.username,
-          message: `Successfully connected ${input.platform}`,
-        };
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: `OAuth callback failed: ${(error as Error).message}`,
-        });
-      }
-    }),
-
-  // Disconnect account
-  disconnectAccount: protectedProcedure
+  // Disconnect account (old method - kept for compatibility)
+  disconnect: protectedProcedure
     .input(z.object({ platform: z.enum(["instagram", "facebook", "twitter", "linkedin", "youtube", "tiktok"]) }))
     .mutation(async ({ input, ctx }) => {
       try {
-      const { getDb } = await import("../db");
-      const database = await getDb();
-      if (database) {
-        await database.update(socialConnections)
-          .set({
-            isConnected: false,
-            isValidated: false,
-            validationError: "Account disconnected by user",
-            updatedAt: new Date(),
-          })
-          .where(
-            and(
-              eq(socialConnections.userId, ctx.user.id),
-              eq(socialConnections.platform, input.platform)
-            )
-          );
-      }
-
+        const connection = await db.getSocialConnectionByPlatform(ctx.user.id, input.platform);
+        if (!connection) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: `No ${input.platform} connection found`,
+          });
+        }
+        await db.disconnectSocialAccount(ctx.user.id, connection.id);
         return {
           success: true,
           message: `${input.platform} account disconnected`,
@@ -220,18 +110,15 @@ export const socialOAuthIntegrationRouter = router({
     .input(z.object({ platform: z.enum(["instagram", "facebook", "twitter", "linkedin", "youtube", "tiktok"]) }))
     .mutation(async ({ input, ctx }) => {
       try {
-        const connection = await db.getSocialConnection(ctx.user.id, input.platform);
-
+        const connection = await db.getSocialConnectionByPlatform(ctx.user.id, input.platform);
         if (!connection || !connection.refreshToken) {
           throw new TRPCError({
             code: "NOT_FOUND",
             message: "Connection not found or refresh token not available",
           });
         }
-
         const credentials = OAUTH_CREDENTIALS[input.platform];
         const decryptedRefreshToken = decryptToken(connection.refreshToken);
-
         // Refresh the token
         const newTokenData = await refreshAccessToken(
           input.platform,
@@ -239,15 +126,12 @@ export const socialOAuthIntegrationRouter = router({
           credentials.clientId,
           credentials.clientSecret
         );
-
         // Update with new token
         const encryptedAccessToken = encryptToken(newTokenData.accessToken);
-        await db.updateSocialConnectionToken(
-          connection.id,
-          encryptedAccessToken,
-          newTokenData.expiresIn ? new Date(Date.now() + newTokenData.expiresIn * 1000) : undefined
-        );
-
+        await db.updateSocialConnection(connection.id, {
+          accessToken: encryptedAccessToken,
+          tokenExpiresAt: newTokenData.expiresIn ? new Date(Date.now() + newTokenData.expiresIn * 1000) : undefined,
+        });
         return {
           success: true,
           message: `${input.platform} token refreshed successfully`,
@@ -265,23 +149,20 @@ export const socialOAuthIntegrationRouter = router({
     .input(z.object({ platform: z.enum(["instagram", "facebook", "twitter", "linkedin", "youtube", "tiktok"]) }))
     .query(async ({ input, ctx }) => {
       try {
-        const connection = await db.getSocialConnection(ctx.user.id, input.platform);
+        const connection = await db.getSocialConnectionByPlatform(ctx.user.id, input.platform);
         if (connection && !connection.isConnected) {
           throw new TRPCError({
             code: "NOT_FOUND",
             message: `No active ${input.platform} connection found`,
           });
         }
-
         if (!connection) {
           throw new TRPCError({
             code: "NOT_FOUND",
             message: `No active ${input.platform} connection found`,
           });
         }
-
         const decryptedToken = decryptToken(connection.accessToken);
-
         return {
           accessToken: decryptedToken,
           platform: input.platform,
@@ -292,6 +173,49 @@ export const socialOAuthIntegrationRouter = router({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to retrieve token",
+        });
+      }
+    }),
+
+  // Secure disconnect: revoke token and delete from database
+  secureDisconnect: protectedProcedure
+    .input(z.object({ platform: z.enum(["instagram", "facebook", "twitter", "linkedin", "youtube", "tiktok"]) }))
+    .mutation(async ({ input, ctx }) => {
+      try {
+        const connection = await db.getSocialConnectionByPlatform(ctx.user.id, input.platform);
+
+        if (!connection || !connection.isConnected) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: `No active ${input.platform} connection found`,
+          });
+        }
+
+        // Step 1: Attempt to revoke the token on the provider's servers
+        console.log(`[Disconnect] Revoking ${input.platform} token for user ${ctx.user.id}...`);
+        const revocationResult = await revokeOAuthToken(input.platform, connection.accessToken);
+
+        if (!revocationResult.success) {
+          console.warn(
+            `[Disconnect] Token revocation failed for ${input.platform}: ${revocationResult.error}. Proceeding with local deletion.`
+          );
+        }
+
+        // Step 2: Delete the connection from database (including all tokens)
+        await deleteSocialConnection(ctx.user.id, connection.id);
+        console.log(`[Disconnect] ${input.platform} connection deleted for user ${ctx.user.id}`);
+
+        return {
+          success: true,
+          platform: input.platform,
+          message: `${input.platform} account successfully disconnected and tokens revoked`,
+          revocationStatus: revocationResult.success ? "revoked" : "revocation_failed_but_deleted",
+        };
+      } catch (error) {
+        console.error(`[Disconnect] Error disconnecting ${input.platform}:`, error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to disconnect ${input.platform} account: ${(error as Error).message}`,
         });
       }
     }),
