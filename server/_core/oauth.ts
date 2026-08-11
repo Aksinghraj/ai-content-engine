@@ -195,7 +195,7 @@ export function registerOAuthRoutes(app: Express) {
               verificationToken,
               verificationUrl
             );
-            console.log("[Google OAuth] Verification email sent to new user:", profile.email);
+            console.log("[Google OAuth] Verification email sent to new user: [REDACTED]");
           } catch (emailErr) {
             console.warn("[Google OAuth] Failed to send verification email:", emailErr);
             // Don't block login if email fails
@@ -234,7 +234,7 @@ export function registerOAuthRoutes(app: Express) {
         expiresInMs: ONE_YEAR_MS,
       });
 
-      console.log("[Google OAuth] Session token created for", openId, "name:", displayName);
+      console.log("[Google OAuth] Session token created for user, name:", displayName);
 
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });

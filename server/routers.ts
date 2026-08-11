@@ -42,7 +42,14 @@ import { socialOAuthIntegrationRouter } from "./routers/socialOAuthIntegration";
 export const appRouter = router({
   system: systemRouter,
   auth: router({
-    me: publicProcedure.query(opts => opts.ctx.user),
+    account: accountDeletionRouter,
+    me: publicProcedure.query(opts => {
+      const user = opts.ctx.user;
+      if (!user) return null;
+      // Strip sensitive fields before returning to frontend
+      const { emailVerificationToken, emailVerificationTokenExpiresAt, ...safeUser } = user;
+      return safeUser;
+    }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
@@ -274,3 +281,4 @@ export const appRouter = router({
 });
 
 export type AppRouter = typeof appRouter;
+import { accountDeletionRouter } from "./routers/accountDeletion";

@@ -65,6 +65,27 @@ async function startServer() {
   }));
 
   // Apply rate limiting to auth and API routes
+  // CORS - restrict to production domains only
+  app.use((req, res, next) => {
+    const allowedOrigins = [
+      "https://lumae.co.in",
+      "https://www.lumae.co.in",
+      "https://lumae.manus.space",
+      "https://aicontent-femeuybh.manus.space",
+    ];
+    const origin = req.headers.origin;
+    if (origin && (allowedOrigins.includes(origin) || process.env.NODE_ENV !== "production")) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+      res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization,trpc-accept");
+    }
+    if (req.method === "OPTIONS") {
+      return res.sendStatus(204);
+    }
+    next();
+  });
+
   app.use("/api/oauth", authLimiter);
   app.use("/api/trpc/auth", authLimiter);
   app.use("/api/trpc", apiLimiter);
@@ -141,7 +162,8 @@ async function startServer() {
         res.json({ received: true });
       } catch (error: any) {
         console.error("Webhook error:", error.message);
-        res.status(400).send(`Webhook Error: ${error.message}`);
+        // Never expose internal error details to clients
+        res.status(400).json({ error: "Webhook signature verification failed" });
       }
     }
   );

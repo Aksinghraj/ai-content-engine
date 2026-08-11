@@ -20,12 +20,10 @@ function razorpayAuth() {
   }
   
   const auth = `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString("base64")}`;
-  console.log(`[Razorpay] Auth header: ${auth.substring(0, 20)}...`);
   return auth;
 }
 
 async function razorpayRequest(path: string, method = "GET", body?: object) {
-  console.log(`[Razorpay] ${method} ${path}`);
   const res = await fetch(`https://api.razorpay.com/v1${path}`, {
     method,
     headers: {
@@ -36,8 +34,9 @@ async function razorpayRequest(path: string, method = "GET", body?: object) {
   });
   if (!res.ok) {
     const err = await res.text();
-    console.error(`[Razorpay] API error (${res.status}):`, err);
-    throw new Error(`Razorpay API error (${res.status}): ${err}`);
+    console.error(`[Razorpay] API error (${res.status}): [details redacted from logs]`);
+    // Don't expose internal API error details to clients
+    throw new Error(`Payment service error. Please try again or contact support.`);
   }
   return res.json();
 }
