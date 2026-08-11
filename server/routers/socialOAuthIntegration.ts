@@ -56,9 +56,15 @@ export const socialOAuthIntegrationRouter = router({
         });
       }
 
-      // Use the same redirect URI pattern as oauthConfig.ts and the registered developer app URIs
-      const BASE_URL = process.env.FRONTEND_URL || "https://lumae.co.in";
-      const redirectUri = `${BASE_URL}/api/oauth/callback/${input.platform}/callback`;
+      // ALWAYS use FRONTEND_URL for OAuth redirects - never use localhost
+      // This is critical for production OAuth to work
+      if (!process.env.FRONTEND_URL) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "FRONTEND_URL environment variable not set. OAuth cannot proceed.",
+        });
+      }
+      const redirectUri = `${process.env.FRONTEND_URL}/api/oauth/callback/${input.platform}/callback`;
 
       const { url, codeVerifier } = getAuthorizationUrl(
         input.platform,
