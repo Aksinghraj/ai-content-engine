@@ -10,7 +10,17 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Company Info */}
           <div className="space-y-4">
-            <h3 className="text-lg font-bold text-foreground">Lumae AI</h3>
+            <div className="flex items-center gap-3 mb-1">
+              <img
+                src="/manus-storage/lumae-logo-icon_ccacaad9.jpg"
+                alt="Lumae AI"
+                className="w-10 h-10 rounded-lg object-cover"
+              />
+              <div>
+                <h3 className="text-lg font-bold text-foreground leading-tight">Lumae AI</h3>
+                <p className="text-xs text-muted-foreground tracking-widest uppercase">Made to Scale</p>
+              </div>
+            </div>
             <p className="text-sm text-muted-foreground">
               AI-powered social media content generation and automation platform.
             </p>

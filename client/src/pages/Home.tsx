@@ -87,9 +87,11 @@ export default function Home() {
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3">
             {/* Logo */}
             <div className="flex items-center gap-2 shrink-0">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-              </div>
+              <img
+                src="/manus-storage/lumae-logo-icon_ccacaad9.jpg"
+                alt="Lumae AI"
+                className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg object-cover"
+              />
               <span className="text-lg sm:text-xl font-bold text-white">Lumae AI</span>
             </div>
 
