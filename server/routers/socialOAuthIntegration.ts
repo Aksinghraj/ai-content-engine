@@ -60,7 +60,7 @@ export const socialOAuthIntegrationRouter = router({
       const BASE_URL = process.env.FRONTEND_URL || "https://lumae.co.in";
       const redirectUri = `${BASE_URL}/api/oauth/callback/${input.platform}/callback`;
 
-      const authUrl = getAuthorizationUrl(
+      const { url, codeVerifier } = getAuthorizationUrl(
         input.platform,
         ctx.user.id,
         credentials.clientId,
@@ -68,8 +68,9 @@ export const socialOAuthIntegrationRouter = router({
       );
 
       return {
-        url: authUrl,
+        url,
         platform: input.platform,
+        codeVerifier, // Include for Twitter PKCE
       };
     }),
 

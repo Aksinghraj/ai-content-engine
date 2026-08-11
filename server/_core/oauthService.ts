@@ -97,12 +97,29 @@ export function verifyStateToken(token: string, userId: number, platform: string
 }
 
 // Get OAuth authorization URL
+// Generate PKCE code challenge and verifier
+function generatePKCE(): { codeVerifier: string; codeChallenge: string } {
+  const codeVerifier = crypto
+    .randomBytes(32)
+    .toString("base64url")
+    .replace(/[^a-zA-Z0-9_-]/g, "")
+    .slice(0, 128);
+  
+  const codeChallenge = crypto
+    .createHash("sha256")
+    .update(codeVerifier)
+    .digest("base64url")
+    .replace(/[^a-zA-Z0-9_-]/g, "");
+  
+  return { codeVerifier, codeChallenge };
+}
+
 export function getAuthorizationUrl(
   platform: keyof typeof OAUTH_PROVIDERS,
   userId: number,
   clientId: string,
   redirectUri: string
-): string {
+): { url: string; codeVerifier?: string } {
   const provider = OAUTH_PROVIDERS[platform];
   const state = generateStateToken(userId, platform);
 
@@ -119,7 +136,19 @@ export function getAuthorizationUrl(
     params.set("display", "popup");
   }
 
-  return `${provider.authUrl}?${params.toString()}`;
+  // Twitter requires PKCE
+  let codeVerifier: string | undefined;
+  if (platform === "twitter") {
+    const { codeVerifier: verifier, codeChallenge } = generatePKCE();
+    codeVerifier = verifier;
+    params.set("code_challenge", codeChallenge);
+    params.set("code_challenge_method", "S256");
+  }
+
+  return {
+    url: `${provider.authUrl}?${params.toString()}`,
+    codeVerifier,
+  };
 }
 
 // Exchange authorization code for access token
