@@ -56,7 +56,9 @@ export const socialOAuthIntegrationRouter = router({
         });
       }
 
-      const redirectUri = `${process.env.VITE_APP_URL || "http://localhost:3000"}/api/oauth/${input.platform}/callback`;
+      // Use the same redirect URI pattern as oauthConfig.ts and the registered developer app URIs
+      const BASE_URL = process.env.FRONTEND_URL || "https://lumae.co.in";
+      const redirectUri = `${BASE_URL}/api/oauth/callback/${input.platform}/callback`;
 
       const authUrl = getAuthorizationUrl(
         input.platform,

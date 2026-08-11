@@ -14,7 +14,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { trpc } from "@/lib/trpc";
+import { trpc, trpcClient } from "@/lib/trpc";
 
 const PLATFORMS = [
   {
@@ -109,12 +109,10 @@ export default function ConnectedAccounts() {
   const handleConnect = async (platformId: string) => {
     setConnecting(platformId);
     try {
-      // Call tRPC to get authorization URL using useQuery hook
-      const { data: result } = await trpc.socialOAuthIntegration.getAuthorizationUrl.useQuery(
-        { platform: platformId as any },
-        { enabled: false }
+      // Call tRPC mutation to get authorization URL (can't use hooks inside event handlers)
+      const result = await trpcClient.socialOAuthIntegration.getAuthorizationUrl.query(
+        { platform: platformId as any }
       );
-
       if (result?.url) {
         // Redirect to OAuth provider
         window.location.href = result.url;

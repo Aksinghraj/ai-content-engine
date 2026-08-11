@@ -11,7 +11,7 @@ export const OAUTH_CONFIG = {
   instagram: {
     clientId: process.env.INSTAGRAM_CLIENT_ID || "",
     clientSecret: process.env.INSTAGRAM_CLIENT_SECRET || "",
-    redirectUri: `${BASE_URL}/api/oauth/callback/instagram`,
+    redirectUri: `${BASE_URL}/api/oauth/callback/instagram/callback`,
     authUrl: "https://api.instagram.com/oauth/authorize",
     tokenUrl: "https://graph.instagram.com/v18.0/access_token",
     userInfoEndpoint: "https://graph.instagram.com/v18.0/me?fields=id,username",
@@ -21,7 +21,7 @@ export const OAUTH_CONFIG = {
   twitter: {
     clientId: process.env.TWITTER_CLIENT_ID || "",
     clientSecret: process.env.TWITTER_CLIENT_SECRET || "",
-    redirectUri: `${BASE_URL}/api/oauth/callback/twitter`,
+    redirectUri: `${BASE_URL}/api/oauth/callback/twitter/callback`,
     authUrl: "https://twitter.com/i/oauth2/authorize",
     tokenUrl: "https://api.twitter.com/2/oauth2/token",
     userInfoEndpoint: "https://api.twitter.com/2/users/me",
@@ -31,7 +31,7 @@ export const OAUTH_CONFIG = {
   linkedin: {
     clientId: process.env.LINKEDIN_CLIENT_ID || "",
     clientSecret: process.env.LINKEDIN_CLIENT_SECRET || "",
-    redirectUri: `${BASE_URL}/api/oauth/callback/linkedin`,
+    redirectUri: `${BASE_URL}/api/oauth/callback/linkedin/callback`,
     authUrl: "https://www.linkedin.com/oauth/v2/authorization",
     tokenUrl: "https://www.linkedin.com/oauth/v2/accessToken",
     userInfoEndpoint: "https://api.linkedin.com/v2/me",
@@ -41,7 +41,7 @@ export const OAUTH_CONFIG = {
   facebook: {
     clientId: process.env.FACEBOOK_CLIENT_ID || "",
     clientSecret: process.env.FACEBOOK_CLIENT_SECRET || "",
-    redirectUri: `${BASE_URL}/api/oauth/callback/facebook`,
+    redirectUri: `${BASE_URL}/api/oauth/callback/facebook/callback`,
     authUrl: "https://www.facebook.com/v18.0/dialog/oauth",
     tokenUrl: "https://graph.facebook.com/v18.0/oauth/access_token",
     userInfoEndpoint: "https://graph.facebook.com/me?fields=id,name,email",
@@ -51,7 +51,7 @@ export const OAUTH_CONFIG = {
   youtube: {
     clientId: process.env.YOUTUBE_CLIENT_ID || "",
     clientSecret: process.env.YOUTUBE_CLIENT_SECRET || "",
-    redirectUri: `${BASE_URL}/api/oauth/callback/youtube`,
+    redirectUri: `${BASE_URL}/api/oauth/callback/youtube/callback`,
     authUrl: "https://accounts.google.com/o/oauth2/v2/auth",
     tokenUrl: "https://oauth2.googleapis.com/token",
     userInfoEndpoint: "https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true",
@@ -61,7 +61,7 @@ export const OAUTH_CONFIG = {
   tiktok: {
     clientId: process.env.TIKTOK_CLIENT_ID || "",
     clientSecret: process.env.TIKTOK_CLIENT_SECRET || "",
-    redirectUri: `${BASE_URL}/api/oauth/callback/tiktok`,
+    redirectUri: `${BASE_URL}/api/oauth/callback/tiktok/callback`,
     authUrl: "https://www.tiktok.com/v1/oauth/authorize",
     tokenUrl: "https://open.tiktokapis.com/v1/oauth/token",
     userInfoEndpoint: "https://open.tiktokapis.com/v1/user/info/",

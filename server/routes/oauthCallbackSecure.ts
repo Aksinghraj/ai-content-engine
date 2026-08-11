@@ -3,6 +3,8 @@ import fetch from "node-fetch";
 import { saveSocialConnection } from "../db/social";
 import { encrypt } from "../_core/encryption";
 import { OAUTH_CONFIG } from "../_core/oauthConfig";
+import { sdk } from "../_core/sdk";
+import { COOKIE_NAME } from "@shared/const";
 
 const router = Router();
 const BASE_URL = process.env.FRONTEND_URL || "https://lumae.co.in";
@@ -146,7 +148,22 @@ async function handleOAuthCallback(
     }
 
     // Get user ID from session/cookie
-    const userId = (req as any).user?.id;
+    // Get user from session cookie (req.user is not populated on Express routes)
+    let userId: number | undefined;
+    try {
+      const cookies = req.headers.cookie || "";
+      const match = cookies.match(new RegExp(`${COOKIE_NAME}=([^;]+)`));
+      if (match?.[1]) {
+        const session = await sdk.verifySession(match[1]);
+        if (session?.openId) {
+          const { getUserByOpenId } = await import("../db");
+          const user = await getUserByOpenId(session.openId);
+          userId = user?.id;
+        }
+      }
+    } catch {
+      // ignore session errors
+    }
     if (!userId) {
       return res.redirect(`${BASE_URL}/login?redirect=/connected-accounts`);
     }
