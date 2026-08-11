@@ -55,6 +55,7 @@ import CookiePolicy from "./pages/CookiePolicy";
 import CookieConsentBanner from "./components/CookieConsentBanner";
 import Footer from "./components/Footer";
 import SocialMediaPublishing from "./pages/SocialMediaPublishing";
+import PublishingTestDashboard from "./pages/PublishingTestDashboard";
 
 function App() {
   return (
@@ -110,6 +111,7 @@ function App() {
             <Route path="/usage-analytics" component={UsageAnalytics} />
             <Route path="/connected-accounts" component={ConnectedAccounts} />
             <Route path="/social-publishing" component={SocialMediaPublishing} />
+            <Route path="/publishing-test-dashboard" component={PublishingTestDashboard} />
             <Route path="/auto-reply-advanced" component={AutoReplyAdvanced} />
             <Route path="/create-post-advanced" component={CreatePostAdvanced} />
             <Route path="/settings-advanced" component={SettingsAdvanced} />
