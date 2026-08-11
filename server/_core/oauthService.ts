@@ -127,9 +127,21 @@ export function getAuthorizationUrl(
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: "code",
-    scope: provider.scope,
+    scope: provider.scope, // Scopes should be space-separated
     state,
   });
+
+  // Fix scope encoding - URLSearchParams encodes spaces as + or %20
+  // Twitter needs actual space characters in the scope parameter
+  let authUrl = `${provider.authUrl}?${params.toString()}`;
+  if (provider.scope && provider.scope.includes(' ')) {
+    // Re-encode scope with proper space handling
+    const scopeParam = encodeURIComponent(provider.scope);
+    authUrl = authUrl.replace(
+      `scope=${encodeURIComponent(provider.scope)}`,
+      `scope=${scopeParam}`
+    );
+  }
 
   // Platform-specific parameters
   if (platform === "instagram" || platform === "facebook") {
@@ -146,7 +158,7 @@ export function getAuthorizationUrl(
   }
 
   return {
-    url: `${provider.authUrl}?${params.toString()}`,
+    url: authUrl,
     codeVerifier,
   };
 }
