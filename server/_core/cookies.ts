@@ -24,7 +24,10 @@ function isSecureRequest(req: Request) {
 export function getSessionCookieOptions(
   req: Request
 ): Pick<CookieOptions, "domain" | "httpOnly" | "path" | "sameSite" | "secure"> {
-  const hostname = req.hostname;
+  // Prefer the forwarded host (real public hostname) over req.hostname
+  // which may resolve to an internal proxy hostname in production
+  const forwardedHost = req.headers["x-forwarded-host"];
+  const hostname = (Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost)?.split(":")[0] || req.hostname;
   const isLocal =
     !hostname ||
     LOCAL_HOSTS.has(hostname) ||
@@ -36,7 +39,11 @@ export function getSessionCookieOptions(
   if (!isLocal) {
     // Strip leading www. to get base domain, then prefix with dot
     const baseDomain = hostname.replace(/^www\./, "");
-    domain = `.${baseDomain}`;
+    // Only set domain for known production domains, not manus preview URLs
+    const isManusPreview = baseDomain.includes("manus.computer") || baseDomain.includes("manus.space");
+    if (!isManusPreview) {
+      domain = `.${baseDomain}`;
+    }
   }
 
   const secure = isSecureRequest(req);

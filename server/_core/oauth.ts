@@ -244,7 +244,7 @@ export function registerOAuthRoutes(app: Express) {
       const redirectTarget = returnPath === "/" ? "/dashboard" : returnPath;
       console.log("[Google OAuth] Cookie set, redirecting to", redirectTarget);
       return res.redirect(302, redirectTarget);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("[Google OAuth] Callback error:", err);
       return res.redirect(`/login?error=${encodeURIComponent("internal_error")}`);
     }
