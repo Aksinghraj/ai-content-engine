@@ -54,6 +54,7 @@ import Contact from "./pages/Contact";
 import CookiePolicy from "./pages/CookiePolicy";
 import CookieConsentBanner from "./components/CookieConsentBanner";
 import Footer from "./components/Footer";
+import SocialMediaPublishing from "./pages/SocialMediaPublishing";
 
 function App() {
   return (
@@ -108,6 +109,7 @@ function App() {
             <Route path="/media-generation" component={MediaGeneration} />
             <Route path="/usage-analytics" component={UsageAnalytics} />
             <Route path="/connected-accounts" component={ConnectedAccounts} />
+            <Route path="/social-publishing" component={SocialMediaPublishing} />
             <Route path="/auto-reply-advanced" component={AutoReplyAdvanced} />
             <Route path="/create-post-advanced" component={CreatePostAdvanced} />
             <Route path="/settings-advanced" component={SettingsAdvanced} />

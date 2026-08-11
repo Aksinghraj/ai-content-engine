@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, Calendar, Settings, Bot, TrendingUp, Repeat, Sparkles, BarChart3, Zap, Wand2, DollarSign, Youtube, AlertTriangle, Image, ChevronDown, MessageCircle, CreditCard, Crown, Wallet } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, Calendar, Settings, Bot, TrendingUp, Repeat, Sparkles, BarChart3, Zap, Wand2, DollarSign, Youtube, AlertTriangle, Image, ChevronDown, MessageCircle, CreditCard, Crown, Wallet, Send } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -44,6 +44,7 @@ const menuItems = [
   { icon: TrendingUp, label: "Viral Score", path: "/viral-score" },
   { icon: Users, label: "Social Automation", path: "/social-automation" },
   { icon: Users, label: "Connected Accounts", path: "/connected-accounts" },
+  { icon: Send, label: "Social Publishing", path: "/social-publishing" },
   { icon: MessageCircle, label: "Auto-Reply AI", path: "/auto-reply-advanced" },
   { icon: Sparkles, label: "Create Post Pro", path: "/create-post-advanced" },
   { icon: Users, label: "My Profile", path: "/profile-advanced" },
