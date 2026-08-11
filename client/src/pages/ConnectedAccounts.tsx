@@ -25,6 +25,13 @@ const PLATFORMS = [
     description: "Connect your Instagram business account",
   },
   {
+    id: "facebook",
+    name: "Facebook",
+    icon: "👥",
+    color: "from-blue-500 to-blue-600",
+    description: "Connect your Facebook page",
+  },
+  {
     id: "twitter",
     name: "Twitter / X",
     icon: "𝕏",
@@ -37,13 +44,6 @@ const PLATFORMS = [
     icon: "💼",
     color: "from-blue-600 to-blue-700",
     description: "Connect your LinkedIn profile",
-  },
-  {
-    id: "facebook",
-    name: "Facebook",
-    icon: "👥",
-    color: "from-blue-500 to-blue-600",
-    description: "Connect your Facebook page",
   },
   {
     id: "youtube",
@@ -70,10 +70,6 @@ export default function ConnectedAccounts() {
   const { data: connectedAccounts, isLoading, refetch } = trpc.socialOAuthIntegration.getConnectedAccounts.useQuery();
 
   // Mutations
-  const getAuthUrlMutation = trpc.socialOAuthIntegration.getAuthorizationUrl.useQuery(
-    { platform: "instagram" },
-    { enabled: false }
-  );
   const disconnectMutation = trpc.socialOAuthIntegration.disconnectAccount.useMutation();
   const refreshTokenMutation = trpc.socialOAuthIntegration.refreshToken.useMutation();
 
@@ -88,30 +84,45 @@ export default function ConnectedAccounts() {
     }
   }, [connectedAccounts]);
 
+  // Check for OAuth callback with success/error
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get("success");
+    const platform = params.get("platform");
+    const error = params.get("error");
+    const message = params.get("message");
+
+    if (success && platform) {
+      toast.success(`${platform} account connected successfully!`);
+      refetch();
+      // Clear URL params
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    if (error) {
+      toast.error(`OAuth Error: ${error} - ${message || "Unknown error"}`);
+      // Clear URL params
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [refetch]);
+
   const handleConnect = async (platformId: string) => {
     setConnecting(platformId);
     try {
-      // Get the authorization URL from the backend
-      const response = await fetch(`/api/trpc/socialOAuthIntegration.getAuthorizationUrl?input=${JSON.stringify({ platform: platformId })}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      // Call tRPC to get authorization URL using useQuery hook
+      const { data: result } = await trpc.socialOAuthIntegration.getAuthorizationUrl.useQuery(
+        { platform: platformId as any },
+        { enabled: false }
+      );
 
-      if (!response.ok) {
-        throw new Error("Failed to get authorization URL");
-      }
-
-      const data = await response.json();
-      
-      // Redirect to OAuth provider
-      if (data.result?.data?.url) {
-        window.location.href = data.result.data.url;
+      if (result?.url) {
+        // Redirect to OAuth provider
+        window.location.href = result.url;
       } else {
         throw new Error("No authorization URL provided");
       }
     } catch (error) {
+      console.error("OAuth error:", error);
       toast.error(`Failed to connect ${platformId}: ${(error as Error)?.message || "Unknown error"}`);
       setConnecting(null);
     }
@@ -199,17 +210,18 @@ export default function ConnectedAccounts() {
                       <p className="text-gray-300">
                         <span className="text-gray-400">Username:</span> {isConnected.username}
                       </p>
-                      {isConnected.followers && (
+                      {isConnected.tokenExpiresAt && (
                         <p className="text-gray-300 mt-1">
-                          <span className="text-gray-400">Followers:</span> {isConnected.followers.toLocaleString()}
+                          <span className="text-gray-400">Expires:</span>{" "}
+                          {new Date(isConnected.tokenExpiresAt).toLocaleDateString()}
                         </p>
                       )}
                     </div>
 
                     <div className="flex gap-2">
                       <Button
-                        size="sm"
                         variant="outline"
+                        size="sm"
                         className="flex-1"
                         onClick={() => handleRefreshToken(platform.id)}
                         disabled={isDisconnecting}
@@ -218,8 +230,8 @@ export default function ConnectedAccounts() {
                         Refresh
                       </Button>
                       <Button
-                        size="sm"
                         variant="destructive"
+                        size="sm"
                         className="flex-1"
                         onClick={() => handleDisconnect(platform.id)}
                         disabled={isDisconnecting}
@@ -235,22 +247,16 @@ export default function ConnectedAccounts() {
                   </div>
                 ) : (
                   <Button
-                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                     onClick={() => handleConnect(platform.id)}
                     disabled={isConnecting}
-                    type="button"
                   >
                     {isConnecting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Connecting...
-                      </>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     ) : (
-                      <>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Connect Account
-                      </>
+                      <Link2 className="w-4 h-4 mr-2" />
                     )}
+                    {isConnecting ? "Connecting..." : "Connect"}
                   </Button>
                 )}
               </Card>
@@ -258,28 +264,18 @@ export default function ConnectedAccounts() {
           })}
         </div>
 
-        {/* Info Box */}
+        {/* Info Section */}
         <Card className="bg-blue-500/10 border-blue-500/30 p-4">
           <div className="flex gap-3">
             <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-            <div>
-              <h4 className="font-semibold text-blue-200">How it works</h4>
-              <p className="text-sm text-blue-300 mt-1">
-                Click "Connect Account" to authenticate with each platform. Your access tokens are securely stored and encrypted. You can manage, refresh, or disconnect accounts at any time.
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        {/* Security Notice */}
-        <Card className="bg-amber-500/10 border-amber-500/30 p-4">
-          <div className="flex gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-            <div>
-              <h4 className="font-semibold text-amber-200">Security & Privacy</h4>
-              <p className="text-sm text-amber-300 mt-1">
-                We never store your passwords. All tokens are encrypted and stored securely. You maintain full control and can revoke access at any time from your social media account settings.
-              </p>
+            <div className="text-sm text-blue-200">
+              <p className="font-semibold mb-1">How it works</p>
+              <ul className="space-y-1 text-blue-100">
+                <li>• Click "Connect" to authorize your account with the platform</li>
+                <li>• Your access token is encrypted and stored securely</li>
+                <li>• Tokens are automatically refreshed before expiration</li>
+                <li>• Click "Disconnect" to revoke access and remove stored tokens</li>
+              </ul>
             </div>
           </div>
         </Card>
