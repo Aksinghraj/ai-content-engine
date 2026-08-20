@@ -820,3 +820,6 @@
 - [x] Build Markdown post pipeline with category, article, archive, and related-post routes
 - [x] Add three launch articles with author profile, CTA, SEO metadata, JSON-LD, and sitemap entries
 - [x] Add Blog to public navigation and apply static premium reading design
+
+## Blog Founder Profile Refinement (IN PROGRESS)
+- [x] Make Veer Rajput’s photo visibly prominent in the Founder / CEO article author presentation
