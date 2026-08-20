@@ -156,6 +156,12 @@ export async function disconnectSocialAccount(userId: number, connectionId: numb
     .update(socialConnections)
     .set({
       isConnected: false,
+      isValidated: false,
+      accessToken: "",
+      refreshToken: null,
+      tokenExpiresAt: null,
+      autoPost: false,
+      autoReply: false,
       updatedAt: new Date(),
     })
     .where(

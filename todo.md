@@ -922,3 +922,9 @@
 - [x] Refine idle, working, thinking, complete, and error states as a 14–18px in-place vector indicator
 - [x] Preserve reduced-motion fallback and ensure only the initiating AI control animates
 - [x] Add targeted regression coverage and validate the complete suite
+
+## Defensive Security Audit and Hardening (IN PROGRESS)
+- [x] Audit server entry points, authentication, authorization, OAuth, payments, data access, inputs, and response headers
+- [x] Implement prioritized server-side hardening for abuse resistance, safe errors, and protected data access
+- [x] Add browser and HTTP protections that preserve login, payments, and social OAuth behavior
+- [x] Add security regression tests, validate the full suite, and document residual operational controls

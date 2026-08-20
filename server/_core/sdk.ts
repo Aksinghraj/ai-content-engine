@@ -222,9 +222,10 @@ class SDKServer {
       if (
         !isNonEmptyString(openId) ||
         !isNonEmptyString(appId) ||
-        !isNonEmptyString(name)
+        !isNonEmptyString(name) ||
+        appId !== ENV.appId
       ) {
-        console.warn("[Auth] Session payload missing required fields");
+        console.warn("[Auth] Session payload is invalid for this application");
         return null;
       }
 
@@ -233,10 +234,10 @@ class SDKServer {
         appId,
         name,
       };
-    } catch (error) {
-        // Log a truncated view of the cookie for debugging malformed tokens in dev
-        const displayed = typeof cookieValue === "string" ? cookieValue.slice(0, 80) : String(cookieValue);
-        console.warn("[Auth] Session verification failed", String(error), "cookiePreview=", displayed + (typeof cookieValue === "string" && cookieValue.length > 80 ? "..." : ""));
+    } catch {
+      // Never log session material or JWT parsing details: logs are an attack
+      // surface and must not become a secondary credential store.
+      console.warn("[Auth] Session verification failed");
       return null;
     }
   }

@@ -1,4 +1,6 @@
-import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
+import { COOKIE_NAME } from "@shared/const";
+import crypto from "crypto";
+import { parse as parseCookie } from "cookie";
 import type { Express, Request, Response } from "express";
 import * as db from "../db";
 import { getSessionCookieOptions } from "./cookies";
@@ -13,6 +15,31 @@ function getQueryParam(req: Request, key: string): string | undefined {
 
 const GOOGLE_OAUTH_ORIGIN = (process.env.FRONTEND_URL || "https://lumae.co.in").replace(/\/$/, "");
 const GOOGLE_OAUTH_REDIRECT_URI = `${GOOGLE_OAUTH_ORIGIN}/api/oauth/google/callback`;
+const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30;
+const GOOGLE_OAUTH_STATE_COOKIE = "lumae_google_oauth_state";
+const GOOGLE_OAUTH_STATE_TTL_MS = 1000 * 60 * 10;
+
+type GoogleOAuthState = { nonce: string; returnPath: string };
+
+const isSafeRelativePath = (value: unknown): value is string =>
+  typeof value === "string" && value.startsWith("/") && !value.startsWith("//") && !value.startsWith("/api/");
+
+function statesMatch(expected: string, received: string): boolean {
+  const expectedBuffer = Buffer.from(expected, "utf8");
+  const receivedBuffer = Buffer.from(received, "utf8");
+  return expectedBuffer.length === receivedBuffer.length && crypto.timingSafeEqual(expectedBuffer, receivedBuffer);
+}
+
+function readGoogleOAuthState(req: Request): GoogleOAuthState | null {
+  const encoded = parseCookie(req.headers.cookie ?? "")[GOOGLE_OAUTH_STATE_COOKIE];
+  if (!encoded) return null;
+  try {
+    const parsed = JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")) as GoogleOAuthState;
+    return typeof parsed.nonce === "string" && isSafeRelativePath(parsed.returnPath) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
 
 // Build: 2026-06-21 — form-based Google OAuth (no redirect, no double-encoding)
 export function registerOAuthRoutes(app: Express) {
@@ -36,14 +63,18 @@ export function registerOAuthRoutes(app: Express) {
     const redirectUri = GOOGLE_OAUTH_REDIRECT_URI;
 
     const requestedReturnPath = getQueryParam(req, "returnPath") || "/";
-    const returnPath = requestedReturnPath.startsWith("/") && !requestedReturnPath.startsWith("//") && !requestedReturnPath.startsWith("/api/")
-      ? requestedReturnPath
-      : "/";
+    const returnPath = isSafeRelativePath(requestedReturnPath) ? requestedReturnPath : "/";
 
-    // State carries only a validated relative path so the callback can resume the initiating page.
-    const state = Buffer.from(
-      JSON.stringify({ returnPath, ts: Date.now() })
-    ).toString("base64url");
+    // Bind the provider callback to this browser with a short-lived HttpOnly
+    // state cookie. The provider receives only an unpredictable nonce.
+    const state = crypto.randomBytes(32).toString("base64url");
+    const stateCookie = Buffer.from(JSON.stringify({ nonce: state, returnPath })).toString("base64url");
+    const cookieOptions = getSessionCookieOptions(req);
+    res.cookie(GOOGLE_OAUTH_STATE_COOKIE, stateCookie, {
+      ...cookieOptions,
+      sameSite: "lax",
+      maxAge: GOOGLE_OAUTH_STATE_TTL_MS,
+    });
 
     // Escape HTML special chars to prevent XSS in attribute values
     const esc = (s: string) =>
@@ -77,6 +108,14 @@ export function registerOAuthRoutes(app: Express) {
 </body>
 </html>`;
 
+    // This isolated transition page needs an external form action and one
+    // auto-submit script. Its narrow CSP overrides the broader app policy only
+    // for this response, keeping Google OAuth functional without loosening all
+    // application pages.
+    res.setHeader(
+      "Content-Security-Policy",
+      "default-src 'none'; base-uri 'none'; form-action https://accounts.google.com; style-src 'unsafe-inline'; script-src 'unsafe-inline'"
+    );
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     return res.send(html);
   });
@@ -95,6 +134,7 @@ export function registerOAuthRoutes(app: Express) {
     const stateRaw = req.query.state as string | undefined;
 
     if (error) {
+      res.clearCookie(GOOGLE_OAUTH_STATE_COOKIE, getSessionCookieOptions(req));
       console.error("[Google OAuth] Error from Google:", error);
       return res.redirect(`/login?error=${encodeURIComponent(error)}`);
     }
@@ -105,18 +145,13 @@ export function registerOAuthRoutes(app: Express) {
       return res.redirect("/login?error=google_oauth_not_configured");
     }
 
-    // Use the identical canonical URI used in the authorization request.
-    let returnPath = "/";
-    try {
-      if (stateRaw) {
-        const parsed = JSON.parse(Buffer.from(stateRaw, "base64url").toString("utf8"));
-        if (typeof parsed.returnPath === "string" && parsed.returnPath.startsWith("/") && !parsed.returnPath.startsWith("//") && !parsed.returnPath.startsWith("/api/")) {
-          returnPath = parsed.returnPath;
-        }
-      }
-    } catch {
-      // ignore malformed state
+    const storedState = readGoogleOAuthState(req);
+    if (!stateRaw || !storedState || !statesMatch(storedState.nonce, stateRaw)) {
+      res.clearCookie(GOOGLE_OAUTH_STATE_COOKIE, getSessionCookieOptions(req));
+      return res.redirect("/login?error=invalid_state");
     }
+    res.clearCookie(GOOGLE_OAUTH_STATE_COOKIE, getSessionCookieOptions(req));
+    const returnPath = storedState.returnPath;
 
     const redirectUri = GOOGLE_OAUTH_REDIRECT_URI;
 
@@ -135,8 +170,7 @@ export function registerOAuthRoutes(app: Express) {
       });
 
       if (!tokenRes.ok) {
-        const body = await tokenRes.text();
-        console.error("[Google OAuth] Token exchange failed:", body);
+        console.error("[Google OAuth] Token exchange failed:", tokenRes.status);
         return res.redirect(`/login?error=${encodeURIComponent("token_exchange_failed")}`);
       }
 
@@ -193,7 +227,7 @@ export function registerOAuthRoutes(app: Express) {
         if (freshUser) {
           try {
             const verificationToken = await db.generateEmailVerificationToken(freshUser.id);
-            const verificationUrl = `${origin}/verify-email?token=${verificationToken}`;
+            const verificationUrl = `${GOOGLE_OAUTH_ORIGIN}/verify-email?token=${verificationToken}`;
             await sendVerificationEmail(
               profile.email,
               profile.name || "User",
@@ -236,13 +270,13 @@ export function registerOAuthRoutes(app: Express) {
 
       const sessionToken = await sdk.createSessionToken(openId, {
         name: displayName,
-        expiresInMs: ONE_YEAR_MS,
+        expiresInMs: SESSION_TTL_MS,
       });
 
-      console.log("[Google OAuth] Session token created for user, name:", displayName);
+      console.log("[Google OAuth] Session token created");
 
       const cookieOptions = getSessionCookieOptions(req);
-      res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+      res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: SESSION_TTL_MS });
       
       // Redirect to dashboard after login, not home page
       // This prevents the ?code= param from being visible on the home page
@@ -315,11 +349,11 @@ export function registerOAuthRoutes(app: Express) {
 
       const sessionToken = await sdk.createSessionToken(userInfo.openId, {
         name: userInfo.name || "",
-        expiresInMs: ONE_YEAR_MS,
+        expiresInMs: SESSION_TTL_MS,
       });
 
       const cookieOptions = getSessionCookieOptions(req);
-      res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+      res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: SESSION_TTL_MS });
       res.redirect(302, "/");
     } catch (error) {
       console.error("[OAuth] Callback failed", error);

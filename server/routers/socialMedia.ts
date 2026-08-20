@@ -1,5 +1,7 @@
 import { publicProcedure, protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import crypto from "crypto";
 import {
   saveSocialConnection,
   getUserSocialConnections,
@@ -14,7 +16,8 @@ import { storagePut } from "../storage";
 
 export const socialMediaRouter = router({
   /**
-   * Save OAuth token after successful login
+   * Client-supplied OAuth tokens are intentionally rejected. Connections must
+   * use the server-side PKCE callback flow so browser code never handles them.
    */
   saveConnection: protectedProcedure
     .input(
@@ -27,21 +30,11 @@ export const socialMediaRouter = router({
         tokenExpiresAt: z.date().optional(),
       })
     )
-    .mutation(async ({ ctx, input }) => {
-      const connection = await saveSocialConnection(
-        ctx.user.id,
-        input.platform,
-        input.username,
-        input.accessToken,
-        input.platformUserId,
-        input.refreshToken,
-        input.tokenExpiresAt
-      );
-
-      return {
-        success: true,
-        connection,
-      };
+    .mutation(() => {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Use Connected Accounts to securely link a social platform.",
+      });
     }),
 
   /**
@@ -49,7 +42,7 @@ export const socialMediaRouter = router({
    */
   getConnections: protectedProcedure.query(async ({ ctx }) => {
     const connections = await getUserSocialConnections(ctx.user.id);
-    return connections;
+    return connections.map(({ accessToken, refreshToken, ...connection }) => connection);
   }),
 
   /**
@@ -89,27 +82,32 @@ export const socialMediaRouter = router({
   uploadMedia: protectedProcedure
     .input(
       z.object({
-        filename: z.string(),
-        fileData: z.string(), // Base64 encoded
+        filename: z.string().trim().max(128).regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*\.(?:jpe?g|png|gif|webp|mp4|webm|mov)$/i),
+        fileData: z.string().min(4).max(900_000), // Base64 encoded and bounded below the HTTP limit
         mediaType: z.enum(["image", "video"]),
       })
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        // Decode base64
+        if (!/^[A-Za-z0-9+/]+={0,2}$/.test(input.fileData)) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid media encoding" });
+        }
         const buffer = Buffer.from(input.fileData, "base64");
+        if (buffer.length === 0 || buffer.length > 650 * 1024) {
+          throw new TRPCError({ code: "PAYLOAD_TOO_LARGE", message: "Media must be 650KB or smaller" });
+        }
 
-        // Determine MIME type
-        let mimeType = "image/jpeg";
-        if (input.filename.endsWith(".png")) mimeType = "image/png";
-        else if (input.filename.endsWith(".gif")) mimeType = "image/gif";
-        else if (input.filename.endsWith(".webp")) mimeType = "image/webp";
-        else if (input.filename.endsWith(".mp4")) mimeType = "video/mp4";
-        else if (input.filename.endsWith(".webm")) mimeType = "video/webm";
-        else if (input.filename.endsWith(".mov")) mimeType = "video/quicktime";
+        const extension = input.filename.split(".").pop()?.toLowerCase();
+        const imageMimeTypes: Record<string, string> = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp" };
+        const videoMimeTypes: Record<string, string> = { mp4: "video/mp4", webm: "video/webm", mov: "video/quicktime" };
+        const mimeTypes = input.mediaType === "image" ? imageMimeTypes : videoMimeTypes;
+        const mimeType = extension ? mimeTypes[extension] : undefined;
+        if (!mimeType) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "File extension does not match the selected media type" });
+        }
 
         // Upload to S3
-        const storageKey = `social-media/${ctx.user.id}/${Date.now()}_${input.filename}`;
+        const storageKey = `social-media/${ctx.user.id}/${crypto.randomUUID()}.${extension}`;
         const { url, key } = await storagePut(storageKey, buffer, mimeType);
 
         return {
@@ -119,8 +117,9 @@ export const socialMediaRouter = router({
           filename: input.filename,
         };
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
         console.error("Media upload error:", error);
-        throw new Error("Failed to upload media");
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to upload media" });
       }
     }),
 
@@ -132,7 +131,7 @@ export const socialMediaRouter = router({
       z.object({
         socialConnectionId: z.number(),
         platform: z.string(),
-        content: z.string(),
+        content: z.string().trim().min(1).max(20_000),
         scheduledAt: z.date(),
         mediaUrl: z.string().optional(),
         mediaType: z.enum(["image", "video"]).optional(),

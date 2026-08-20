@@ -3,12 +3,11 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
   generateAuthorizationUrl,
-  getValidAccessToken,
-  refreshAccessToken,
 } from "../_core/oauthFlow";
 import {
   getUserSocialConnections,
   disconnectSocialAccount,
+  getSocialConnection,
   getSocialConnectionByPlatform,
 } from "../db/social";
 
@@ -136,8 +135,8 @@ export const oauthManagementRouter = router({
     .mutation(async ({ ctx, input }) => {
       try {
         // Verify ownership
-        const connection = await getSocialConnectionByPlatform(ctx.user.id, "instagram");
-        if (!connection || connection.id !== input.connectionId) {
+        const connection = await getSocialConnection(input.connectionId);
+        if (!connection || connection.userId !== ctx.user.id) {
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "You don't have permission to disconnect this account",
@@ -151,69 +150,10 @@ export const oauthManagementRouter = router({
           message: "Account disconnected successfully",
         };
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to disconnect account",
-        });
-      }
-    }),
-
-  /**
-   * Refresh access token (called when token is expired)
-   */
-  refreshToken: protectedProcedure
-    .input(
-      z.object({
-        platform: z.enum(["instagram", "twitter", "linkedin", "facebook", "youtube", "tiktok"]),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      try {
-        const baseUrl = process.env.FRONTEND_URL;
-        if (!baseUrl) throw new Error("FRONTEND_URL is required for token refresh");
-        const { accessToken, expiresIn } = await refreshAccessToken(
-          baseUrl,
-          ctx.user.id,
-          input.platform
-        );
-
-        return {
-          success: true,
-          accessToken,
-          expiresIn,
-          message: "Token refreshed successfully",
-        };
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to refresh token: ${(error as Error).message}`,
-        });
-      }
-    }),
-
-  /**
-   * Get valid access token (auto-refresh if needed)
-   */
-  getAccessToken: protectedProcedure
-    .input(
-      z.object({
-        platform: z.enum(["instagram", "twitter", "linkedin", "facebook", "youtube", "tiktok"]),
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      try {
-        const baseUrl = process.env.FRONTEND_URL;
-        if (!baseUrl) throw new Error("FRONTEND_URL is required for token refresh");
-        const accessToken = await getValidAccessToken(baseUrl, ctx.user.id, input.platform);
-
-        return {
-          success: true,
-          accessToken,
-        };
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to get access token: ${(error as Error).message}`,
         });
       }
     }),

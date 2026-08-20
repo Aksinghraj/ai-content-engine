@@ -20,7 +20,8 @@ describe("social Connect and automation reliability contracts", () => {
     const socialCallback = read("server/routes/oauthCallbackSecure.ts");
     expect(loginUrl).toContain('getLoginUrl = (returnPath = "/")');
     expect(dashboardLayout).toContain("getLoginUrl(`${window.location.pathname}${window.location.search}`)");
-    expect(googleOAuth).toContain('!requestedReturnPath.startsWith("//")');
+    expect(googleOAuth).toContain("const isSafeRelativePath");
+    expect(googleOAuth).toContain("isSafeRelativePath(requestedReturnPath)");
     expect(socialCallback).toContain("completed.returnPath");
   });
 

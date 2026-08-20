@@ -53,6 +53,30 @@ const apiLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const contactLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 8,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many contact requests. Please try again later." },
+});
+
+const paymentLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many payment requests. Please try again later." },
+});
+
+const allowedOrigins = [
+  "https://lumae.co.in",
+  "https://www.lumae.co.in",
+  "https://lumae.manus.space",
+  "https://aicontent-femeuybh.manus.space",
+];
+const isAllowedOrigin = (origin: string) => allowedOrigins.includes(origin) || process.env.NODE_ENV !== "production";
+
 async function startServer() {
   const app = express();
   const server = createServer(app);
@@ -63,25 +87,34 @@ async function startServer() {
 
   // Security headers
   app.use(helmet({
-    contentSecurityPolicy: false, // Managed by Vite in dev; CSP set separately in prod
+    contentSecurityPolicy: process.env.NODE_ENV === "production" ? {
+      directives: {
+        defaultSrc: ["'self'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        frameAncestors: ["'self'"],
+        imgSrc: ["'self'", "data:", "blob:", "https:"],
+        objectSrc: ["'none'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https:"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+        fontSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'", "https:"],
+        upgradeInsecureRequests: [],
+      },
+    } : false,
     crossOriginEmbedderPolicy: false,
   }));
 
   // Apply rate limiting to auth and API routes
   // CORS - restrict to production domains only
   app.use((req, res, next) => {
-    const allowedOrigins = [
-      "https://lumae.co.in",
-      "https://www.lumae.co.in",
-      "https://lumae.manus.space",
-      "https://aicontent-femeuybh.manus.space",
-    ];
     const origin = req.headers.origin;
-    if (origin && (allowedOrigins.includes(origin) || process.env.NODE_ENV !== "production")) {
+    if (origin && isAllowedOrigin(origin)) {
       res.setHeader("Access-Control-Allow-Origin", origin);
       res.setHeader("Access-Control-Allow-Credentials", "true");
       res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
       res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization,trpc-accept");
+      res.setHeader("Vary", "Origin");
     }
     if (req.method === "OPTIONS") {
       return res.sendStatus(204);
@@ -91,6 +124,16 @@ async function startServer() {
 
   app.use("/api/oauth", authLimiter);
   app.use("/api/trpc/auth", authLimiter);
+  app.use("/api/trpc/system.sendContactMessage", contactLimiter);
+  app.use("/api/trpc/credits", paymentLimiter);
+  app.use("/api/trpc", (req, res, next) => {
+    const origin = req.headers.origin;
+    const unsafeMethod = ["POST", "PUT", "PATCH", "DELETE"].includes(req.method);
+    if (unsafeMethod && origin && !isAllowedOrigin(origin)) {
+      return res.status(403).json({ error: "untrusted-origin" });
+    }
+    next();
+  });
   app.use("/api/trpc", apiLimiter);
 
   // Dev: log incoming requests for debugging
@@ -106,12 +149,7 @@ async function startServer() {
   const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET;
   const razorpayWebhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
   
-  // Log first few characters of keys for verification (LIVE keys start with rzp_live_)
-  if (razorpayKeyId) {
-    const keyPrefix = razorpayKeyId.substring(0, 12);
-    const isLive = razorpayKeyId.startsWith('rzp_live_');
-    console.log(`[Razorpay] Key ID loaded: ${keyPrefix}... (${isLive ? 'LIVE' : 'TEST'} mode)`);
-  } else {
+  if (!razorpayKeyId) {
     console.warn("[Razorpay] Key ID not found in environment");
   }
   
@@ -132,19 +170,22 @@ async function startServer() {
   // Razorpay webhook - must be registered BEFORE express.json() to access raw body
   app.post(
     "/api/webhooks/razorpay",
-    express.raw({ type: "application/json" }),
+    express.raw({ type: "application/json", limit: "256kb" }),
     async (req, res) => {
-      // Parse raw body for signature verification
-      const rawBody = req.body.toString("utf8");
-      req.body = JSON.parse(rawBody);
-      await handleRazorpayWebhook(req, res);
+      try {
+        const rawBody = req.body.toString("utf8");
+        req.body = JSON.parse(rawBody);
+        await handleRazorpayWebhook(req, res);
+      } catch {
+        return res.status(400).json({ error: "Invalid webhook payload" });
+      }
     }
   );
 
   // Stripe webhook must be registered BEFORE express.json() to access raw body
   app.post(
     "/api/stripe/webhook",
-    express.raw({ type: "application/json" }),
+    express.raw({ type: "application/json", limit: "256kb" }),
     async (req, res) => {
       const signature = req.headers["stripe-signature"] as string;
       
@@ -171,9 +212,9 @@ async function startServer() {
     }
   );
   
-  // Configure body parser - limit to 10mb to prevent DoS
-  app.use(express.json({ limit: "10mb" }));
-  app.use(express.urlencoded({ limit: "10mb", extended: true }));
+  // Bound non-file request bodies to reduce memory-exhaustion risk.
+  app.use(express.json({ limit: "1mb" }));
+  app.use(express.urlencoded({ limit: "1mb", extended: true }));
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   app.post("/api/scheduled/social-automation", runScheduledAutomation);

@@ -12,10 +12,15 @@ const KEY_LENGTH = 32;
 const SALT = "ai-content-engine-e2e-salt-v1";
 
 /**
- * Derive encryption key from JWT_SECRET or custom key
+ * Derive encryption key from a configured server-side secret. A deploy without
+ * a real secret must fail rather than silently encrypting customer data with a
+ * predictable fallback value.
  */
 function getEncryptionKey(customKey?: string): Buffer {
-  const secret = customKey || process.env.JWT_SECRET || "default-encryption-key-change-in-production";
+  const secret = customKey || process.env.DATA_ENCRYPTION_KEY || process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error("A 32-character DATA_ENCRYPTION_KEY or JWT_SECRET is required for encryption");
+  }
   return crypto.scryptSync(secret, SALT, KEY_LENGTH);
 }
 
@@ -94,7 +99,10 @@ export function generateSecureToken(length: number = 32): string {
  * Verify data integrity using HMAC
  */
 export function createHMAC(data: string, key?: string): string {
-  const secret = key || process.env.JWT_SECRET || "default-hmac-key";
+  const secret = key || process.env.DATA_ENCRYPTION_KEY || process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error("A 32-character DATA_ENCRYPTION_KEY or JWT_SECRET is required for HMAC operations");
+  }
   return crypto.createHmac("sha256", secret).update(data).digest("hex");
 }
 
@@ -103,7 +111,9 @@ export function createHMAC(data: string, key?: string): string {
  */
 export function verifyHMAC(data: string, signature: string, key?: string): boolean {
   const computed = createHMAC(data, key);
-  return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(signature));
+  const expected = Buffer.from(computed, "hex");
+  const received = Buffer.from(signature, "hex");
+  return received.length === expected.length && crypto.timingSafeEqual(expected, received);
 }
 
 /**

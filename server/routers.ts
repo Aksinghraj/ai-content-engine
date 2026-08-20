@@ -27,16 +27,12 @@ import { aiAgentsRouter } from "./routers/aiAgents";
 import { templatesRouter } from "./routers/templates";
 import { communityRouter } from "./routers/community";
 import { socialOAuthRouter } from "./routers/socialOAuth";
-import { oauthFlowRouter } from "./routers/oauthFlow";
 import { socialMediaRouter } from "./routers/socialMedia";
 import { enterpriseRouter } from "./routers/enterprise";
 import { oauthManagementRouter } from "./routers/oauthManagement";
-import { multilingualAIRouter } from "./routers/multilingualAI";
 import { socialPostingRouter } from "./routers/socialPosting";
-import { encryptionRouter } from "./routers/encryption";
 import { aiPostGenerationRouter } from "./routers/aiPostGeneration";
 import { aiMediaGeneration } from "./routers/aiMediaGeneration";
-import { oauthCallbackRouter } from "./routers/oauthCallback";
 import { socialOAuthIntegrationRouter } from "./routers/socialOAuthIntegration";
 import { freeTierRouter } from "./routers/freeTier";
 import { professionalProfileRouter } from "./routers/professionalProfile";
@@ -91,13 +87,10 @@ export const appRouter = router({
   templates: templatesRouter,
   community: communityRouter,
   socialOAuth: socialOAuthRouter,
-  oauthFlow: oauthFlowRouter,
   socialMedia: socialMediaRouter,
   enterprise: enterpriseRouter,
   oauthManagement: oauthManagementRouter,
-  multilingualAI: multilingualAIRouter,
   socialPosting: socialPostingRouter,
-  encryption: encryptionRouter,
   aiPostGeneration: aiPostGenerationRouter,
   professionalProfile: professionalProfileRouter,
   lightPulseIntro: router({
@@ -113,7 +106,6 @@ export const appRouter = router({
   }),
   aiMediaGeneration: aiMediaGeneration,
   freeTier: freeTierRouter,
-  oauth: oauthCallbackRouter,
   socialOAuthIntegration: socialOAuthIntegrationRouter,
   contentRewriter: contentGenerationRouter.contentRewriter,
   contentRepurposer: contentGenerationRouter.contentRepurposer,
