@@ -14,6 +14,8 @@ export default function Footer() {
               <img
                 src="/manus-storage/lumae-logo-icon_ccacaad9.jpg"
                 alt="Lumae AI"
+                width={40}
+                height={40}
                 className="w-10 h-10 rounded-lg object-cover"
               />
               <div>
@@ -97,19 +99,19 @@ export default function Footer() {
             <h4 className="font-semibold text-foreground">Compliance</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li className="flex items-start gap-2">
-                <span className="text-purple-600 mt-1">✓</span>
+                <span className="text-[#10b981] mt-1">✓</span>
                 <span>GDPR Compliant</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-purple-600 mt-1">✓</span>
+                <span className="text-[#10b981] mt-1">✓</span>
                 <span>Google AdSense Approved</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-purple-600 mt-1">✓</span>
+                <span className="text-[#10b981] mt-1">✓</span>
                 <span>CCPA Compliant</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-purple-600 mt-1">✓</span>
+                <span className="text-[#10b981] mt-1">✓</span>
                 <span>SSL Encrypted</span>
               </li>
             </ul>

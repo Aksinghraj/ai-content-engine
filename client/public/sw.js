@@ -1,72 +1,39 @@
-const CACHE_NAME = 'ai-content-engine-v1';
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-];
+const CACHE_NAME = 'lumae-ai-v2';
+const CORE_ASSETS = ['/manifest.json'];
 
-// Install event - cache resources
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(urlsToCache).catch((err) => {
-        console.log('Cache addAll error:', err);
-      });
-    })
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)));
   self.skipWaiting();
 });
 
-// Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    caches.keys().then((names) => Promise.all(names.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name)))),
   );
   self.clients.claim();
 });
 
-// Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET requests
-  if (event.request.method !== 'GET') {
+  if (event.request.method !== 'GET') return;
+
+  // Navigation and application HTML must always come from the network so a
+  // deployed UI never remains stuck behind a stale service-worker cache.
+  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+    event.respondWith(fetch(event.request).catch(() => caches.match('/')));
     return;
   }
 
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      if (response) {
-        return response;
-      }
-
-      return fetch(event.request)
+    caches.match(event.request).then((cached) => {
+      const network = fetch(event.request)
         .then((response) => {
-          // Don't cache non-successful responses
-          if (!response || response.status !== 200 || response.type === 'error') {
-            return response;
+          if (response.ok && response.type !== 'error') {
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
           }
-
-          // Clone the response
-          const responseToCache = response.clone();
-
-          // Cache successful responses
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-
           return response;
         })
-        .catch(() => {
-          // Return a fallback response if offline
-          return caches.match('/index.html');
-        });
-    })
+        .catch(() => cached);
+      return cached || network;
+    }),
   );
 });

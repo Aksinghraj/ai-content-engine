@@ -6,6 +6,8 @@
 
 import axios from "axios";
 
+const PROVIDER_VALIDATION_TIMEOUT_MS = 2_000;
+
 export type SocialPlatform = "instagram" | "twitter" | "linkedin" | "facebook" | "youtube" | "tiktok";
 
 interface ValidationResult {
@@ -29,7 +31,7 @@ export async function validateInstagramCredentials(
         fields: "id,username",
         access_token: accessToken,
       },
-      timeout: 5000,
+      timeout: PROVIDER_VALIDATION_TIMEOUT_MS,
     });
 
     if (response.data?.id && response.data?.username) {
@@ -66,7 +68,7 @@ export async function validateTwitterCredentials(accessToken: string): Promise<V
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
-      timeout: 5000,
+      timeout: PROVIDER_VALIDATION_TIMEOUT_MS,
     });
 
     if (response.data?.data?.id && response.data?.data?.username) {
@@ -106,7 +108,7 @@ export async function validateLinkedInCredentials(
         Authorization: `Bearer ${accessToken}`,
         "Accept": "application/json",
       },
-      timeout: 5000,
+      timeout: PROVIDER_VALIDATION_TIMEOUT_MS,
     });
 
     if (response.data?.id) {
@@ -147,7 +149,7 @@ export async function validateFacebookCredentials(
         fields: "id,name,email",
         access_token: accessToken,
       },
-      timeout: 5000,
+      timeout: PROVIDER_VALIDATION_TIMEOUT_MS,
     });
 
     if (response.data?.id && response.data?.name) {
@@ -188,7 +190,7 @@ export async function validateYouTubeCredentials(
         mine: true,
         access_token: accessToken,
       },
-      timeout: 5000,
+      timeout: PROVIDER_VALIDATION_TIMEOUT_MS,
     });
 
     if (response.data?.items?.[0]?.id && response.data?.items?.[0]?.snippet?.title) {
@@ -227,7 +229,7 @@ export async function validateTikTokCredentials(
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
-      timeout: 5000,
+      timeout: PROVIDER_VALIDATION_TIMEOUT_MS,
     });
 
     if (response.data?.data?.user?.id && response.data?.data?.user?.username) {

@@ -786,3 +786,10 @@
 - [x] Replace non-durable node-cron automation with platform-managed scheduled execution
 - [x] Ensure a scheduled automation publishes only to a connected account with Auto-Post enabled
 - [x] Record deterministic publish outcomes and retries for scheduled social posts
+
+## Landing Page Premium Redesign (IN PROGRESS)
+- [x] Replace unreliable hero branding with an accessible fixed-size Lumae AI logo asset
+- [x] Correct navbar authentication state so logged-out visitors see Log In and Sign Up
+- [x] Apply the neutral premium #0a0a0b / #0071e3 landing-page accent system
+- [x] Refine differentiated hero headline, CTA copy, typography hierarchy, and below-fold spacing
+- [x] Validate responsive landing-page rendering and interactions
