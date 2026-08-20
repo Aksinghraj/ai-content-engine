@@ -1,5 +1,8 @@
+import { LogOut, User } from "lucide-react";
+import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { useTheme } from "@/contexts/ThemeContext";
+import { getLoginUrl } from "@/const";
+import { AppPrimaryNavigation } from "@/components/AppNavigation";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,217 +12,55 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Moon, Sun, Monitor, LogOut, User, Settings, Sparkles, Zap, BarChart3, Cog, Coins, Calendar, Mic } from "lucide-react";
-import { useLocation } from "wouter";
-import { getLoginUrl } from "@/const";
-import { trpc } from "@/lib/trpc";
-
-// Credit Balance Component
-function CreditBalance() {
-  const { data: balance } = trpc.credits.getBalance.useQuery();
-  const balanceAmount = typeof balance === 'object' ? balance?.balance : balance;
-  return <span>{balanceAmount || 0} credits</span>;
-}
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
-  const { theme, setTheme } = useTheme();
   const [, navigate] = useLocation();
 
   const handleLogout = async () => {
     await logout();
-    // Navigate to home page after cache is cleared
     window.location.href = "/";
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-        {/* Logo */}
-        <div
-          className="flex items-center gap-2 cursor-pointer"
-          onClick={() => navigate("/")}
-        >
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-white" />
+    <header className="sticky top-0 z-50 border-b border-[#2a2a2e] bg-[#0a0a0b]/95 text-[#f5f5f7] backdrop-blur-xl">
+      <div className="mx-auto flex h-15 max-w-7xl items-center gap-4 px-4 sm:px-6">
+        <button onClick={() => navigate("/dashboard")} className="flex shrink-0 items-center gap-2 rounded-lg text-left" aria-label="Lumae AI dashboard">
+          <img src="/manus-storage/lumae-logo-icon_ccacaad9.jpg" alt="Lumae AI" width={32} height={32} className="h-8 w-8 rounded-lg object-cover" />
+          <span className="text-base font-semibold tracking-tight">Lumae AI</span>
+        </button>
+
+        {isAuthenticated && user && (
+          <div className="hidden min-w-0 flex-1 justify-center md:flex">
+            <AppPrimaryNavigation compact />
           </div>
-          <span className="text-xl font-bold text-foreground">Lumae AI</span>
-        </div>
+        )}
 
-        {/* Right side controls */}
-        <div className="flex items-center gap-4">
-          {/* Theme Switcher */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="text-foreground">
-                {theme === "light" && <Sun className="w-4 h-4" />}
-                {theme === "dark" && <Moon className="w-4 h-4" />}
-                {theme === "auto" && <Monitor className="w-4 h-4" />}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Theme</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setTheme("light")}>
-                <Sun className="w-4 h-4 mr-2" />
-                Light
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("dark")}>
-                <Moon className="w-4 h-4 mr-2" />
-                Dark
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("auto")}>
-                <Monitor className="w-4 h-4 mr-2" />
-                Auto
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Credit Balance Display */}
-          {isAuthenticated && user && (
-            <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-slate-100 rounded-lg">
-              <Coins className="w-4 h-4 text-yellow-600" />
-              <span className="text-sm font-medium text-slate-900">
-                {/* Credit balance will be fetched from tRPC */}
-                <CreditBalance />
-              </span>
-            </div>
-          )}
-
-          {/* User Menu */}
+        <div className="ml-auto flex items-center gap-2">
           {isAuthenticated && user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <User className="w-4 h-4 mr-2" />
-                  {user.name || "Account"}
+                <Button variant="outline" size="sm" className="border-[#2a2a2e] bg-transparent text-[#f5f5f7] hover:bg-[#161618] hover:text-white">
+                  <User className="mr-2 h-4 w-4" />
+                  <span className="max-w-28 truncate">{user.name || "Account"}</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{user.email || user.name}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate("/dashboard")}>
-                  <Settings className="w-4 h-4 mr-2" />
-                  Dashboard
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/generator")}>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Generate Content
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/personal-ai")}>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Personal AI
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {user.subscriptionTier === "pro" && (
-                  <>
-                    <DropdownMenuItem onClick={() => navigate("/automation")}>
-                      <Zap className="w-4 h-4 mr-2" />
-                      Automation
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/advanced-automation")}>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Advanced Automation
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/automation-dashboard")}>
-                      <Cog className="w-4 h-4 mr-2" />
-                      Automation Dashboard
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/analytics")}>
-                      <BarChart3 className="w-4 h-4 mr-2" />
-                      Analytics
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/automation-manager")}>
-                      <Zap className="w-4 h-4 mr-2" />
-                      Automation Manager
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/viral-score")}>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Viral Score
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/rewriter")}>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Content Rewriter
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/repurposing")}>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Repurposing Engine
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/brand-voice")}>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Brand Voice
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/analytics-dashboard")}>
-                      <BarChart3 className="w-4 h-4 mr-2" />
-                      Analytics Dashboard
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/content-calendar")}>
-                      <Calendar className="w-4 h-4 mr-2" />
-                      Content Calendar
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/ai-assistant")}>
-                      <Mic className="w-4 h-4 mr-2" />
-                      AI Assistant
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/credits")}>
-                      <Coins className="w-4 h-4 mr-2" />
-                      Credits
-                    </DropdownMenuItem>
-                  </>
-                )}
-                {user.subscriptionTier === "free" && (
-                  <>
-                    <DropdownMenuItem onClick={() => navigate("/automation")}>
-                      <Zap className="w-4 h-4 mr-2" />
-                      Automation
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/viral-score")}>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Viral Score
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/rewriter")}>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Content Rewriter
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/repurposing")}>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Repurposing Engine
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/brand-voice")}>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Brand Voice
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/ai-assistant")}>
-                      <Mic className="w-4 h-4 mr-2" />
-                      AI Assistant
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/analytics-dashboard")}>
-                      <BarChart3 className="w-4 h-4 mr-2" />
-                      Analytics
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/pricing")}>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Upgrade to Pro
-                    </DropdownMenuItem>
-                  </>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
+              <DropdownMenuContent align="end" className="border-[#2a2a2e] bg-[#161618] text-[#f5f5f7]">
+                <DropdownMenuLabel className="text-[#f5f5f7]">{user.email || user.name}</DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-[#2a2a2e]" />
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-300 focus:bg-red-500/10 focus:text-red-200">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button
-              onClick={() => (window.location.href = getLoginUrl())}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Login
+            <Button onClick={() => (window.location.href = getLoginUrl())} size="sm" className="bg-[#0071e3] text-white hover:bg-[#0066cc]">
+              Log In
             </Button>
           )}
         </div>
       </div>
-    </nav>
+    </header>
   );
 }

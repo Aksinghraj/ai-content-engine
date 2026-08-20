@@ -26,34 +26,8 @@ import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
-
-const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-  { icon: Calendar, label: "Post Scheduling", path: "/post-scheduling" },
-  { icon: Sparkles, label: "AI Generator", path: "/generator" },
-  { icon: Image, label: "Media Generation", path: "/media-generation" },
-  { icon: Bot, label: "Auto-Reply AI", path: "/auto-reply" },
-  { icon: Repeat, label: "Repurposing Engine", path: "/repurposing" },
-  { icon: Youtube, label: "Video Repurposing", path: "/video-repurposing" },
-  { icon: Zap, label: "Format Agent", path: "/content-formatting" },
-  { icon: AlertTriangle, label: "Escalation", path: "/sentiment-escalation" },
-  { icon: BarChart3, label: "Analytics", path: "/analytics" },
-  { icon: TrendingUp, label: "Usage Analytics", path: "/usage-analytics" },
-  { icon: DollarSign, label: "ROI Dashboard", path: "/roi-dashboard" },
-  { icon: Wand2, label: "Content Rewriter", path: "/content-rewriter" },
-  { icon: TrendingUp, label: "Viral Score", path: "/viral-score" },
-  { icon: Users, label: "Social Automation", path: "/social-automation" },
-  { icon: Users, label: "Connected Accounts", path: "/connected-accounts" },
-  { icon: Send, label: "Social Publishing", path: "/social-publishing" },
-  { icon: MessageCircle, label: "Auto-Reply AI", path: "/auto-reply-advanced" },
-  { icon: Sparkles, label: "Create Post Pro", path: "/create-post-advanced" },
-  { icon: Users, label: "My Profile", path: "/profile-advanced" },
-  { icon: Settings, label: "Settings", path: "/settings-advanced" },
-  { icon: Settings, label: "OAuth Settings", path: "/oauth-settings" },
-  { icon: CreditCard, label: "Buy Credits", path: "/razorpay-payments" },
-  { icon: Wallet, label: "My Credits", path: "/my-credits" },
-  { icon: Crown, label: "Subscription Plans", path: "/subscription-plans" },
-];
+import { AppPrimaryNavigation, GroupedPageTabs } from "./AppNavigation";
+import { getNavigationArea } from "@/lib/appNavigation";
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
 const DEFAULT_WIDTH = 280;
@@ -91,7 +65,7 @@ export default function DashboardLayout({
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="flex flex-col items-center gap-6">
-          <div className="w-10 h-10 rounded-full border-4 border-purple-500 border-t-transparent animate-spin" />
+          <div className="w-10 h-10 rounded-full border-4 border-[#0071e3] border-t-transparent animate-spin" />
           <p className="text-sm text-muted-foreground">Redirecting to login...</p>
           <Button
             variant="ghost"
@@ -131,12 +105,12 @@ function DashboardLayoutContent({
   setSidebarWidth,
 }: DashboardLayoutContentProps) {
   const { user, logout } = useAuth();
-  const [location, setLocation] = useLocation();
+  const [location] = useLocation();
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const activeMenuItem = menuItems.find(item => item.path === location);
+  const activeMenuItem = getNavigationArea(location);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -197,6 +171,8 @@ function DashboardLayoutContent({
                   <img
                     src="/manus-storage/lumae-logo-icon_ccacaad9.jpg"
                     alt="Lumae AI"
+                    width={28}
+                    height={28}
                     className="w-7 h-7 rounded-md object-cover shrink-0"
                   />
                   <span className="font-semibold tracking-tight truncate text-sm">
@@ -208,26 +184,9 @@ function DashboardLayoutContent({
           </SidebarHeader>
 
           <SidebarContent className="gap-0">
-            <SidebarMenu className="px-2 py-1">
-              {menuItems.map(item => {
-                const isActive = location === item.path;
-                return (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton
-                      isActive={isActive}
-                      onClick={() => setLocation(item.path)}
-                      tooltip={item.label}
-                      className={`h-10 transition-all font-normal`}
-                    >
-                      <item.icon
-                        className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
-                      />
-                      <span>{item.label}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
+            <div className="px-2 py-2 group-data-[collapsible=icon]:px-1">
+              <AppPrimaryNavigation />
+            </div>
           </SidebarContent>
 
           <SidebarFooter className="p-3">
@@ -272,6 +231,11 @@ function DashboardLayoutContent({
       </div>
 
       <SidebarInset>
+        {!isMobile && (
+          <div className="sticky top-0 z-30 hidden border-b border-[#2a2a2e] bg-[#0a0a0b]/95 px-4 py-2 backdrop-blur-xl md:block">
+            <AppPrimaryNavigation compact />
+          </div>
+        )}
         {isMobile && (
           <div className="flex border-b h-14 items-center justify-between bg-background/95 px-2 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40">
             <div className="flex items-center gap-2">
@@ -313,7 +277,10 @@ function DashboardLayoutContent({
             )}
           </div>
         )}
-        <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-x-hidden">{children}</main>
+        <main className="flex-1 overflow-x-hidden p-3 sm:p-4 md:p-6">
+          <GroupedPageTabs />
+          {children}
+        </main>
       </SidebarInset>
     </>
   );
