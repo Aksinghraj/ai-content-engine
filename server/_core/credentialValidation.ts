@@ -103,7 +103,7 @@ export async function validateLinkedInCredentials(
   accessToken: string
 ): Promise<ValidationResult> {
   try {
-    const response = await axios.get("https://api.linkedin.com/v2/me", {
+    const response = await axios.get("https://api.linkedin.com/v2/userinfo", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Accept": "application/json",
@@ -111,12 +111,13 @@ export async function validateLinkedInCredentials(
       timeout: PROVIDER_VALIDATION_TIMEOUT_MS,
     });
 
-    if (response.data?.id) {
-      const username = response.data?.localizedFirstName || response.data?.id;
+    if (response.data?.sub || response.data?.id) {
+      const userId = response.data.sub || response.data.id;
+      const username = response.data?.name || response.data?.given_name || userId;
       return {
         isValid: true,
         username: username,
-        userId: response.data.id,
+        userId,
         message: "LinkedIn credentials verified successfully",
       };
     }

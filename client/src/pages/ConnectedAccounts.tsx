@@ -62,6 +62,11 @@ const PLATFORMS = [
   },
 ];
 
+const PROVIDER_GUIDANCE: Record<string, string> = {
+  linkedin: "Requires the OpenID Connect product and Share on LinkedIn product. Register https://lumae.co.in/api/oauth/callback/linkedin/callback in your LinkedIn app before connecting.",
+  youtube: "YouTube upload access requires a Google OAuth consent screen. Add your Google account as a test user while the app is in Testing, or complete Google verification before connecting other users.",
+};
+
 export default function ConnectedAccounts() {
   const [connecting, setConnecting] = useState<string | null>(null);
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
@@ -102,7 +107,8 @@ export default function ConnectedAccounts() {
     }
 
     if (error) {
-      toast.error(`OAuth Error: ${error} - ${message || "Unknown error"}`);
+      const guidance = platform ? PROVIDER_GUIDANCE[platform] : undefined;
+      toast.error(guidance ? `${platform}: ${guidance}` : `OAuth Error: ${error} - ${message || "Unknown error"}`);
       // Clear URL params
       window.history.replaceState({}, document.title, window.location.pathname);
     }
@@ -269,18 +275,25 @@ export default function ConnectedAccounts() {
                     </div>
                   </div>
                 ) : (
-                  <Button
-                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                    onClick={() => handleConnect(platform.id)}
-                    disabled={isConnecting}
-                  >
-                    {isConnecting ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Link2 className="w-4 h-4 mr-2" />
+                  <div className="space-y-3">
+                    {PROVIDER_GUIDANCE[platform.id] && (
+                      <p className="rounded-md border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs leading-relaxed text-amber-100">
+                        {PROVIDER_GUIDANCE[platform.id]}
+                      </p>
                     )}
-                    {isConnecting ? "Connecting..." : "Connect"}
-                  </Button>
+                    <Button
+                      className="w-full bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-500 text-white"
+                      onClick={() => handleConnect(platform.id)}
+                      disabled={isConnecting}
+                    >
+                      {isConnecting ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Link2 className="w-4 h-4 mr-2" />
+                      )}
+                      {isConnecting ? "Connecting..." : "Connect"}
+                    </Button>
+                  </div>
                 )}
               </Card>
             );

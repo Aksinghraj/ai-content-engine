@@ -892,3 +892,9 @@
 - [x] Return actionable readiness, generation, and publish outcomes to the owner
 - [x] Add a Run Now diagnostic control and result feedback to Automation
 - [x] Add immediate-execution security and regression coverage
+
+## LinkedIn & YouTube Connection Remediation (IN PROGRESS)
+- [x] Verify the exact LinkedIn and YouTube OAuth authorization parameters and callback URLs
+- [x] Correct application-side provider configuration or scopes where possible
+- [x] Add provider-specific in-app status and remediation guidance
+- [x] Add regression coverage for canonical LinkedIn and YouTube authorization requests

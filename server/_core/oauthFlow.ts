@@ -273,7 +273,7 @@ function extractPlatformUserId(platform: string, userInfo: any): string {
     case "twitter":
       return userInfo.data?.id || userInfo.id;
     case "linkedin":
-      return userInfo.id;
+      return userInfo.sub || userInfo.id;
     case "facebook":
       return userInfo.id;
     case "youtube":
@@ -295,7 +295,7 @@ function extractUsername(platform: string, userInfo: any): string {
     case "twitter":
       return userInfo.data?.username || userInfo.username || "Twitter User";
     case "linkedin":
-      return userInfo.localizedFirstName + " " + userInfo.localizedLastName || "LinkedIn User";
+      return userInfo.name || [userInfo.given_name, userInfo.family_name].filter(Boolean).join(" ") || "LinkedIn User";
     case "facebook":
       return userInfo.name || "Facebook User";
     case "youtube":
