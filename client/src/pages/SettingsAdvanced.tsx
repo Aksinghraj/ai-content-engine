@@ -30,8 +30,12 @@ import {
   LogOut,
   Copy,
   Radio,
+  Sun,
+  Moon,
+  Monitor,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface NotificationSetting {
   id: string;
@@ -59,6 +63,7 @@ export default function SettingsAdvanced() {
   const [activeTab, setActiveTab] = useState("account");
   const [showPassword, setShowPassword] = useState(false);
   const [showApiKey, setShowApiKey] = useState<string | null>(null);
+  const { theme, effectiveTheme, setTheme } = useTheme();
 
   const [notifications, setNotifications] = useState<NotificationSetting[]>([
     {
@@ -186,8 +191,8 @@ export default function SettingsAdvanced() {
       <div className="space-y-6">
         {/* Header */}
         <div className="space-y-2">
-          <h1 className="text-4xl font-bold text-white">Settings</h1>
-          <p className="text-purple-200">
+          <h1 className="text-4xl font-bold text-foreground">Settings</h1>
+          <p className="text-muted-foreground">
             Manage your account, security, notifications, and integrations
           </p>
         </div>
@@ -288,32 +293,45 @@ export default function SettingsAdvanced() {
               </Card>
 
               {/* Preferences */}
-              <Card className="bg-slate-800/50 border-slate-700/50 p-6 space-y-4">
-                <h3 className="text-white font-semibold flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-yellow-400" />
-                  Preferences
+              <Card className="border-border bg-card p-6 space-y-4">
+                <h3 className="flex items-center gap-2 font-semibold text-card-foreground">
+                  <Zap className="h-5 w-5 text-[#f59e0b]" />
+                  Appearance & preferences
                 </h3>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-slate-700/20 rounded-lg">
-                    <div>
-                      <p className="text-white font-medium">Dark Mode</p>
-                      <p className="text-xs text-slate-400">Use dark theme</p>
+                  <div className="rounded-xl border border-border bg-muted/40 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-card-foreground">Display mode</p>
+                        <p className="mt-1 text-xs text-muted-foreground">Your selection is saved to this account. Current appearance: {effectiveTheme === "dark" ? "Dark" : "Bright"}.</p>
+                      </div>
+                      {effectiveTheme === "dark" ? <Moon className="h-5 w-5 text-primary" /> : <Sun className="h-5 w-5 text-[#f59e0b]" />}
                     </div>
-                    <Radio className="w-6 h-6 text-purple-400" />
+                    <div className="mt-4 grid grid-cols-3 gap-2">
+                      {[
+                        { value: "light" as const, label: "Bright", icon: Sun },
+                        { value: "dark" as const, label: "Dark", icon: Moon },
+                        { value: "auto" as const, label: "System", icon: Monitor },
+                      ].map(({ value, label, icon: Icon }) => (
+                        <Button key={value} type="button" variant={theme === value ? "default" : "outline"} onClick={() => setTheme(value)} className={theme === value ? "lumae-gradient-cta" : "border-border bg-background text-foreground hover:bg-accent"}>
+                          <Icon className="mr-1.5 h-4 w-4" />{label}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-slate-700/20 rounded-lg">
+                  <div className="flex items-center justify-between rounded-lg bg-muted/45 p-3">
                     <div>
-                      <p className="text-white font-medium">Email Digest</p>
-                      <p className="text-xs text-slate-400">Weekly summary</p>
+                      <p className="font-medium text-card-foreground">Email Digest</p>
+                      <p className="text-xs text-muted-foreground">Weekly summary</p>
                     </div>
-                    <Radio className="w-6 h-6 text-green-400" />
+                    <Radio className="h-6 w-6 text-[#10b981]" />
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-slate-700/20 rounded-lg">
+                  <div className="flex items-center justify-between rounded-lg bg-muted/45 p-3">
                     <div>
-                      <p className="text-white font-medium">Analytics Tracking</p>
-                      <p className="text-xs text-slate-400">Help us improve</p>
+                      <p className="font-medium text-card-foreground">Analytics Tracking</p>
+                      <p className="text-xs text-muted-foreground">Help us improve</p>
                     </div>
-                    <Radio className="w-6 h-6 text-blue-400" />
+                    <Radio className="h-6 w-6 text-primary" />
                   </div>
                 </div>
               </Card>

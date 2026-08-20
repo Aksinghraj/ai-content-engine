@@ -858,3 +858,10 @@
 - [x] Show live estimated speaking time and word guidance for all selected lengths
 - [x] Persist and restore each user’s preferred video and script length settings
 - [x] Add regression coverage for presets, estimates, and saved preferences
+
+## Professional Profile & Theme Modes (IN PROGRESS)
+- [x] Redesign Account Profile into a professional introduction and credential presentation
+- [x] Add editable professional biography, role, expertise, and profile completeness guidance
+- [x] Implement a polished bright/dark theme toggle with saved user preference
+- [x] Audit and normalize major account and navigation surfaces for both theme modes
+- [x] Add responsive and theme persistence regression coverage

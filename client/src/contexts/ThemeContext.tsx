@@ -1,15 +1,19 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
 
 type Theme = "light" | "dark" | "auto";
 
 interface ThemeContextType {
   theme: Theme;
+  effectiveTheme: "light" | "dark";
   setTheme: (theme: Theme) => void;
-  toggleTheme?: () => void;
+  toggleTheme: () => void;
   switchable: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const STORAGE_KEY = "lumae-theme";
 
 interface ThemeProviderProps {
   children: React.ReactNode;
@@ -19,65 +23,63 @@ interface ThemeProviderProps {
 
 export function ThemeProvider({
   children,
-  defaultTheme = "light",
-  switchable = false,
+  defaultTheme = "auto",
+  switchable = true,
 }: ThemeProviderProps) {
+  const { isAuthenticated } = useAuth();
   const [theme, setThemeState] = useState<Theme>(() => {
-    if (switchable) {
-      const stored = localStorage.getItem("theme");
-      return (stored as Theme) || defaultTheme;
-    }
-    return defaultTheme;
+    if (typeof window === "undefined" || !switchable) return defaultTheme;
+    return (localStorage.getItem(STORAGE_KEY) as Theme) || defaultTheme;
   });
+  const [systemPrefersDark, setSystemPrefersDark] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia("(prefers-color-scheme: dark)").matches : true,
+  );
+  const [hasSyncedAccountTheme, setHasSyncedAccountTheme] = useState(false);
 
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
-    if (switchable) {
-      localStorage.setItem("theme", newTheme);
-    }
-  };
+  const statusQuery = trpc.subscription.getStatus.useQuery(undefined, {
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000,
+  });
+  const setThemeMutation = trpc.subscription.setTheme.useMutation();
+
+  const effectiveTheme = useMemo<"light" | "dark">(
+    () => theme === "auto" ? (systemPrefersDark ? "dark" : "light") : theme,
+    [systemPrefersDark, theme],
+  );
+
+  useEffect(() => {
+    const storedTheme = typeof window === "undefined" ? null : localStorage.getItem(STORAGE_KEY);
+    const accountTheme = statusQuery.data?.theme as Theme | undefined;
+    if (!isAuthenticated || !accountTheme || storedTheme || hasSyncedAccountTheme) return;
+    setThemeState(accountTheme);
+    setHasSyncedAccountTheme(true);
+  }, [hasSyncedAccountTheme, isAuthenticated, statusQuery.data?.theme]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const updateSystemTheme = () => setSystemPrefersDark(mediaQuery.matches);
+    updateSystemTheme();
+    mediaQuery.addEventListener?.("change", updateSystemTheme);
+    return () => mediaQuery.removeEventListener?.("change", updateSystemTheme);
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
-    let effectiveTheme = theme;
-    
-    // If theme is 'auto', detect system preference
-    if (theme === "auto") {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      effectiveTheme = prefersDark ? "dark" : "light";
-    }
-    
-    if (effectiveTheme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-  }, [theme]);
+    root.classList.toggle("dark", effectiveTheme === "dark");
+    root.dataset.theme = effectiveTheme;
+    root.style.colorScheme = effectiveTheme;
+  }, [effectiveTheme]);
 
-  // Listen for system theme changes when using 'auto'
-  useEffect(() => {
-    if (theme !== "auto") return;
-    
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = () => {
-      // Trigger re-render
-      setThemeState(prev => prev);
-    };
-    
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", handleChange);
-      return () => mediaQuery.removeEventListener("change", handleChange);
-    }
-  }, [theme]);
+  const setTheme = (nextTheme: Theme) => {
+    setThemeState(nextTheme);
+    if (switchable) localStorage.setItem(STORAGE_KEY, nextTheme);
+    if (isAuthenticated) setThemeMutation.mutate({ theme: nextTheme });
+  };
 
-  const toggleTheme = switchable
-    ? () => {
-        setTheme(theme === "light" ? "dark" : "light");
-      }
-    : undefined;
+  const toggleTheme = () => setTheme(effectiveTheme === "dark" ? "light" : "dark");
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, switchable }}>
+    <ThemeContext.Provider value={{ theme, effectiveTheme, setTheme, toggleTheme, switchable }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -85,8 +87,6 @@ export function ThemeProvider({
 
 export function useTheme() {
   const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error("useTheme must be used within ThemeProvider");
-  }
+  if (!context) throw new Error("useTheme must be used within ThemeProvider");
   return context;
 }

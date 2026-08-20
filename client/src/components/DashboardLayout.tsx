@@ -21,13 +21,14 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, Calendar, Settings, Bot, TrendingUp, Repeat, Sparkles, BarChart3, Zap, Wand2, DollarSign, Youtube, AlertTriangle, Image, ChevronDown, MessageCircle, CreditCard, Crown, Wallet, Send } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, Calendar, Settings, Bot, TrendingUp, Repeat, Sparkles, BarChart3, Zap, Wand2, DollarSign, Youtube, AlertTriangle, Image, ChevronDown, MessageCircle, CreditCard, Crown, Wallet, Send, Moon, Sun } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 import { AppPrimaryNavigation, GroupedPageTabs } from "./AppNavigation";
 import { getNavigationArea } from "@/lib/appNavigation";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
 const DEFAULT_WIDTH = 280;
@@ -114,6 +115,7 @@ function DashboardLayoutContent({
   const sidebarRef = useRef<HTMLDivElement>(null);
   const activeMenuItem = getNavigationArea(location);
   const isMobile = useIsMobile();
+  const { effectiveTheme, toggleTheme } = useTheme();
 
   useEffect(() => {
     if (isCollapsed) {
@@ -234,8 +236,11 @@ function DashboardLayoutContent({
 
       <SidebarInset>
         {!isMobile && (
-          <div className="sticky top-0 z-30 hidden border-b border-[#26262b] bg-[#09090b]/95 px-4 py-2 backdrop-blur-xl md:block">
+          <div className="sticky top-0 z-30 hidden items-center justify-between border-b border-border bg-background/95 px-4 py-2 backdrop-blur-xl md:flex">
             <AppPrimaryNavigation compact />
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="ml-3 shrink-0 text-muted-foreground hover:text-foreground" aria-label={`Switch to ${effectiveTheme === "dark" ? "bright" : "dark"} mode`} title={`Switch to ${effectiveTheme === "dark" ? "bright" : "dark"} mode`}>
+              {effectiveTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
           </div>
         )}
         {isMobile && (
@@ -250,6 +255,9 @@ function DashboardLayoutContent({
                 </div>
               </div>
             </div>
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9 text-muted-foreground hover:text-foreground" aria-label={`Switch to ${effectiveTheme === "dark" ? "bright" : "dark"} mode`}>
+              {effectiveTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
             {user && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

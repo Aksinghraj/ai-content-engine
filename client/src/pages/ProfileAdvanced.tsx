@@ -24,6 +24,11 @@ import {
   CheckCircle2,
   Upload,
   Crown,
+  BriefcaseBusiness,
+  BadgeCheck,
+  Target,
+  ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -47,8 +52,11 @@ export default function ProfileAdvanced() {
   const [profile, setProfile] = useState({
     name: user?.name || "Your Name",
     email: user?.email || "",
+    professionalTitle: "Content Strategist & AI Workflow Builder",
     phone: "",
-    bio: "Content creator & social media strategist. Building the future of AI-powered content.",
+    bio: "I build practical content systems that help people turn ideas into clear, consistent publishing workflows.",
+    expertise: "Content strategy, brand voice, AI workflows, social publishing",
+    availability: "Open to collaborations",
     location: "India",
     website: "https://lumae.co.in",
     socialLinks: {
@@ -171,8 +179,19 @@ export default function ProfileAdvanced() {
     ? SUBSCRIPTION_PLANS_DISPLAY.pro
     : SUBSCRIPTION_PLANS_DISPLAY.free;
 
+  const profileCompleteness = Math.round(([
+    profile.name,
+    profile.email || user?.email,
+    profile.professionalTitle,
+    profile.bio,
+    profile.expertise,
+    profile.location,
+    profile.website,
+  ].filter(Boolean).length / 7) * 100);
+  const expertiseItems = profile.expertise.split(",").map((item) => item.trim()).filter(Boolean);
+
   const avatarSrc = avatarPreview || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user?.name || "user")}`;
-  const coverSrc = coverPreview || "https://images.unsplash.com/photo-1579546929662-711aa33e6b14?w=1200&h=400&fit=crop";
+  const coverSrc = coverPreview;
 
   return (
     <DashboardLayout>
@@ -193,18 +212,21 @@ export default function ProfileAdvanced() {
           onChange={handleCoverChange}
         />
 
-        {/* Cover Image */}
-        <div className="relative h-48 rounded-lg overflow-hidden group">
-          <img
-            src={coverSrc}
-            alt="Cover"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all" />
+        {/* Professional profile cover */}
+        <div className="relative h-52 overflow-hidden rounded-2xl border border-border group">
+          {coverSrc ? (
+            <img src={coverSrc} alt="Profile cover" className="h-full w-full object-cover" />
+          ) : (
+            <div className="h-full w-full bg-[radial-gradient(circle_at_16%_20%,rgb(99_102_241_/_35%),transparent_32%),radial-gradient(circle_at_84%_18%,rgb(6_182_212_/_20%),transparent_28%),linear-gradient(115deg,#18181b,#141417)] dark:bg-[radial-gradient(circle_at_16%_20%,rgb(99_102_241_/_30%),transparent_32%),radial-gradient(circle_at_84%_18%,rgb(6_182_212_/_16%),transparent_28%),linear-gradient(115deg,#09090b,#141417)]" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
+          <div className="absolute left-5 top-5 flex items-center gap-2 rounded-full border border-white/15 bg-black/20 px-3 py-1.5 text-xs font-medium text-white backdrop-blur">
+            <BriefcaseBusiness className="h-3.5 w-3.5" /> Professional profile
+          </div>
           <button
             onClick={() => coverInputRef.current?.click()}
             disabled={isUploadingCover}
-            className="absolute top-4 right-4 bg-black/50 hover:bg-black/80 p-2 rounded-lg text-white transition-all flex items-center gap-2"
+            className="absolute right-4 top-4 flex items-center gap-2 rounded-lg border border-white/15 bg-black/45 p-2 text-white transition-colors hover:bg-black/70"
             title="Change cover photo"
           >
             {isUploadingCover ? (
@@ -218,15 +240,15 @@ export default function ProfileAdvanced() {
           </button>
         </div>
 
-        {/* Profile Header */}
-        <div className="relative -mt-24 px-6 space-y-4">
+        {/* Professional introduction header */}
+        <div className="relative -mt-20 px-5 sm:px-7 space-y-5">
           <div className="flex flex-col md:flex-row md:items-end gap-6">
             {/* Avatar */}
             <div className="relative group">
               <img
                 src={avatarSrc}
                 alt="Avatar"
-                className="w-32 h-32 rounded-full border-4 border-slate-900 object-cover"
+                className="h-28 w-28 rounded-2xl border-4 border-background object-cover shadow-xl sm:h-32 sm:w-32"
               />
               <button
                 onClick={() => avatarInputRef.current?.click()}
@@ -246,7 +268,7 @@ export default function ProfileAdvanced() {
               <button
                 onClick={() => avatarInputRef.current?.click()}
                 disabled={isUploadingAvatar}
-                className="absolute bottom-0 right-0 bg-purple-600 hover:bg-purple-700 p-2 rounded-full text-white shadow-lg"
+                className="absolute bottom-0 right-0 rounded-full bg-primary p-2 text-primary-foreground shadow-lg transition-transform hover:scale-105"
                 title="Change profile photo"
               >
                 <Camera className="w-4 h-4" />
@@ -255,24 +277,26 @@ export default function ProfileAdvanced() {
 
             {/* Profile Info */}
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl font-bold text-white">{profile.name}</h1>
-                {user?.subscriptionTier === "pro" && (
-                  <CheckCircle2 className="w-6 h-6 text-blue-400" />
-                )}
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <h1 className="text-3xl font-semibold tracking-tight text-foreground">{profile.name}</h1>
+                <BadgeCheck className="h-5 w-5 text-primary" aria-label="Verified account" />
               </div>
-              <p className="text-slate-400 mb-3">
-                {user?.subscriptionTier === "pro" ? "Pro Member" : "Free Member"}
-              </p>
+              <p className="mb-2 text-sm font-medium text-primary">{profile.professionalTitle}</p>
+              <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">{profile.bio}</p>
               <div className="flex flex-wrap gap-2">
+                <Badge className="border border-border bg-card text-card-foreground">
+                  <ShieldCheck className="mr-1 h-3 w-3 text-[#10b981]" />
+                  {profile.availability}
+                </Badge>
                 {user?.subscriptionTier === "pro" && (
-                  <Badge className="bg-purple-500/20 text-purple-300">
+                  <Badge className="border border-primary/30 bg-primary/10 text-primary">
                     <Crown className="w-3 h-3 mr-1" />
                     Pro Plan
                   </Badge>
                 )}
-                <Badge className="bg-green-500/20 text-green-300">
-                  Active Account
+                <Badge className="border border-border bg-card text-muted-foreground">
+                  <Sparkles className="mr-1 h-3 w-3 text-[#8b5cf6]" />
+                  {user?.subscriptionTier === "pro" ? "Pro member" : "Free member"}
                 </Badge>
               </div>
             </div>
@@ -281,7 +305,7 @@ export default function ProfileAdvanced() {
             <div className="flex gap-2">
               <Button
                 onClick={() => setIsEditing(!isEditing)}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                className="lumae-gradient-cta"
               >
                 <Edit2 className="w-4 h-4 mr-2" />
                 {isEditing ? "Cancel" : "Edit Profile"}
@@ -290,11 +314,24 @@ export default function ProfileAdvanced() {
           </div>
         </div>
 
-        {/* Photo Upload Helper Text */}
-        <div className="px-6">
-          <p className="text-xs text-slate-500 flex items-center gap-1">
+        <div className="grid grid-cols-1 gap-3 px-5 sm:grid-cols-3 sm:px-7">
+          {[
+            { label: "Focus", value: "AI-assisted content", icon: Target },
+            { label: "Profile status", value: "Active & verified", icon: ShieldCheck },
+            { label: "Plan", value: currentPlan.name, icon: Crown },
+          ].map(({ label, value, icon: Icon }) => (
+            <Card key={label} className="border-border bg-card p-4 shadow-sm">
+              <Icon className="mb-2 h-4 w-4 text-primary" />
+              <p className="text-xs text-muted-foreground">{label}</p>
+              <p className="mt-1 text-sm font-medium text-card-foreground">{value}</p>
+            </Card>
+          ))}
+        </div>
+
+        <div className="px-5 sm:px-7">
+          <p className="flex items-center gap-1 text-xs text-muted-foreground">
             <Camera className="w-3 h-3" />
-            Tap the camera icon or hover over your photo to upload from your gallery. Supports JPG, PNG, GIF, WebP.
+            Update your portrait or cover image anytime. Supports JPG, PNG, GIF, and WebP.
           </p>
         </div>
 
@@ -339,6 +376,16 @@ export default function ProfileAdvanced() {
                       className="w-full mt-1 px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:border-purple-500/50 focus:outline-none"
                     />
                   </div>
+                  <div className="md:col-span-2">
+                    <label className="text-sm text-muted-foreground">Professional title</label>
+                    <input
+                      type="text"
+                      value={profile.professionalTitle}
+                      onChange={(e) => setProfile({ ...profile, professionalTitle: e.target.value })}
+                      placeholder="e.g., Content Strategist & AI Workflow Builder"
+                      className="mt-1 w-full rounded-lg border border-input bg-background px-4 py-2 text-foreground focus:border-primary focus:outline-none"
+                    />
+                  </div>
                   <div>
                     <label className="text-sm text-slate-400">Phone</label>
                     <input
@@ -373,6 +420,26 @@ export default function ProfileAdvanced() {
                       onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
                       rows={4}
                       className="w-full mt-1 px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:border-purple-500/50 focus:outline-none resize-none"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-sm text-muted-foreground">Areas of expertise</label>
+                    <input
+                      type="text"
+                      value={profile.expertise}
+                      onChange={(e) => setProfile({ ...profile, expertise: e.target.value })}
+                      placeholder="Separate focus areas with commas"
+                      className="mt-1 w-full rounded-lg border border-input bg-background px-4 py-2 text-foreground focus:border-primary focus:outline-none"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-sm text-muted-foreground">Availability</label>
+                    <input
+                      type="text"
+                      value={profile.availability}
+                      onChange={(e) => setProfile({ ...profile, availability: e.target.value })}
+                      placeholder="e.g., Open to collaborations"
+                      className="mt-1 w-full rounded-lg border border-input bg-background px-4 py-2 text-foreground focus:border-primary focus:outline-none"
                     />
                   </div>
                 </div>
@@ -426,8 +493,26 @@ export default function ProfileAdvanced() {
                 </div>
               </Card>
             ) : (
-              <Card className="bg-slate-800/50 border-slate-700/50 p-6">
-                <div className="space-y-4">
+              <Card className="border-border bg-card p-6">
+                <div className="space-y-6">
+                  <section className="rounded-xl border border-border bg-muted/35 p-5">
+                    <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-[0.16em] text-primary">Professional introduction</p>
+                        <h3 className="mt-2 text-xl font-semibold text-card-foreground">{profile.professionalTitle}</h3>
+                        <p className="mt-3 max-w-3xl leading-relaxed text-muted-foreground">{profile.bio}</p>
+                      </div>
+                      <div className="min-w-28 rounded-lg border border-border bg-card px-3 py-2 text-center">
+                        <p className="text-lg font-semibold text-card-foreground">{profileCompleteness}%</p>
+                        <p className="text-[11px] text-muted-foreground">Profile complete</p>
+                      </div>
+                    </div>
+                    {expertiseItems.length > 0 && (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {expertiseItems.map((expertise) => <Badge key={expertise} className="border border-primary/20 bg-primary/10 text-primary">{expertise}</Badge>)}
+                      </div>
+                    )}
+                  </section>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center gap-3">
                       <User className="w-5 h-5 text-purple-400" />
