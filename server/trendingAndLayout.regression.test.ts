@@ -29,4 +29,12 @@ describe("AI Assistant layout and unified trend UI", () => {
     expect(source).toContain("goal: topic.suggestedGoal");
     expect(source).not.toContain("platform: topic.source");
   });
+
+  it("renders Content Rewriter trend provenance without assuming legacy engagement metrics", () => {
+    const source = read("client/src/pages/ContentRewriter.tsx");
+    expect(source).toContain("const trendSourceLabel");
+    expect(source).toContain("Topic source: ${trendSourceLabel(topic)}");
+    expect(source).not.toContain("topic.engagement.views");
+    expect(source).not.toContain("topic.engagement.likes");
+  });
 });

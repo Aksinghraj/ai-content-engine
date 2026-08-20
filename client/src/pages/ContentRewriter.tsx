@@ -17,6 +17,15 @@ const REWRITE_STYLES = [
   { id: "technical", label: "Technical", description: "Precise and detailed" },
 ];
 
+type UnifiedTrendTopic = {
+  id: string;
+  title: string;
+  source: "youtube" | "instagram" | "facebook" | "tiktok" | "twitter";
+  dataKind: "live" | "ai_estimated";
+};
+
+const trendSourceLabel = (topic: UnifiedTrendTopic) => `${topic.dataKind === "live" ? "Live" : "AI-estimated"} ${topic.source === "twitter" ? "X" : topic.source[0].toUpperCase() + topic.source.slice(1)}`;
+
 export default function ContentRewriter() {
   const [inputContent, setInputContent] = useState("");
   const [selectedStyle, setSelectedStyle] = useState("professional");
@@ -24,9 +33,8 @@ export default function ContentRewriter() {
   const [isRewriting, setIsRewriting] = useState(false);
   const [toneLevel, setToneLevel] = useState(50);
   const [error, setError] = useState("");
-  const [trendingTopics, setTrendingTopics] = useState<any[]>([]);
+  const [trendingTopics, setTrendingTopics] = useState<UnifiedTrendTopic[]>([]);
   const [selectedTrending, setSelectedTrending] = useState<string | null>(null);
-  const [isLoadingTrending, setIsLoadingTrending] = useState(false);
 
   // Fetch trending topics
   const trendingQuery = trpc.trending.getTrendingTopics.useQuery(
@@ -36,7 +44,7 @@ export default function ContentRewriter() {
 
   useEffect(() => {
     if (trendingQuery.data?.data) {
-      setTrendingTopics(trendingQuery.data.data);
+      setTrendingTopics(trendingQuery.data.data as UnifiedTrendTopic[]);
     }
   }, [trendingQuery.data]);
 
@@ -106,8 +114,8 @@ export default function ContentRewriter() {
     });
   };
 
-  const handleUseTrendingTopic = (topic: any) => {
-    setInputContent(`Write about: ${topic.title}\n\nThis is trending with ${topic.engagement.views.toLocaleString()} views and ${topic.engagement.likes.toLocaleString()} likes.`);
+  const handleUseTrendingTopic = (topic: UnifiedTrendTopic) => {
+    setInputContent(`Write about: ${topic.title}\n\nTopic source: ${trendSourceLabel(topic)}. Use this as an angle and verify factual claims before publishing.`);
     setSelectedTrending(topic.id);
   };
 
@@ -135,7 +143,7 @@ export default function ContentRewriter() {
                 </label>
               </div>
               <div className="space-y-2">
-                {isLoadingTrending ? (
+                {trendingQuery.isLoading ? (
                   <p className="text-xs text-slate-500">Loading trending topics...</p>
                 ) : trendingTopics.length > 0 ? (
                   trendingTopics.map((topic) => (
@@ -149,8 +157,8 @@ export default function ContentRewriter() {
                       }`}
                     >
                       <p className="font-medium text-purple-300 truncate">{topic.title}</p>
-                      <p className="text-purple-200/60 text-xs mt-1">
-                        👁️ {(topic.engagement.views / 1000).toFixed(0)}K views
+                      <p className={`mt-1 text-xs ${topic.dataKind === "live" ? "text-[#06b6d4]" : "text-[#9a9aa2]"}`}>
+                        {trendSourceLabel(topic)}
                       </p>
                     </button>
                   ))

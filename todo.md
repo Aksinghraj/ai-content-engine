@@ -841,3 +841,8 @@
 - [x] Trace the active Google authorization request and canonical callback route
 - [x] Correct any remaining redirect URI mismatch or localhost/preview fallback
 - [x] Add regression coverage for the exact Google redirect URI and verify the generated authorization URL
+
+## Unified Trend Response Crash Repair (IN PROGRESS)
+- [x] Locate every legacy trend-card access to removed engagement metrics
+- [x] Update trend views to render the source-labelled unified trend response safely
+- [x] Add a production crash regression test for trends without engagement fields
