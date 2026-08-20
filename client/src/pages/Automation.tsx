@@ -345,7 +345,7 @@ export default function Automation() {
             <Card className="border-slate-700 bg-slate-800/50 backdrop-blur-sm">
               <CardContent className="py-12">
                 <p className="flex items-center justify-center gap-3 text-center text-slate-400">
-                  <LumaeLightPulse state="active" size={22} label="Lumae is checking automation schedules" />
+                  <LumaeLightPulse state="working" size={18} label="Lumae is checking automation schedules" />
                   Loading schedules...
                 </p>
               </CardContent>
@@ -401,7 +401,7 @@ export default function Automation() {
                           title="Generate and publish this automation immediately"
                         >
                           {runNowMutation.isPending ? (
-                            <LumaeLightPulse state="active" size={17} className="mr-1" label="Lumae is running this automation" />
+                            <LumaeLightPulse state="working" size={17} className="mr-1" label="Lumae is running this automation" />
                           ) : (
                             <Play className="w-4 h-4 mr-1" />
                           )}

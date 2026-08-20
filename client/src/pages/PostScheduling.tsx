@@ -51,6 +51,7 @@ import {
   getPlatformColor,
 } from "@/lib/mockData";
 import DashboardLayout from "@/components/DashboardLayout";
+import { LumaeLightPulse } from "@/components/LumaeLightPulse";
 
 interface PostDraft {
   id: string;
@@ -695,7 +696,7 @@ function PostSchedulingContent() {
                 >
                   {isGeneratingAll ? (
                     <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      <LumaeLightPulse state="working" size={18} className="mr-2" label="Lumae is generating content for all platforms" />
                       Generating content for all platforms...
                     </>
                   ) : (

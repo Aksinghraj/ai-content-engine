@@ -72,7 +72,7 @@ export function LumaeLightPulseIntroModal() {
         <div className="border-b border-border bg-gradient-to-br from-[#6366f1]/12 via-[#8b5cf6]/8 to-[#06b6d4]/10 px-6 pt-8 pb-7 sm:px-8">
           <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl border border-white/10 bg-background/55 shadow-[0_14px_34px_rgb(99_102_241_/_18%)]">
             <LumaeLightPulse
-              state={prefersReducedMotion ? "idle" : "active"}
+              state={prefersReducedMotion ? "idle" : "working"}
               size={58}
               label="Lumae Light Pulse preview"
             />

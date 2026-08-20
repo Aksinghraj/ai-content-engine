@@ -916,3 +916,9 @@
 - [x] Record dismissal totals without storing user IDs, device identifiers, or event-level histories
 - [x] Report dismissals through the authenticated modal path with safe failure handling
 - [x] Add privacy and regression coverage, then verify the full suite
+
+## Lumae Light Pulse In-Place Micro-Animation Refinement (IN PROGRESS)
+- [x] Audit the existing motion mark and each active-state usage for maximum footprint and non-overlay compliance
+- [x] Refine idle, working, thinking, complete, and error states as a 14–18px in-place vector indicator
+- [x] Preserve reduced-motion fallback and ensure only the initiating AI control animates
+- [x] Add targeted regression coverage and validate the complete suite

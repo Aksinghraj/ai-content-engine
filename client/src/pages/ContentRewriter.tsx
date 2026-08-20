@@ -146,7 +146,7 @@ export default function ContentRewriter() {
               <div className="space-y-2">
                 {trendingQuery.isLoading ? (
                   <p className="flex items-center gap-2 text-xs text-slate-500">
-                    <LumaeLightPulse state="active" size={16} label="Lumae is analysing current topics" />
+                    <LumaeLightPulse state="working" size={16} label="Lumae is analysing current topics" />
                     Loading trending topics...
                   </p>
                 ) : trendingTopics.length > 0 ? (
@@ -240,7 +240,7 @@ export default function ContentRewriter() {
               >
                 {isRewriting ? (
                   <>
-                    <LumaeLightPulse state="active" size={20} className="mr-2" label="Lumae is rewriting your content" />
+                    <LumaeLightPulse state="working" size={18} className="mr-2" label="Lumae is rewriting your content" />
                     Rewriting...
                   </>
                 ) : (

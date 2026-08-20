@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { OAuthLoginModal } from "@/components/OAuthLoginModal";
+import { LumaeLightPulse } from "@/components/LumaeLightPulse";
 import { toast } from "sonner";
 import {
   Instagram,
@@ -526,7 +527,7 @@ function SocialAutomationContent() {
                 >
                   {isGenerating ? (
                     <>
-                      <Loader2 size={18} className="mr-2 animate-spin" />
+                      <LumaeLightPulse state="working" size={18} className="mr-2" label="Lumae is generating a social post" />
                       Generating...
                     </>
                   ) : (

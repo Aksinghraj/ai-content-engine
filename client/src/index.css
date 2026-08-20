@@ -244,6 +244,15 @@
   display: inline-flex;
   flex: 0 0 auto;
   line-height: 0;
+  width: var(--lumae-light-pulse-size, 16px);
+  height: var(--lumae-light-pulse-size, 16px);
+  transform: translateZ(0);
+}
+
+.lumae-light-pulse svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .lumae-light-pulse__path {
@@ -254,23 +263,31 @@
 }
 
 .lumae-light-pulse__trail {
-  stroke: url(#lumae-light-gradient);
-  stroke-width: 2.25;
+  stroke: #8b5cf6;
+  stroke-width: 2.1;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: 16 84;
+  stroke-dasharray: 14 86;
   stroke-dashoffset: 100;
   opacity: 0;
 }
 
-.lumae-light-pulse--active .lumae-light-pulse__trail {
-  opacity: 0.88;
-  animation: lumae-light-flow 1.5s ease-in-out infinite;
+.lumae-light-pulse--working .lumae-light-pulse__trail {
+  opacity: 0.82;
+  animation: lumae-light-flow 1.4s ease-in-out infinite;
+}
+
+.lumae-light-pulse--thinking {
+  animation: lumae-light-think 1.4s ease-in-out infinite;
+}
+
+.lumae-light-pulse--thinking .lumae-light-pulse__path {
+  stroke: #8b5cf6;
 }
 
 .lumae-light-pulse--complete .lumae-light-pulse__trail {
-  opacity: 0.9;
-  animation: lumae-light-complete 1.45s ease-in-out 1 forwards;
+  opacity: 0.84;
+  animation: lumae-light-complete 1.4s ease-in-out 1 forwards;
 }
 
 .lumae-light-pulse--complete .lumae-light-pulse__path {
@@ -282,7 +299,8 @@
 }
 
 .lumae-light-pulse--error .lumae-light-pulse__trail,
-.lumae-light-pulse--idle .lumae-light-pulse__trail {
+.lumae-light-pulse--idle .lumae-light-pulse__trail,
+.lumae-light-pulse--thinking .lumae-light-pulse__trail {
   display: none;
 }
 
@@ -300,13 +318,23 @@
   100% { stroke-dashoffset: -12; opacity: 0; }
 }
 
+@keyframes lumae-light-think {
+  0%, 100% { transform: scale(1); opacity: 0.92; }
+  50% { transform: scale(1.03); opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .lumae-light-pulse--thinking {
+    animation: none;
+  }
+
   .lumae-light-pulse__trail {
     animation: none !important;
     display: none;
   }
 
-  .lumae-light-pulse--active .lumae-light-pulse__path,
+  .lumae-light-pulse--working .lumae-light-pulse__path,
+  .lumae-light-pulse--thinking .lumae-light-pulse__path,
   .lumae-light-pulse--complete .lumae-light-pulse__path {
     stroke: var(--primary);
   }

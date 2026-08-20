@@ -57,7 +57,7 @@ export default function AnalyticsDashboardEnhanced() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-96">
-          <LumaeLightPulse state="active" size={34} label="Lumae is preparing analytics" />
+          <LumaeLightPulse state="working" size={18} label="Lumae is preparing analytics" />
         </div>
       </DashboardLayout>
     );
@@ -94,7 +94,7 @@ export default function AnalyticsDashboardEnhanced() {
               disabled={isRefreshing}
               className="border-purple-500/50 hover:bg-purple-500/10"
             >
-              {isRefreshing ? <LumaeLightPulse state="active" size={18} className="mr-2" label="Lumae is refreshing analytics" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+              {isRefreshing ? <LumaeLightPulse state="working" size={18} className="mr-2" label="Lumae is refreshing analytics" /> : <RefreshCw className="w-4 h-4 mr-2" />}
               Refresh
             </Button>
             <Button

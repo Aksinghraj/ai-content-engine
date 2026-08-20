@@ -251,7 +251,7 @@ export default function Generator() {
 
     setIsLoading(true);
     setProgress(0);
-    setGenerationPulse("active");
+    setGenerationPulse("working");
 
     const progressInterval = setInterval(() => {
       setProgress((prev) => Math.min(prev + 10, 90));
@@ -652,7 +652,7 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
 
                   {isLoading && (
                     <div className="flex items-center gap-3">
-                      <LumaeLightPulse state="active" size={22} label="Lumae is preparing your content package" />
+                      <LumaeLightPulse state="working" size={18} label="Lumae is preparing your content package" />
                       <Progress value={progress} className="h-2 flex-1" />
                     </div>
                   )}

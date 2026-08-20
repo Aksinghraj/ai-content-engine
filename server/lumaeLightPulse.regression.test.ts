@@ -6,16 +6,21 @@ const projectRoot = resolve(__dirname, "..");
 const readClient = (relativePath: string) => readFileSync(resolve(projectRoot, "client", "src", relativePath), "utf8");
 
 describe("Lumae Light Pulse motion system", () => {
-  it("defines static, active, complete, and error variants with reduced-motion fallback", () => {
+  it("defines compact idle, working, thinking, complete, and error variants with reduced-motion fallback", () => {
     const component = readClient("components/LumaeLightPulse.tsx");
     const styles = readClient("index.css");
 
-    expect(component).toContain('"idle" | "active" | "complete" | "error"');
+    expect(component).toContain('"idle" | "working" | "thinking" | "complete" | "error"');
     expect(component).toContain("lumae-light-pulse--${state}");
+    expect(component).toContain("Math.min(Math.max(size, 14), 18)");
+    expect(component).not.toContain("feGaussianBlur");
     expect(styles).toContain("@keyframes lumae-light-flow");
+    expect(styles).toContain("@keyframes lumae-light-think");
+    expect(styles).toContain("1.4s ease-in-out infinite");
     expect(styles).toContain("@keyframes lumae-light-complete");
     expect(styles).toContain("@media (prefers-reduced-motion: reduce)");
     expect(styles).toContain(".lumae-light-pulse--error");
+    expect(styles).not.toMatch(/\.lumae-light-pulse\s*\{[^}]*\b(position:\s*fixed|inset:|z-index:)/);
   });
 
   it("uses one shared motion primitive in existing AI generation, analysis, automation, and analytics states", () => {
@@ -24,12 +29,18 @@ describe("Lumae Light Pulse motion system", () => {
     const assistant = readClient("pages/PersonalAI.tsx");
     const automation = readClient("pages/Automation.tsx");
     const analytics = readClient("pages/AnalyticsDashboardEnhanced.tsx");
+    const scheduling = readClient("pages/PostScheduling.tsx");
+    const socialAutomation = readClient("pages/SocialAutomation.tsx");
 
-    [generator, rewriter, assistant, automation, analytics].forEach((source) => {
+    [generator, rewriter, assistant, automation, analytics, scheduling, socialAutomation].forEach((source) => {
       expect(source).toContain("LumaeLightPulse");
     });
+    expect(generator).toContain('setGenerationPulse("working")');
     expect(generator).toContain('setGenerationPulse("complete")');
     expect(generator).toContain('setGenerationPulse("error")');
+    expect(assistant).toContain('state="thinking"');
+    expect(scheduling).toContain('state="working"');
+    expect(socialAutomation).toContain('state="working"');
   });
 
   it("introduces the motion language once through an accessible, reduced-motion-aware dialog", () => {
@@ -38,7 +49,7 @@ describe("Lumae Light Pulse motion system", () => {
 
     expect(modal).toContain('LUMAE_PULSE_INTRO_STORAGE_KEY = "lumae_pulse_intro_seen"');
     expect(modal).toContain('window.matchMedia("(prefers-reduced-motion: reduce)")');
-    expect(modal).toContain('state={prefersReducedMotion ? "idle" : "active"}');
+    expect(modal).toContain('state={prefersReducedMotion ? "idle" : "working"}');
     expect(modal).toContain("<Dialog open={open} onOpenChange={handleOpenChange}>");
     expect(modal).toContain("Got it");
     expect(layout).toContain("<LumaeLightPulseIntroModal />");
