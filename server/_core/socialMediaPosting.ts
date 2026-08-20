@@ -2,6 +2,8 @@ import { getDb } from "../db";
 import { getSocialConnectionByPlatform, getUserSocialConnections } from "../db/social";
 import { getValidAccessToken } from "./oauthFlow";
 
+const OAUTH_BASE_URL = process.env.FRONTEND_URL || "https://lumae.co.in";
+
 /**
  * Social Media Posting Service
  * Handles actual posting to connected social media accounts
@@ -27,7 +29,7 @@ export async function postToInstagram(
       return { success: false, error: "Instagram account not connected" };
     }
 
-    const baseUrl = process.env.APP_URL || "http://localhost:3000";
+    const baseUrl = OAUTH_BASE_URL;
     const accessToken = await getValidAccessToken(baseUrl, userId, "instagram");
     if (!accessToken) {
       return { success: false, error: "Failed to get valid access token" };
@@ -77,7 +79,7 @@ export async function postToTwitter(
       return { success: false, error: "Twitter account not connected" };
     }
 
-    const baseUrl = process.env.APP_URL || "http://localhost:3000";
+    const baseUrl = OAUTH_BASE_URL;
     const accessToken = await getValidAccessToken(baseUrl, userId, "twitter");
     if (!accessToken) {
       return { success: false, error: "Failed to get valid access token" };
@@ -128,7 +130,7 @@ export async function postToLinkedIn(
       return { success: false, error: "LinkedIn account not connected" };
     }
 
-    const baseUrl = process.env.APP_URL || "http://localhost:3000";
+    const baseUrl = OAUTH_BASE_URL;
     const accessToken = await getValidAccessToken(baseUrl, userId, "linkedin");
     if (!accessToken) {
       return { success: false, error: "Failed to get valid access token" };
@@ -188,7 +190,7 @@ export async function postToFacebook(
       return { success: false, error: "Facebook account not connected" };
     }
 
-    const baseUrl = process.env.APP_URL || "http://localhost:3000";
+    const baseUrl = OAUTH_BASE_URL;
     const accessToken = await getValidAccessToken(baseUrl, userId, "facebook");
     if (!accessToken) {
       return { success: false, error: "Failed to get valid access token" };
@@ -234,7 +236,7 @@ export async function postToYouTube(
       return { success: false, error: "YouTube account not connected" };
     }
 
-    const baseUrl = process.env.APP_URL || "http://localhost:3000";
+    const baseUrl = OAUTH_BASE_URL;
     const accessToken = await getValidAccessToken(baseUrl, userId, "youtube");
     if (!accessToken) {
       return { success: false, error: "Failed to get valid access token" };
@@ -286,7 +288,7 @@ export async function postToTikTok(
       return { success: false, error: "TikTok account not connected" };
     }
 
-    const baseUrl = process.env.APP_URL || "http://localhost:3000";
+    const baseUrl = OAUTH_BASE_URL;
     const accessToken = await getValidAccessToken(baseUrl, userId, "tiktok");
     if (!accessToken) {
       return { success: false, error: "Failed to get valid access token" };

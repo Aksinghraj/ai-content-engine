@@ -1,6 +1,7 @@
 import { getDb } from "../db";
 import { socialConnections, scheduledPosts } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
+import { encrypt } from "../_core/encryption";
 
 /**
  * Save or update a social media connection
@@ -16,6 +17,9 @@ export async function saveSocialConnection(
 ) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
+
+  const encryptedAccessToken = encrypt(accessToken);
+  const encryptedRefreshToken = refreshToken ? encrypt(refreshToken) : undefined;
 
   const existing = await db
     .select()
@@ -34,8 +38,8 @@ export async function saveSocialConnection(
       .update(socialConnections)
       .set({
         username,
-        accessToken,
-        refreshToken,
+        accessToken: encryptedAccessToken,
+        refreshToken: encryptedRefreshToken,
         tokenExpiresAt,
         platformUserId,
         isConnected: true,
@@ -43,15 +47,15 @@ export async function saveSocialConnection(
       })
       .where(eq(socialConnections.id, existing[0].id));
 
-    return existing[0];
+    return { ...existing[0], accessToken: "", refreshToken: null };
   } else {
     // Create new connection
     const result = await db.insert(socialConnections).values({
       userId,
       platform,
       username,
-      accessToken,
-      refreshToken,
+      accessToken: encryptedAccessToken,
+      refreshToken: encryptedRefreshToken,
       tokenExpiresAt,
       platformUserId,
       isConnected: true,
@@ -62,8 +66,8 @@ export async function saveSocialConnection(
       userId,
       platform,
       username,
-      accessToken,
-      refreshToken,
+      accessToken: "",
+      refreshToken: undefined,
       tokenExpiresAt,
       platformUserId,
       isConnected: true,

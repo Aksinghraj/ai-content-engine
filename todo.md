@@ -776,3 +776,13 @@
 - [x] Hover overlay on avatar shows Upload icon
 - [x] Helper text below profile header explains how to upload photos
 - [x] Zero TypeScript errors, 481/484 tests passing (3 pre-existing network timeout failures)
+
+## Vite HMR & Social Automation Verification (IN PROGRESS)
+- [x] Fix Vite WebSocket/HMR connection through the Manus preview proxy
+- [x] Verify the production OAuth authorization URLs do not contain localhost or malformed scopes
+- [x] Audit OAuth callback, encrypted token storage, refresh, and disconnect paths
+- [x] Audit social publishing and scheduled automation execution paths
+- [x] Run targeted tests and document which provider flows are operational versus awaiting provider-side approval
+- [ ] Replace non-durable node-cron automation with platform-managed scheduled execution
+- [ ] Ensure a scheduled automation publishes only to a connected account with Auto-Post enabled
+- [ ] Record deterministic publish outcomes and retries for scheduled social posts

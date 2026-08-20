@@ -21,10 +21,10 @@ export interface OAuthPlatforms {
 }
 
 /**
- * Get base redirect URI (will be appended with /callback/{platform})
+ * Get the exact callback URI mounted by the Express OAuth router.
  */
 function getRedirectUri(baseUrl: string, platform: string): string {
-  return `${baseUrl}/api/oauth/callback/${platform}`;
+  return `${baseUrl}/api/oauth/callback/${platform}/callback`;
 }
 
 /**
@@ -83,7 +83,7 @@ export function initializeOAuthConfigs(baseUrl: string): OAuthPlatforms {
         "mute.manage.read",
         "mute.manage.write",
       ],
-      scopeSeparator: "space",
+      scopeSeparator: " ",
       pkceRequired: true, // Twitter requires PKCE
     },
 
@@ -102,7 +102,7 @@ export function initializeOAuthConfigs(baseUrl: string): OAuthPlatforms {
         "w_member_social",
         "w_organization_social",
       ],
-      scopeSeparator: "space",
+      scopeSeparator: " ",
       pkceRequired: false,
     },
 
@@ -145,7 +145,7 @@ export function initializeOAuthConfigs(baseUrl: string): OAuthPlatforms {
         "https://www.googleapis.com/auth/userinfo.email",
         "https://www.googleapis.com/auth/userinfo.profile",
       ],
-      scopeSeparator: "space",
+      scopeSeparator: " ",
       pkceRequired: false,
     },
 
@@ -164,7 +164,7 @@ export function initializeOAuthConfigs(baseUrl: string): OAuthPlatforms {
         "video.upload",
         "video.publish",
       ],
-      scopeSeparator: "space",
+      scopeSeparator: " ",
       pkceRequired: true, // TikTok recommends PKCE
     },
   };

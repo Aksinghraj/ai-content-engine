@@ -13,6 +13,17 @@ import {
 import { initializeOAuthConfigs, getPlatformConfig, validateOAuthConfig } from "./oauthPlatforms";
 import { saveSocialConnection, getSocialConnectionByPlatform, updateSocialConnection } from "../db/social";
 import { validateCredentials } from "./credentialValidation";
+import { decrypt } from "./encryption";
+
+function decryptStoredToken(token: string): string {
+  try {
+    return decrypt(token);
+  } catch {
+    // Legacy records created before encrypted token storage are supported only
+    // for the current request; the next refresh writes encrypted values.
+    return token;
+  }
+}
 
 /**
  * OAuth 2.0 Authorization Code Grant Flow Handler
@@ -209,7 +220,7 @@ export async function refreshAccessToken(
 
   const refreshParams = new URLSearchParams({
     grant_type: "refresh_token",
-    refresh_token: connection.refreshToken,
+    refresh_token: decryptStoredToken(connection.refreshToken),
     client_id: config.clientId,
     client_secret: config.clientSecret,
   });
@@ -316,5 +327,5 @@ export async function getValidAccessToken(
     }
   }
 
-  return connection.accessToken;
+  return decryptStoredToken(connection.accessToken);
 }

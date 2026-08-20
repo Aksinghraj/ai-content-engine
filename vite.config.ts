@@ -170,6 +170,13 @@ export default defineConfig({
   },
   server: {
     host: true,
+    // The public preview is HTTPS behind a reverse proxy. Tell the Vite client
+    // to reconnect through that same public host over WSS rather than trying
+    // to reach the sandbox-only localhost:5173 WebSocket directly.
+    hmr: {
+      protocol: "wss",
+      clientPort: 443,
+    },
     allowedHosts: [
       ".manuspre.computer",
       ".manus.computer",

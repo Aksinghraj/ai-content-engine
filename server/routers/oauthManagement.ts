@@ -30,7 +30,8 @@ export const oauthManagementRouter = router({
     )
     .query(async ({ ctx, input }) => {
       try {
-        const baseUrl = process.env.APP_URL || "http://localhost:3000";
+        const baseUrl = process.env.FRONTEND_URL;
+        if (!baseUrl) throw new Error("FRONTEND_URL is required for OAuth redirects");
         const { authorizationUrl, state } = await generateAuthorizationUrl(
           baseUrl,
           input.platform,
@@ -168,7 +169,8 @@ export const oauthManagementRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const baseUrl = process.env.APP_URL || "http://localhost:3000";
+        const baseUrl = process.env.FRONTEND_URL;
+        if (!baseUrl) throw new Error("FRONTEND_URL is required for token refresh");
         const { accessToken, expiresIn } = await refreshAccessToken(
           baseUrl,
           ctx.user.id,
@@ -200,7 +202,8 @@ export const oauthManagementRouter = router({
     )
     .query(async ({ ctx, input }) => {
       try {
-        const baseUrl = process.env.APP_URL || "http://localhost:3000";
+        const baseUrl = process.env.FRONTEND_URL;
+        if (!baseUrl) throw new Error("FRONTEND_URL is required for token refresh");
         const accessToken = await getValidAccessToken(baseUrl, ctx.user.id, input.platform);
 
         return {
