@@ -55,9 +55,9 @@ export default function BasicScriptGeneration() {
               </p>
             </div>
             <div className="rounded-xl border border-[#26262b] bg-[#09090b] px-4 py-3 text-right">
-              <p className="text-xs font-medium uppercase tracking-wide text-[#9a9aa2]">Free uses remaining</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-[#9a9aa2]">Basic Script Free — daily limit</p>
               <p className="mt-1 text-2xl font-semibold text-[#f5f5f7]">{usage?.remaining ?? 3} <span className="text-sm font-medium text-[#9a9aa2]">/ 3</span></p>
-              <p className="mt-1 text-xs text-[#9a9aa2]">Rolling 24-hour window</p>
+              <p className="mt-1 text-xs text-[#9a9aa2]">3 script generations per rolling 24 hours</p>
             </div>
           </div>
         </section>

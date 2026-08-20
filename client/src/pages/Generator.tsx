@@ -87,6 +87,7 @@ const VIDEO_LENGTHS = [
   { code: "90s", name: "Extended (90 seconds)" },
   { code: "3min", name: "Long Form (3 minutes)" },
   { code: "5min", name: "Deep Dive (5 minutes)" },
+  { code: "custom", name: "Custom duration…" },
 ];
 const SCRIPT_LENGTHS = [
   { code: "brief", name: "Brief (~50 words)" },
@@ -94,6 +95,7 @@ const SCRIPT_LENGTHS = [
   { code: "medium", name: "Medium (~200-300 words)" },
   { code: "long", name: "Long (~400-600 words)" },
   { code: "extended", name: "Extended (~800-1200 words)" },
+  { code: "custom", name: "Custom word target…" },
 ];
 const LANGUAGES = [
   { code: "en", name: "English" },
@@ -133,6 +135,8 @@ export default function Generator() {
     language: "hinglish",
     videoLength: "60s",
     scriptLength: "medium",
+    customVideoSeconds: "",
+    customScriptWordTarget: "",
   });
   const [trendingTopics, setTrendingTopics] = useState<string[]>([]);
   const trendingQuery = trpc.trending.getTrendingTopics.useQuery({ limit: 8 }, {
@@ -164,6 +168,16 @@ export default function Generator() {
       toast.error("Please fill in all fields");
       return;
     }
+    const customVideoSeconds = Number(formData.customVideoSeconds);
+    const customScriptWordTarget = Number(formData.customScriptWordTarget);
+    if (formData.videoLength === "custom" && (!Number.isInteger(customVideoSeconds) || customVideoSeconds < 5 || customVideoSeconds > 3600)) {
+      toast.error("Choose a custom video duration between 5 seconds and 60 minutes.");
+      return;
+    }
+    if (formData.scriptLength === "custom" && (!Number.isInteger(customScriptWordTarget) || customScriptWordTarget < 25 || customScriptWordTarget > 3000)) {
+      toast.error("Choose a custom script target between 25 and 3,000 words.");
+      return;
+    }
 
     setIsLoading(true);
     setProgress(0);
@@ -175,6 +189,8 @@ export default function Generator() {
     try {
       const result = await generateMutation.mutateAsync({
             ...formData,
+            customVideoSeconds: formData.videoLength === "custom" ? customVideoSeconds : undefined,
+            customScriptWordTarget: formData.scriptLength === "custom" ? customScriptWordTarget : undefined,
             trendingTopics: trendingTopics.length > 0 ? trendingTopics : undefined,
           });
       setGeneratedContent(result);
@@ -303,6 +319,8 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
       language: "hinglish",
       videoLength: "60s",
       scriptLength: "medium",
+      customVideoSeconds: "",
+      customScriptWordTarget: "",
     });
   };
 
@@ -431,6 +449,12 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
                         ))}
                       </SelectContent>
                     </Select>
+                    {formData.videoLength === "custom" && (
+                      <div className="mt-2">
+                        <Label className="text-xs text-[#9a9aa2]">Custom duration in seconds</Label>
+                        <Input type="number" min={5} max={3600} inputMode="numeric" value={formData.customVideoSeconds} onChange={(event) => setFormData({ ...formData, customVideoSeconds: event.target.value })} placeholder="e.g., 75" className="mt-1 border-[#26262b] bg-[#09090b] text-[#f5f5f7]" />
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -447,6 +471,12 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
                         ))}
                       </SelectContent>
                     </Select>
+                    {formData.scriptLength === "custom" && (
+                      <div className="mt-2">
+                        <Label className="text-xs text-[#9a9aa2]">Custom word target</Label>
+                        <Input type="number" min={25} max={3000} inputMode="numeric" value={formData.customScriptWordTarget} onChange={(event) => setFormData({ ...formData, customScriptWordTarget: event.target.value })} placeholder="e.g., 425" className="mt-1 border-[#26262b] bg-[#09090b] text-[#f5f5f7]" />
+                      </div>
+                    )}
                   </div>
 
                   {/* Unified cached trends: Live YouTube + clearly labelled AI estimates. */}

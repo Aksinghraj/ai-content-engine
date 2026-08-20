@@ -9,6 +9,8 @@ interface ContentGenerationInput {
   language?: string;
   videoLength?: string;
   scriptLength?: string;
+  customVideoSeconds?: number;
+  customScriptWordTarget?: number;
   trendingTopics?: string[];
 }
 
@@ -208,7 +210,11 @@ function getDetailedLanguageInstructions(language: string): string {
   return instructions[language] || instructions["en"];
 }
 
-function getVideoLengthInstructions(videoLength: string): string {
+function getVideoLengthInstructions(videoLength: string, customVideoSeconds?: number): string {
+  if (videoLength === "custom" && customVideoSeconds) {
+    const estimatedWords = Math.round(customVideoSeconds * 2.5);
+    return `Make the spoken script approximately ${customVideoSeconds} seconds long (about ${estimatedWords} words at a natural pace).`;
+  }
   const instructions: Record<string, string> = {
     "15s": "Make the script exactly 15 seconds when read aloud (about 35-40 words). Ultra-short, punchy, one key message.",
     "30s": "Make the script exactly 30 seconds when read aloud (about 75-80 words). Quick hook, one main point, strong CTA.",
@@ -222,7 +228,10 @@ function getVideoLengthInstructions(videoLength: string): string {
   return instructions[videoLength] || instructions["60s"];
 }
 
-function getScriptLengthInstructions(scriptLength: string): string {
+function getScriptLengthInstructions(scriptLength: string, customScriptWordTarget?: number): string {
+  if (scriptLength === "custom" && customScriptWordTarget) {
+    return `Target approximately ${customScriptWordTarget} words for the complete script. Keep the hook, body, and CTA proportionate to this target.`;
+  }
   const instructions: Record<string, string> = {
     "brief": "Keep the script brief and concise - maximum 50 words total. One hook, one point, one CTA.",
     "short": "Keep the script short - about 100-150 words. Quick hook, 1-2 main points, brief CTA.",
@@ -237,8 +246,8 @@ function buildContentPrompt(input: ContentGenerationInput): string {
   const languageCode = input.language || "en";
   const languageName = getLanguageName(languageCode);
   const languageInstructions = getDetailedLanguageInstructions(languageCode);
-  const videoLengthInstructions = getVideoLengthInstructions(input.videoLength || "60s");
-  const scriptLengthInstructions = getScriptLengthInstructions(input.scriptLength || "medium");
+  const videoLengthInstructions = getVideoLengthInstructions(input.videoLength || "60s", input.customVideoSeconds);
+  const scriptLengthInstructions = getScriptLengthInstructions(input.scriptLength || "medium", input.customScriptWordTarget);
 
   // Build trending topics section
   let trendingSection = "";
@@ -262,8 +271,8 @@ Content Details:
 - Platform: ${input.platform}
 - Goal: ${input.goal}
 - Content Style: ${input.contentStyle}
-- Video Length: ${input.videoLength || "60s"}
-- Script Length: ${input.scriptLength || "medium"}
+- Video Length: ${input.videoLength === "custom" ? `${input.customVideoSeconds} seconds (custom)` : input.videoLength || "60s"}
+- Script Length: ${input.scriptLength === "custom" ? `${input.customScriptWordTarget} words (custom)` : input.scriptLength || "medium"}
 
 ${languageInstructions}
 

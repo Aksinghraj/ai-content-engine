@@ -215,8 +215,10 @@ export const appRouter = router({
           goal: z.string().min(1),
           contentStyle: z.string().min(1),
           language: z.string().optional().default("en"),
-          videoLength: z.string().optional().default("60s"),
-          scriptLength: z.string().optional().default("medium"),
+          videoLength: z.string().refine((value) => ["15s", "30s", "60s", "90s", "3min", "5min", "custom"].includes(value), "Invalid video length").optional().default("60s"),
+          scriptLength: z.string().refine((value) => ["brief", "short", "medium", "long", "extended", "custom"].includes(value), "Invalid script length").optional().default("medium"),
+          customVideoSeconds: z.number().int().min(5).max(3600).optional(),
+          customScriptWordTarget: z.number().int().min(25).max(3000).optional(),
           trendingTopics: z.array(z.string()).optional(),
         })
       )

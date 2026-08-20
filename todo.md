@@ -846,3 +846,9 @@
 - [x] Locate every legacy trend-card access to removed engagement metrics
 - [x] Update trend views to render the source-labelled unified trend response safely
 - [x] Add a production crash regression test for trends without engagement fields
+
+## Custom Generator Lengths & Free-Tier Clarity (IN PROGRESS)
+- [x] Add validated custom video duration and script word-target options to the AI Generator
+- [x] Pass custom length targets to the generation service without affecting Basic Script Free limits
+- [x] Clarify the three-per-rolling-24-hours Basic Script Free quota in Content Studio
+- [x] Add mobile and regression coverage for custom lengths and quota messaging
