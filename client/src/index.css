@@ -281,6 +281,17 @@
   [class*="via-purple"], [class*="via-pink"], [class*="via-fuchsia"] { --tw-gradient-stops: var(--tw-gradient-from), #8b5cf6 var(--tw-gradient-via-position), var(--tw-gradient-to) !important; }
   [class*="to-purple"], [class*="to-pink"], [class*="to-fuchsia"] { --tw-gradient-to: #06b6d4 var(--tw-gradient-to-position) !important; }
 
+  /* Internal routes still contain legacy blue/slate utility classes. Normalize
+     them inside the application shell while leaving homepage/blog treatments alone. */
+  .app-static-motion [class*="text-blue"], .app-static-motion [class*="text-slate"] { color: #9a9aa2 !important; }
+  .app-static-motion [class*="border-blue"], .app-static-motion [class*="border-slate"] { border-color: #26262b !important; }
+  .app-static-motion [class*="bg-blue"], .app-static-motion [class*="bg-slate"] { background-color: #141417 !important; }
+  .app-static-motion [class*="from-blue"] { --tw-gradient-from: #6366f1 var(--tw-gradient-from-position) !important; --tw-gradient-to: rgb(99 102 241 / 0) var(--tw-gradient-to-position) !important; }
+  .app-static-motion [class*="via-blue"] { --tw-gradient-stops: var(--tw-gradient-from), #8b5cf6 var(--tw-gradient-via-position), var(--tw-gradient-to) !important; }
+  .app-static-motion [class*="to-blue"] { --tw-gradient-to: #06b6d4 var(--tw-gradient-to-position) !important; }
+  .app-static-motion [class*="min-h-screen"][class*="bg-gradient-to-"] { background-image: none !important; background-color: #09090b !important; }
+  .app-static-motion [class*="bg-gradient-to-"][class*="slate"] { background-image: none !important; background-color: #141417 !important; }
+
   /* Internal workflows remain static; spinners continue to communicate active loading. */
   .app-static-motion .animate-slide-left,
   .app-static-motion .animate-slide-right,

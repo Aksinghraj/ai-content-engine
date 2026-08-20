@@ -823,3 +823,9 @@
 
 ## Blog Founder Profile Refinement (IN PROGRESS)
 - [x] Make Veer Rajput’s photo visibly prominent in the Founder / CEO article author presentation
+
+## Free Quota & Internal Palette Verification (IN PROGRESS)
+- [x] Verify Basic Script Generation consumes only its separate free-use quota and not credits
+- [x] Add deterministic tests for the three-use cap and rolling 24-hour reset behavior
+- [x] Audit all internal application pages for legacy color-token references and correct inconsistencies
+- [x] Verify internal pages remain static except for standard hover/focus transitions

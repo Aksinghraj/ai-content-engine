@@ -4,7 +4,7 @@ import { getDb } from "./db";
 
 export const BASIC_SCRIPT_ACTION = "basic_script_gen" as const;
 export const BASIC_SCRIPT_DAILY_LIMIT = 3;
-const ROLLING_FREE_WINDOW_MS = 24 * 60 * 60 * 1000;
+export const ROLLING_FREE_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 export type FreeActionUsage = {
   available: boolean;
@@ -14,8 +14,8 @@ export type FreeActionUsage = {
   resetAt: Date | null;
 };
 
-function asUsage(record?: { count: number; resetAt: Date }): FreeActionUsage {
-  if (!record || record.resetAt.getTime() <= Date.now()) {
+export function deriveBasicScriptUsage(record?: { count: number; resetAt: Date }, now: number = Date.now()): FreeActionUsage {
+  if (!record || record.resetAt.getTime() <= now) {
     return { available: true, count: 0, limit: BASIC_SCRIPT_DAILY_LIMIT, remaining: BASIC_SCRIPT_DAILY_LIMIT, resetAt: record?.resetAt ?? null };
   }
   return {
@@ -32,7 +32,7 @@ export async function getBasicScriptUsage(userId: number): Promise<FreeActionUsa
   if (!db) throw new Error("Free-tier usage tracking is unavailable");
   const [record] = await db.select().from(dailyFreeActions)
     .where(and(eq(dailyFreeActions.userId, userId), eq(dailyFreeActions.actionType, BASIC_SCRIPT_ACTION))).limit(1);
-  return asUsage(record);
+  return deriveBasicScriptUsage(record);
 }
 
 /**
@@ -67,7 +67,7 @@ export async function reserveBasicScriptGeneration(userId: number): Promise<Free
     .where(and(eq(dailyFreeActions.userId, userId), eq(dailyFreeActions.actionType, BASIC_SCRIPT_ACTION))).limit(1);
   if (!record) throw new Error("Failed to reserve Basic Script Generation");
 
-  return { ...asUsage(record), available: affectedRows > 0 };
+  return { ...deriveBasicScriptUsage(record), available: affectedRows > 0 };
 }
 
 /** Reverses a reservation after an upstream LLM failure. Failed requests are never charged. */
