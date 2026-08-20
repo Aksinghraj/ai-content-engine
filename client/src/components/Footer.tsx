@@ -60,6 +60,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/blog" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Blog
+                </Link>
+              </li>
+              <li>
                 <Link href="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Contact
                 </Link>
@@ -128,6 +133,10 @@ export default function Footer() {
             <span className="font-semibold text-foreground">Ankit Singh</span>
           </p>
           <div className="flex gap-4 text-xs text-muted-foreground">
+            <a href="https://www.instagram.com/lumaeai?igsi=ejdjZGxmbGw2ZHZz" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">
+              Instagram
+            </a>
+            <span>•</span>
             <a href="/privacy-policy" className="hover:text-foreground transition-colors">
               Privacy
             </a>

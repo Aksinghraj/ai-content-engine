@@ -814,3 +814,9 @@
 - [x] Create a constrained no-credit Basic Script Generation server procedure
 - [x] Add premium static free-tier UI, remaining-use feedback, and cap upsell messaging
 - [x] Add regression tests for limit resets, no-credit usage, and output constraints
+
+## Static Marketing Blog (PLANNED)
+- [x] Confirm Veer Rajput founder display name and biography; founder photo uploaded, with founder and official Lumae Instagram links confirmed
+- [x] Build Markdown post pipeline with category, article, archive, and related-post routes
+- [x] Add three launch articles with author profile, CTA, SEO metadata, JSON-LD, and sitemap entries
+- [x] Add Blog to public navigation and apply static premium reading design

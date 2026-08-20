@@ -94,6 +94,9 @@ export default function Home() {
             </button>
 
             <nav className="flex items-center gap-2" aria-label="Primary navigation">
+              <Button onClick={() => navigate("/blog")} variant="ghost" size="sm" className="h-9 px-2.5 text-xs text-[#f5f5f7] hover:bg-[#141417] hover:text-white sm:px-4 sm:text-sm">
+                Blog
+              </Button>
               {signedIn ? (
                 <>
                   <Button onClick={() => navigate("/dashboard")} size="sm" className="lumae-gradient-cta h-9 px-3 text-xs sm:px-5 sm:text-sm">

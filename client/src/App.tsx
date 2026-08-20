@@ -58,6 +58,9 @@ import Footer from "./components/Footer";
 import SocialMediaPublishing from "./pages/SocialMediaPublishing";
 import PublishingTestDashboard from "./pages/PublishingTestDashboard";
 import { GroupedRouteShell } from "./components/GroupedRouteShell";
+import Blog from "./pages/Blog";
+import BlogCategory from "./pages/BlogCategory";
+import BlogPost from "./pages/BlogPost";
 
 function GroupedGenerator() {
   return <GroupedRouteShell><Generator /></GroupedRouteShell>;
@@ -97,6 +100,9 @@ function App() {
             <Route path="/cookie-policy" component={CookiePolicy} />
             <Route path="/cookies" component={CookiePolicy} />
             <Route path="/verify-email" component={VerifyEmail} />
+            <Route path="/blog" component={Blog} />
+            <Route path="/blog/category/:category" component={BlogCategory} />
+            <Route path="/blog/:category/:slug" component={BlogPost} />
 
             {/* Canonical seven-area application routes */}
             <Route path="/dashboard" component={SimpleDashboard} />

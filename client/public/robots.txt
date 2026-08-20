@@ -3,4 +3,4 @@ Allow: /
 Disallow: /api/
 Disallow: /auth/
 
-Sitemap: https://aicontent-femeuybh.manus.space/sitemap.xml
+Sitemap: https://lumae.co.in/sitemap.xml
