@@ -28,6 +28,8 @@ export const users = mysqlTable("users", {
   stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 255 }),
   // Theme preference: 'light', 'dark', 'auto'
   theme: mysqlEnum("theme", ["light", "dark", "auto"]).default("auto").notNull(),
+  // Optional accessibility contrast mode, independent of the selected color scheme.
+  highContrast: boolean("highContrast").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -43,6 +45,38 @@ export const users = mysqlTable("users", {
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
+
+/**
+ * Professional profile fields are stored separately from the authentication
+ * record. Profiles are private by default; only non-sensitive fields are
+ * exposed through the public sharing route when explicitly enabled.
+ */
+export const professionalProfiles = mysqlTable("professionalProfiles", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  displayName: varchar("displayName", { length: 120 }).notNull(),
+  professionalTitle: varchar("professionalTitle", { length: 180 }).notNull().default("Content Strategist & AI Workflow Builder"),
+  biography: text("biography"),
+  expertise: text("expertise"),
+  availability: varchar("availability", { length: 160 }),
+  phone: varchar("phone", { length: 40 }),
+  location: varchar("location", { length: 120 }),
+  website: varchar("website", { length: 500 }),
+  avatarUrl: text("avatarUrl"),
+  coverUrl: text("coverUrl"),
+  socialLinks: json("socialLinks"),
+  publicSlug: varchar("publicSlug", { length: 100 }),
+  isPublic: boolean("isPublic").default(false).notNull(),
+  shareSocialLinks: boolean("shareSocialLinks").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  userUnique: uniqueIndex("professional_profiles_user_unique").on(table.userId),
+  publicSlugUnique: uniqueIndex("professional_profiles_public_slug_unique").on(table.publicSlug),
+}));
+
+export type ProfessionalProfile = typeof professionalProfiles.$inferSelect;
+export type InsertProfessionalProfile = typeof professionalProfiles.$inferInsert;
 
 /**
  * Content generation history table.

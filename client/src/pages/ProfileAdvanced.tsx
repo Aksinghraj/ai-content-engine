@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -34,12 +34,15 @@ import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { SUBSCRIPTION_PLANS_DISPLAY } from "../../../shared/pricing";
+import { trpc } from "@/lib/trpc";
 
 export default function ProfileAdvanced() {
   const [activeTab, setActiveTab] = useState("profile");
   const [isEditing, setIsEditing] = useState(false);
   const [, navigate] = useLocation();
   const { user } = useAuth();
+  const profileQuery = trpc.professionalProfile.mine.useQuery();
+  const saveProfileMutation = trpc.professionalProfile.save.useMutation();
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
@@ -65,7 +68,38 @@ export default function ProfileAdvanced() {
       instagram: "",
       facebook: "",
     },
+    publicSlug: "",
+    isPublic: false,
+    shareSocialLinks: false,
   });
+
+  useEffect(() => {
+    const stored = profileQuery.data;
+    if (!stored) return;
+    const links = (stored.socialLinks ?? {}) as Record<string, string>;
+    setProfile({
+      name: stored.displayName,
+      email: user?.email || "",
+      professionalTitle: stored.professionalTitle,
+      phone: stored.phone || "",
+      bio: stored.biography || "",
+      expertise: stored.expertise || "",
+      availability: stored.availability || "",
+      location: stored.location || "",
+      website: stored.website || "",
+      socialLinks: {
+        linkedin: links.linkedin || "",
+        twitter: links.twitter || "",
+        instagram: links.instagram || "",
+        facebook: links.facebook || "",
+      },
+      publicSlug: stored.publicSlug || "",
+      isPublic: stored.isPublic,
+      shareSocialLinks: stored.shareSocialLinks,
+    });
+    setAvatarPreview(stored.avatarUrl || null);
+    setCoverPreview(stored.coverUrl || null);
+  }, [profileQuery.data, user?.email]);
 
 
 
@@ -160,9 +194,30 @@ export default function ProfileAdvanced() {
     }
   };
 
-  const handleSaveProfile = () => {
-    setIsEditing(false);
-    toast.success("Profile updated successfully!");
+  const handleSaveProfile = async () => {
+    try {
+      await saveProfileMutation.mutateAsync({
+        displayName: profile.name.trim() || "Lumae creator",
+        professionalTitle: profile.professionalTitle.trim() || "Content Strategist & AI Workflow Builder",
+        biography: profile.bio.trim() || null,
+        expertise: profile.expertise.trim() || null,
+        availability: profile.availability.trim() || null,
+        phone: profile.phone.trim() || null,
+        location: profile.location.trim() || null,
+        website: profile.website.trim() || null,
+        avatarUrl: avatarPreview || null,
+        coverUrl: coverPreview || null,
+        socialLinks: Object.fromEntries(Object.entries(profile.socialLinks).filter(([, value]) => value.trim())),
+        publicSlug: profile.publicSlug.trim() || null,
+        isPublic: profile.isPublic,
+        shareSocialLinks: profile.shareSocialLinks,
+      });
+      await profileQuery.refetch();
+      setIsEditing(false);
+      toast.success("Professional profile saved securely.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Profile could not be saved.");
+    }
   };
 
   const handleUpgradeSubscription = () => {
@@ -441,6 +496,32 @@ export default function ProfileAdvanced() {
                       placeholder="e.g., Open to collaborations"
                       className="mt-1 w-full rounded-lg border border-input bg-background px-4 py-2 text-foreground focus:border-primary focus:outline-none"
                     />
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border bg-muted/35 p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <h4 className="font-semibold text-card-foreground">Public profile sharing</h4>
+                      <p className="mt-1 text-sm text-muted-foreground">Your email and phone are never published. Sharing is off by default.</p>
+                    </div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-card-foreground">
+                      <input type="checkbox" checked={profile.isPublic} onChange={(e) => setProfile({ ...profile, isPublic: e.target.checked })} className="h-4 w-4 accent-primary" />
+                      Make profile public
+                    </label>
+                  </div>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                    <div>
+                      <label className="text-sm text-muted-foreground">Public profile link</label>
+                      <div className="mt-1 flex items-center rounded-lg border border-input bg-background px-3">
+                        <span className="shrink-0 text-sm text-muted-foreground">lumae.co.in/u/</span>
+                        <input value={profile.publicSlug} onChange={(e) => setProfile({ ...profile, publicSlug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })} placeholder="your-name" className="min-w-0 flex-1 bg-transparent px-1 py-2 text-foreground outline-none" />
+                      </div>
+                    </div>
+                    <label className="flex items-center gap-2 pb-2 text-sm text-card-foreground">
+                      <input type="checkbox" checked={profile.shareSocialLinks} onChange={(e) => setProfile({ ...profile, shareSocialLinks: e.target.checked })} className="h-4 w-4 accent-primary" />
+                      Share social links
+                    </label>
                   </div>
                 </div>
 

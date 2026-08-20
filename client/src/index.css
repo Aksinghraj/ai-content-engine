@@ -113,6 +113,58 @@
   --sidebar-ring: #6366f1;
 }
 
+/* High-contrast accessibility mode increases text, border, and focus separation. */
+[data-theme="light"].high-contrast {
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #111111;
+  --muted: #f5f5f5;
+  --muted-foreground: #333333;
+  --accent: #e9e9e9;
+  --accent-foreground: #000000;
+  --border: #000000;
+  --input: #000000;
+  --ring: #0000ee;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #000000;
+  --sidebar-accent: #e9e9e9;
+  --sidebar-accent-foreground: #000000;
+  --sidebar-border: #000000;
+}
+
+[data-theme="dark"].high-contrast {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #000000;
+  --card-foreground: #ffffff;
+  --popover: #000000;
+  --popover-foreground: #ffffff;
+  --secondary: #111111;
+  --secondary-foreground: #ffffff;
+  --muted: #111111;
+  --muted-foreground: #e5e5e5;
+  --accent: #1c1c1c;
+  --accent-foreground: #ffffff;
+  --border: #ffffff;
+  --input: #ffffff;
+  --ring: #00ffff;
+  --sidebar: #000000;
+  --sidebar-foreground: #ffffff;
+  --sidebar-accent: #1c1c1c;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #ffffff;
+}
+
+.high-contrast :focus-visible {
+  outline: 3px solid var(--ring) !important;
+  outline-offset: 3px;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

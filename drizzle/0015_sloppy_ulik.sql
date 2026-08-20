@@ -1,0 +1,23 @@
+CREATE TABLE `professionalProfiles` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`userId` int NOT NULL,
+	`displayName` varchar(120) NOT NULL,
+	`professionalTitle` varchar(180) NOT NULL DEFAULT 'Content Strategist & AI Workflow Builder',
+	`biography` text,
+	`expertise` text,
+	`availability` varchar(160),
+	`phone` varchar(40),
+	`location` varchar(120),
+	`website` varchar(500),
+	`avatarUrl` text,
+	`coverUrl` text,
+	`socialLinks` json,
+	`publicSlug` varchar(100),
+	`isPublic` boolean NOT NULL DEFAULT false,
+	`shareSocialLinks` boolean NOT NULL DEFAULT false,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `professionalProfiles_id` PRIMARY KEY(`id`),
+	CONSTRAINT `professional_profiles_user_unique` UNIQUE(`userId`),
+	CONSTRAINT `professional_profiles_public_slug_unique` UNIQUE(`publicSlug`)
+);

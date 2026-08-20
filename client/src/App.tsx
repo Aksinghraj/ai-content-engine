@@ -61,6 +61,7 @@ import { GroupedRouteShell } from "./components/GroupedRouteShell";
 import Blog from "./pages/Blog";
 import BlogCategory from "./pages/BlogCategory";
 import BlogPost from "./pages/BlogPost";
+import PublicProfile from "./pages/PublicProfile";
 
 function GroupedGenerator() {
   return <GroupedRouteShell><Generator /></GroupedRouteShell>;
@@ -110,6 +111,7 @@ function App() {
             <Route path="/blog" component={Blog} />
             <Route path="/blog/category/:category" component={BlogCategory} />
             <Route path="/blog/:category/:slug" component={BlogPost} />
+            <Route path="/u/:slug" component={PublicProfile} />
 
             {/* Canonical seven-area application routes */}
             <Route path="/dashboard" component={SimpleDashboard} />

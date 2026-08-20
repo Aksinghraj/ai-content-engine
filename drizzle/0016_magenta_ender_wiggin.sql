@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `highContrast` boolean DEFAULT false NOT NULL;

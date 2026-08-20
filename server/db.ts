@@ -1,6 +1,6 @@
 
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, contentHistory, InsertContentHistory, tokenUsage, automationSchedules, automationExecutionLogs, contentAnalytics, userCredits, creditTransactions, creditPackages, passwordResetTokens, generatorLengthPreferences } from "../drizzle/schema";
+import { InsertUser, users, contentHistory, InsertContentHistory, tokenUsage, automationSchedules, automationExecutionLogs, contentAnalytics, userCredits, creditTransactions, creditPackages, passwordResetTokens, generatorLengthPreferences, professionalProfiles } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { eq, desc, and, gte, sql } from "drizzle-orm";
 
@@ -252,6 +252,12 @@ export async function updateUserTheme(userId: number, theme: 'light' | 'dark' | 
     console.error("[Database] Failed to update theme:", error);
     throw error;
   }
+}
+
+export async function updateUserHighContrast(userId: number, highContrast: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.update(users).set({ highContrast }).where(eq(users.id, userId));
 }
 
 // Automation schedule management functions
@@ -765,6 +771,77 @@ export async function deletePasswordResetToken(token: string) {
     console.error("[Database] Failed to delete password reset token:", error);
     return null;
   }
+}
+
+export type ProfessionalProfileInput = {
+  displayName: string;
+  professionalTitle: string;
+  biography?: string | null;
+  expertise?: string | null;
+  availability?: string | null;
+  phone?: string | null;
+  location?: string | null;
+  website?: string | null;
+  avatarUrl?: string | null;
+  coverUrl?: string | null;
+  socialLinks?: Record<string, string>;
+  publicSlug?: string | null;
+  isPublic: boolean;
+  shareSocialLinks: boolean;
+};
+
+export async function getProfessionalProfileByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(professionalProfiles).where(eq(professionalProfiles.userId, userId)).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function saveProfessionalProfile(userId: number, profile: ProfessionalProfileInput) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const payload = { userId, ...profile, socialLinks: profile.socialLinks ?? {} };
+  await db.insert(professionalProfiles).values(payload).onDuplicateKeyUpdate({
+    set: {
+      displayName: profile.displayName,
+      professionalTitle: profile.professionalTitle,
+      biography: profile.biography ?? null,
+      expertise: profile.expertise ?? null,
+      availability: profile.availability ?? null,
+      phone: profile.phone ?? null,
+      location: profile.location ?? null,
+      website: profile.website ?? null,
+      avatarUrl: profile.avatarUrl ?? null,
+      coverUrl: profile.coverUrl ?? null,
+      socialLinks: profile.socialLinks ?? {},
+      publicSlug: profile.publicSlug ?? null,
+      isPublic: profile.isPublic,
+      shareSocialLinks: profile.shareSocialLinks,
+    },
+  });
+  return getProfessionalProfileByUserId(userId);
+}
+
+export async function getPublicProfessionalProfileBySlug(publicSlug: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select({
+    displayName: professionalProfiles.displayName,
+    professionalTitle: professionalProfiles.professionalTitle,
+    biography: professionalProfiles.biography,
+    expertise: professionalProfiles.expertise,
+    availability: professionalProfiles.availability,
+    location: professionalProfiles.location,
+    website: professionalProfiles.website,
+    avatarUrl: professionalProfiles.avatarUrl,
+    coverUrl: professionalProfiles.coverUrl,
+    socialLinks: professionalProfiles.socialLinks,
+    publicSlug: professionalProfiles.publicSlug,
+    shareSocialLinks: professionalProfiles.shareSocialLinks,
+  }).from(professionalProfiles).where(and(eq(professionalProfiles.publicSlug, publicSlug), eq(professionalProfiles.isPublic, true))).limit(1);
+  const profile = rows[0];
+  if (!profile) return null;
+  return { ...profile, socialLinks: profile.shareSocialLinks ? profile.socialLinks : {} };
 }
 
 

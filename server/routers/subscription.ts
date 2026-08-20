@@ -1,6 +1,6 @@
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
-import { updateUserSubscription, updateUserTheme, getTodayTokenUsage, updateUserTokenBalance } from "../db";
+import { updateUserSubscription, updateUserTheme, updateUserHighContrast, getTodayTokenUsage, updateUserTokenBalance } from "../db";
 import crypto from "crypto";
 
 // ─── Razorpay HTTP helper ───────────────────────────────────────────────────
@@ -125,6 +125,7 @@ export const subscriptionRouter = router({
       todayUsage,
       dailyLimit,
       theme: user.theme,
+      highContrast: user.highContrast,
       features: user.subscriptionTier === "pro"
         ? SUBSCRIPTION_PLANS.pro_monthly.features
         : SUBSCRIPTION_PLANS.free.features,
@@ -138,6 +139,13 @@ export const subscriptionRouter = router({
     .mutation(async ({ ctx, input }) => {
       await updateUserTheme(ctx.user.id, input.theme);
       return { success: true, theme: input.theme };
+    }),
+
+  setHighContrast: protectedProcedure
+    .input(z.object({ highContrast: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      await updateUserHighContrast(ctx.user.id, input.highContrast);
+      return { success: true, highContrast: input.highContrast };
     }),
 
   // ── Check if user can generate content ────────────────────────────────────

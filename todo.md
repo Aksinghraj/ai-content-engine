@@ -865,3 +865,10 @@
 - [x] Implement a polished bright/dark theme toggle with saved user preference
 - [x] Audit and normalize major account and navigation surfaces for both theme modes
 - [x] Add responsive and theme persistence regression coverage
+
+## Profile Persistence, Sharing & Accessibility (IN PROGRESS)
+- [x] Add secure profile storage and ownership-safe read/update procedures
+- [x] Persist professional title, biography, expertise, availability, and profile visuals
+- [x] Add opt-in public profile sharing with slug controls and private-by-default visibility
+- [x] Add high-contrast theme mode with persistent accessibility preference
+- [x] Add privacy, persistence, sharing, and accessibility regression coverage

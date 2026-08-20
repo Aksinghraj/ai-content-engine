@@ -63,7 +63,7 @@ export default function SettingsAdvanced() {
   const [activeTab, setActiveTab] = useState("account");
   const [showPassword, setShowPassword] = useState(false);
   const [showApiKey, setShowApiKey] = useState<string | null>(null);
-  const { theme, effectiveTheme, setTheme } = useTheme();
+  const { theme, effectiveTheme, highContrast, setTheme, setHighContrast } = useTheme();
 
   const [notifications, setNotifications] = useState<NotificationSetting[]>([
     {
@@ -318,6 +318,15 @@ export default function SettingsAdvanced() {
                         </Button>
                       ))}
                     </div>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg border border-border bg-muted/25 p-3">
+                    <div>
+                      <p className="font-medium text-card-foreground">High contrast</p>
+                      <p className="text-xs text-muted-foreground">Strengthens borders, text contrast, and keyboard focus indicators.</p>
+                    </div>
+                    <Button type="button" variant={highContrast ? "default" : "outline"} onClick={() => setHighContrast(!highContrast)} className={highContrast ? "lumae-gradient-cta" : "border-border bg-background text-foreground"}>
+                      {highContrast ? "Enabled" : "Enable"}
+                    </Button>
                   </div>
                   <div className="flex items-center justify-between rounded-lg bg-muted/45 p-3">
                     <div>

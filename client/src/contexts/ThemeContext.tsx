@@ -7,13 +7,16 @@ type Theme = "light" | "dark" | "auto";
 interface ThemeContextType {
   theme: Theme;
   effectiveTheme: "light" | "dark";
+  highContrast: boolean;
   setTheme: (theme: Theme) => void;
+  setHighContrast: (enabled: boolean) => void;
   toggleTheme: () => void;
   switchable: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 const STORAGE_KEY = "lumae-theme";
+const CONTRAST_STORAGE_KEY = "lumae-high-contrast";
 
 interface ThemeProviderProps {
   children: React.ReactNode;
@@ -35,12 +38,16 @@ export function ThemeProvider({
     typeof window !== "undefined" ? window.matchMedia("(prefers-color-scheme: dark)").matches : true,
   );
   const [hasSyncedAccountTheme, setHasSyncedAccountTheme] = useState(false);
+  const [highContrast, setHighContrastState] = useState(() =>
+    typeof window !== "undefined" && localStorage.getItem(CONTRAST_STORAGE_KEY) === "true",
+  );
 
   const statusQuery = trpc.subscription.getStatus.useQuery(undefined, {
     enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000,
   });
   const setThemeMutation = trpc.subscription.setTheme.useMutation();
+  const setHighContrastMutation = trpc.subscription.setHighContrast.useMutation();
 
   const effectiveTheme = useMemo<"light" | "dark">(
     () => theme === "auto" ? (systemPrefersDark ? "dark" : "light") : theme,
@@ -56,6 +63,12 @@ export function ThemeProvider({
   }, [hasSyncedAccountTheme, isAuthenticated, statusQuery.data?.theme]);
 
   useEffect(() => {
+    const storedContrast = typeof window === "undefined" ? null : localStorage.getItem(CONTRAST_STORAGE_KEY);
+    if (!isAuthenticated || storedContrast !== null || typeof statusQuery.data?.highContrast !== "boolean") return;
+    setHighContrastState(statusQuery.data.highContrast);
+  }, [isAuthenticated, statusQuery.data?.highContrast]);
+
+  useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const updateSystemTheme = () => setSystemPrefersDark(mediaQuery.matches);
     updateSystemTheme();
@@ -66,9 +79,11 @@ export function ThemeProvider({
   useEffect(() => {
     const root = document.documentElement;
     root.classList.toggle("dark", effectiveTheme === "dark");
+    root.classList.toggle("high-contrast", highContrast);
     root.dataset.theme = effectiveTheme;
+    root.dataset.contrast = highContrast ? "high" : "standard";
     root.style.colorScheme = effectiveTheme;
-  }, [effectiveTheme]);
+  }, [effectiveTheme, highContrast]);
 
   const setTheme = (nextTheme: Theme) => {
     setThemeState(nextTheme);
@@ -77,9 +92,14 @@ export function ThemeProvider({
   };
 
   const toggleTheme = () => setTheme(effectiveTheme === "dark" ? "light" : "dark");
+  const setHighContrast = (enabled: boolean) => {
+    setHighContrastState(enabled);
+    localStorage.setItem(CONTRAST_STORAGE_KEY, String(enabled));
+    if (isAuthenticated) setHighContrastMutation.mutate({ highContrast: enabled });
+  };
 
   return (
-    <ThemeContext.Provider value={{ theme, effectiveTheme, setTheme, toggleTheme, switchable }}>
+    <ThemeContext.Provider value={{ theme, effectiveTheme, highContrast, setTheme, setHighContrast, toggleTheme, switchable }}>
       {children}
     </ThemeContext.Provider>
   );
