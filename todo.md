@@ -836,3 +836,8 @@
 - [x] Confirm budget and source policy for X, YouTube, and AI-estimated social trend data
 - [x] Add cached unified trending topics with source labels and brief-field suggestions
 - [x] Add automated coverage for layout contracts, trend mapping, cache, and selection behavior
+
+## Google OAuth Redirect Repair (IN PROGRESS)
+- [x] Trace the active Google authorization request and canonical callback route
+- [x] Correct any remaining redirect URI mismatch or localhost/preview fallback
+- [x] Add regression coverage for the exact Google redirect URI and verify the generated authorization URL

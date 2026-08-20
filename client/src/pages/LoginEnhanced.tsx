@@ -21,7 +21,8 @@ export default function LoginEnhanced() {
   }, [isAuthenticated, navigate]);
 
   // Google OAuth: navigate to our server endpoint which auto-submits a form to Google
-  const googleLoginUrl = `/api/oauth/google/login?origin=${encodeURIComponent(window.location.origin)}`;
+  // The server owns the canonical registered Google callback URI.
+  const googleLoginUrl = "/api/oauth/google/login";
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();

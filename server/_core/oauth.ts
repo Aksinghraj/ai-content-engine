@@ -11,6 +11,9 @@ function getQueryParam(req: Request, key: string): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
+const GOOGLE_OAUTH_ORIGIN = (process.env.FRONTEND_URL || "https://lumae.co.in").replace(/\/$/, "");
+const GOOGLE_OAUTH_REDIRECT_URI = `${GOOGLE_OAUTH_ORIGIN}/api/oauth/google/callback`;
+
 // Build: 2026-06-21 — form-based Google OAuth (no redirect, no double-encoding)
 export function registerOAuthRoutes(app: Express) {
   // ─── Google OAuth ──────────────────────────────────────────────────────────
@@ -28,16 +31,13 @@ export function registerOAuthRoutes(app: Express) {
       return res.status(500).send("Google OAuth not configured (missing GOOGLE_OAUTH_CLIENT_ID)");
     }
 
-    // Derive the app origin: prefer the forwarded proto+host, fall back to req
-    const origin =
-      (req.query.origin as string) ||
-      `${req.headers["x-forwarded-proto"] || req.protocol}://${req.headers["x-forwarded-host"] || req.headers.host}`;
-
-    const redirectUri = `${origin}/api/oauth/google/callback`;
+    // Google requires an exact registered URI. Never derive it from preview
+    // hosts or a client-provided origin, either of which can cause a mismatch.
+    const redirectUri = GOOGLE_OAUTH_REDIRECT_URI;
 
     // State carries the return path and origin so the callback can redirect correctly
     const state = Buffer.from(
-      JSON.stringify({ returnPath: "/", origin, ts: Date.now() })
+      JSON.stringify({ returnPath: "/", ts: Date.now() })
     ).toString("base64url");
 
     // Escape HTML special chars to prevent XSS in attribute values
@@ -100,20 +100,18 @@ export function registerOAuthRoutes(app: Express) {
       return res.redirect("/login?error=google_oauth_not_configured");
     }
 
-    // Parse state to get the origin for building the redirect URI
-    let origin = `${req.headers["x-forwarded-proto"] || req.protocol}://${req.headers["x-forwarded-host"] || req.headers.host}`;
+    // Use the identical canonical URI used in the authorization request.
     let returnPath = "/";
     try {
       if (stateRaw) {
         const parsed = JSON.parse(Buffer.from(stateRaw, "base64url").toString("utf8"));
-        if (parsed.origin) origin = parsed.origin;
         if (parsed.returnPath) returnPath = parsed.returnPath;
       }
     } catch {
       // ignore malformed state
     }
 
-    const redirectUri = `${origin}/api/oauth/google/callback`;
+    const redirectUri = GOOGLE_OAUTH_REDIRECT_URI;
 
     try {
       // Exchange authorization code for tokens
