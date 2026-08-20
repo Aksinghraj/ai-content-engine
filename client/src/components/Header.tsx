@@ -23,7 +23,7 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#2a2a2e] bg-[#0a0a0b]/95 text-[#f5f5f7] backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-[#26262b] bg-[#09090b]/95 text-[#f5f5f7] backdrop-blur-xl">
       <div className="mx-auto flex h-15 max-w-7xl items-center gap-4 px-4 sm:px-6">
         <button onClick={() => navigate("/dashboard")} className="flex shrink-0 items-center gap-2 rounded-lg text-left" aria-label="Lumae AI dashboard">
           <img src="/manus-storage/lumae-logo-icon_ccacaad9.jpg" alt="Lumae AI" width={32} height={32} className="h-8 w-8 rounded-lg object-cover" />
@@ -40,14 +40,14 @@ export default function Header() {
           {isAuthenticated && user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="border-[#2a2a2e] bg-transparent text-[#f5f5f7] hover:bg-[#161618] hover:text-white">
+                <Button variant="outline" size="sm" className="border-[#26262b] bg-transparent text-[#f5f5f7] hover:bg-[#141417] hover:text-white">
                   <User className="mr-2 h-4 w-4" />
                   <span className="max-w-28 truncate">{user.name || "Account"}</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="border-[#2a2a2e] bg-[#161618] text-[#f5f5f7]">
+              <DropdownMenuContent align="end" className="border-[#26262b] bg-[#141417] text-[#f5f5f7]">
                 <DropdownMenuLabel className="text-[#f5f5f7]">{user.email || user.name}</DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-[#2a2a2e]" />
+                <DropdownMenuSeparator className="bg-[#26262b]" />
                 <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-300 focus:bg-red-500/10 focus:text-red-200">
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign out
@@ -55,7 +55,7 @@ export default function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button onClick={() => (window.location.href = getLoginUrl())} size="sm" className="bg-[#0071e3] text-white hover:bg-[#0066cc]">
+            <Button onClick={() => (window.location.href = getLoginUrl())} size="sm" className="lumae-gradient-cta">
               Log In
             </Button>
           )}

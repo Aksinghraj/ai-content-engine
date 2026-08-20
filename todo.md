@@ -800,3 +800,10 @@
 - [x] Build Content Studio, Scheduling, Automation, Analytics, Account, and Billing grouped routes
 - [x] Preserve old feature URLs with redirects to canonical nested tabs
 - [x] Validate desktop/mobile navigation, active tabs, and deep-link behavior
+
+## Premium Color System & Motion Boundaries (IN PROGRESS)
+- [x] Replace global application tokens and legacy purple/pink references with the premium palette
+- [x] Apply static premium styling to internal pages, navigation, controls, charts, and focus states
+- [x] Remove decorative animation from internal application pages while preserving concise interaction transitions
+- [x] Add reduced-motion-aware hero and feature-card animation exclusively to the landing page
+- [x] Validate palette consistency, motion boundaries, and accessible reduced-motion behavior

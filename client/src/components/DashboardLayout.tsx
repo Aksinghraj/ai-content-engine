@@ -65,7 +65,7 @@ export default function DashboardLayout({
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="flex flex-col items-center gap-6">
-          <div className="w-10 h-10 rounded-full border-4 border-[#0071e3] border-t-transparent animate-spin" />
+          <div className="w-10 h-10 rounded-full border-4 border-[#6366f1] border-t-transparent animate-spin" />
           <p className="text-sm text-muted-foreground">Redirecting to login...</p>
           <Button
             variant="ghost"
@@ -80,18 +80,20 @@ export default function DashboardLayout({
   }
 
   return (
-    <SidebarProvider
-      defaultOpen={true}
-      style={
-        {
-          "--sidebar-width": `${sidebarWidth}px`,
-        } as CSSProperties
-      }
-    >
-      <DashboardLayoutContent setSidebarWidth={setSidebarWidth}>
-        {children}
-      </DashboardLayoutContent>
-    </SidebarProvider>
+    <div className="app-static-motion">
+      <SidebarProvider
+        defaultOpen={true}
+        style={
+          {
+            "--sidebar-width": `${sidebarWidth}px`,
+          } as CSSProperties
+        }
+      >
+        <DashboardLayoutContent setSidebarWidth={setSidebarWidth}>
+          {children}
+        </DashboardLayoutContent>
+      </SidebarProvider>
+    </div>
   );
 }
 
@@ -232,7 +234,7 @@ function DashboardLayoutContent({
 
       <SidebarInset>
         {!isMobile && (
-          <div className="sticky top-0 z-30 hidden border-b border-[#2a2a2e] bg-[#0a0a0b]/95 px-4 py-2 backdrop-blur-xl md:block">
+          <div className="sticky top-0 z-30 hidden border-b border-[#26262b] bg-[#09090b]/95 px-4 py-2 backdrop-blur-xl md:block">
             <AppPrimaryNavigation compact />
           </div>
         )}
