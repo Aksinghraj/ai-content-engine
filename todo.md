@@ -904,3 +904,9 @@
 - [x] Create the reusable L-shaped Light Pulse component with static, active, complete, and error variants
 - [x] Apply the shared motion primitive to existing generation, analysis, automation, analytics, video, and suggestion states
 - [x] Add reduced-motion and motion-system regression coverage
+
+## Lumae Light Pulse Introduction Modal (IN PROGRESS)
+- [x] Audit existing dialog and local preference patterns for a one-time authenticated introduction
+- [x] Create an accessible, keyboard-dismissible Light Pulse preview modal without changing dashboard structure
+- [x] Persist dismissal locally and use a static presentation when reduced motion is preferred
+- [x] Add modal regression coverage and verify the full test suite

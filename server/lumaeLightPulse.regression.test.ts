@@ -31,4 +31,16 @@ describe("Lumae Light Pulse motion system", () => {
     expect(generator).toContain('setGenerationPulse("complete")');
     expect(generator).toContain('setGenerationPulse("error")');
   });
+
+  it("introduces the motion language once through an accessible, reduced-motion-aware dialog", () => {
+    const modal = readClient("components/LumaeLightPulseIntroModal.tsx");
+    const layout = readClient("components/DashboardLayout.tsx");
+
+    expect(modal).toContain('LUMAE_PULSE_INTRO_STORAGE_KEY = "lumae_pulse_intro_seen"');
+    expect(modal).toContain('window.matchMedia("(prefers-reduced-motion: reduce)")');
+    expect(modal).toContain('state={prefersReducedMotion ? "idle" : "active"}');
+    expect(modal).toContain("<Dialog open={open} onOpenChange={handleOpenChange}>");
+    expect(modal).toContain("Got it");
+    expect(layout).toContain("<LumaeLightPulseIntroModal />");
+  });
 });

@@ -29,6 +29,7 @@ import { Button } from "./ui/button";
 import { AppPrimaryNavigation, GroupedPageTabs } from "./AppNavigation";
 import { getNavigationArea } from "@/lib/appNavigation";
 import { useTheme } from "@/contexts/ThemeContext";
+import { LumaeLightPulseIntroModal } from "@/components/LumaeLightPulseIntroModal";
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
 const DEFAULT_WIDTH = 280;
@@ -93,6 +94,7 @@ export default function DashboardLayout({
         <DashboardLayoutContent setSidebarWidth={setSidebarWidth}>
           {children}
         </DashboardLayoutContent>
+        <LumaeLightPulseIntroModal />
       </SidebarProvider>
     </div>
   );
