@@ -29,6 +29,9 @@ import {
   Target,
   ShieldCheck,
   Sparkles,
+  Eye,
+  Copy,
+  Share2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -43,6 +46,7 @@ export default function ProfileAdvanced() {
   const { user } = useAuth();
   const profileQuery = trpc.professionalProfile.mine.useQuery();
   const saveProfileMutation = trpc.professionalProfile.save.useMutation();
+  const profileViewsQuery = trpc.professionalProfile.viewSummary.useQuery();
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
@@ -247,6 +251,15 @@ export default function ProfileAdvanced() {
 
   const avatarSrc = avatarPreview || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user?.name || "user")}`;
   const coverSrc = coverPreview;
+  const publicProfileUrl = profile.publicSlug ? `${window.location.origin}/u/${profile.publicSlug}` : "";
+  const copyPublicProfileUrl = async () => {
+    if (!profile.isPublic || !publicProfileUrl) {
+      toast.info("Enable public sharing and choose a profile link first.");
+      return;
+    }
+    await navigator.clipboard.writeText(publicProfileUrl);
+    toast.success("Public profile link copied.");
+  };
 
   return (
     <DashboardLayout>
@@ -381,6 +394,24 @@ export default function ProfileAdvanced() {
               <p className="mt-1 text-sm font-medium text-card-foreground">{value}</p>
             </Card>
           ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 px-5 sm:grid-cols-3 sm:px-7">
+          <Card className="border-border bg-card p-4 shadow-sm">
+            <Eye className="mb-2 h-4 w-4 text-primary" />
+            <p className="text-xs text-muted-foreground">Public profile views</p>
+            <p className="mt-1 text-lg font-semibold text-card-foreground">{profileViewsQuery.data?.totalViews ?? 0}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{profileViewsQuery.data?.viewsLast30Days ?? 0} in the last 30 days</p>
+          </Card>
+          <Card className="border-border bg-card p-4 shadow-sm sm:col-span-2">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="inline-flex items-center gap-2 text-sm font-medium text-card-foreground"><Share2 className="h-4 w-4 text-primary" />Public profile sharing</p>
+                <p className="mt-1 text-xs text-muted-foreground">{profile.isPublic && publicProfileUrl ? publicProfileUrl : "Private by default — enable sharing in Edit Profile."}</p>
+              </div>
+              <Button type="button" variant="outline" onClick={copyPublicProfileUrl} className="border-border bg-background text-card-foreground"><Copy className="mr-2 h-4 w-4" />Copy link</Button>
+            </div>
+          </Card>
         </div>
 
         <div className="px-5 sm:px-7">

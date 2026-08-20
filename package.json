@@ -76,6 +76,7 @@
     "node-fetch": "2",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
+    "qrcode.react": "^4.2.0",
     "razorpay": "^2.9.6",
     "react": "^19.2.1",
     "react-day-picker": "^9.11.1",

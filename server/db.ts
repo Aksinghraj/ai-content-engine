@@ -1,6 +1,6 @@
 
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, contentHistory, InsertContentHistory, tokenUsage, automationSchedules, automationExecutionLogs, contentAnalytics, userCredits, creditTransactions, creditPackages, passwordResetTokens, generatorLengthPreferences, professionalProfiles } from "../drizzle/schema";
+import { InsertUser, users, contentHistory, InsertContentHistory, tokenUsage, automationSchedules, automationExecutionLogs, contentAnalytics, userCredits, creditTransactions, creditPackages, passwordResetTokens, generatorLengthPreferences, professionalProfiles, professionalProfileViews } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { eq, desc, and, gte, sql } from "drizzle-orm";
 
@@ -826,6 +826,7 @@ export async function getPublicProfessionalProfileBySlug(publicSlug: string) {
   const db = await getDb();
   if (!db) return null;
   const rows = await db.select({
+    ownerId: professionalProfiles.userId,
     displayName: professionalProfiles.displayName,
     professionalTitle: professionalProfiles.professionalTitle,
     biography: professionalProfiles.biography,
@@ -842,6 +843,27 @@ export async function getPublicProfessionalProfileBySlug(publicSlug: string) {
   const profile = rows[0];
   if (!profile) return null;
   return { ...profile, socialLinks: profile.shareSocialLinks ? profile.socialLinks : {} };
+}
+
+export async function recordProfessionalProfileView(userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  const now = new Date();
+  const viewDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  await db.insert(professionalProfileViews).values({ userId, viewDate, views: 1 }).onDuplicateKeyUpdate({
+    set: { views: sql`${professionalProfileViews.views} + 1` },
+  });
+}
+
+export async function getProfessionalProfileViewSummary(userId: number) {
+  const db = await getDb();
+  if (!db) return { totalViews: 0, viewsLast30Days: 0 };
+  const rows = await db.select().from(professionalProfileViews).where(eq(professionalProfileViews.userId, userId));
+  const threshold = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000);
+  return {
+    totalViews: rows.reduce((total, row) => total + row.views, 0),
+    viewsLast30Days: rows.filter((row) => row.viewDate >= threshold).reduce((total, row) => total + row.views, 0),
+  };
 }
 
 

@@ -872,3 +872,10 @@
 - [x] Add opt-in public profile sharing with slug controls and private-by-default visibility
 - [x] Add high-contrast theme mode with persistent accessibility preference
 - [x] Add privacy, persistence, sharing, and accessibility regression coverage
+
+## Public Profile Analytics & Sharing (IN PROGRESS)
+- [x] Add aggregate, privacy-preserving public profile-view analytics
+- [x] Add an owner-only profile analytics summary in Account Profile
+- [x] Add dynamic Open Graph title, description, and image metadata for public profiles
+- [x] Add a downloadable QR code for each enabled public profile link
+- [x] Add privacy and sharing regression coverage

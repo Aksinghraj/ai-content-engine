@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { Link, useRoute } from "wouter";
-import { Globe, Instagram, Linkedin, MapPin, Twitter, UserRound } from "lucide-react";
+import { Download, Globe, Instagram, Linkedin, MapPin, QrCode, Twitter, UserRound } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { trpc } from "@/lib/trpc";
 
 const socialIcons: Record<string, typeof Linkedin> = {
@@ -12,7 +14,46 @@ export default function PublicProfile() {
   const [, params] = useRoute("/u/:slug");
   const slug = params?.slug || "";
   const profileQuery = trpc.professionalProfile.publicBySlug.useQuery({ slug }, { enabled: Boolean(slug) });
+  const recordViewMutation = trpc.professionalProfile.recordPublicView.useMutation();
   const profile = profileQuery.data;
+
+  useEffect(() => {
+    if (!profile || !slug) return;
+    const key = `lumae-public-profile-view:${slug}`;
+    if (!sessionStorage.getItem(key)) {
+      sessionStorage.setItem(key, "recorded");
+      recordViewMutation.mutate({ slug });
+    }
+    const setMeta = (property: string, content: string) => {
+      let element = document.querySelector(`meta[property="${property}"], meta[name="${property}"]`) as HTMLMetaElement | null;
+      if (!element) {
+        element = document.createElement("meta");
+        element.setAttribute(property.startsWith("twitter:") ? "name" : "property", property);
+        document.head.appendChild(element);
+      }
+      element.content = content;
+    };
+    const title = `${profile.displayName} — ${profile.professionalTitle} | Lumae AI`;
+    const description = profile.biography || `${profile.displayName}'s professional profile on Lumae AI.`;
+    document.title = title;
+    setMeta("og:title", title);
+    setMeta("og:description", description);
+    setMeta("og:url", window.location.href);
+    setMeta("og:image", profile.avatarUrl || "https://lumae.co.in/manus-storage/lumae-full-logo.jpg");
+    setMeta("twitter:card", "summary_large_image");
+  }, [profile, recordViewMutation, slug]);
+
+  const downloadQr = () => {
+    const svg = document.getElementById("public-profile-qr") as SVGSVGElement | null;
+    if (!svg || !profile?.publicSlug) return;
+    const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${profile.publicSlug}-lumae-profile-qr.svg`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   if (profileQuery.isLoading) {
     return <main className="min-h-screen bg-background px-5 py-20 text-center text-muted-foreground">Loading profile…</main>;
@@ -61,6 +102,14 @@ export default function PublicProfile() {
               {profile.website && <a href={profile.website} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-primary hover:underline"><Globe className="h-4 w-4" />Website</a>}
             </div>
             {Object.entries(links).length > 0 && <div className="mt-6 flex flex-wrap gap-3">{Object.entries(links).map(([name, href]) => { const Icon = socialIcons[name] || Globe; return <a key={name} href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-card-foreground transition-colors hover:bg-accent"><Icon className="h-4 w-4 text-primary" />{name}</a>; })}</div>}
+            <div className="mt-8 flex flex-col items-start gap-3 border-t border-border pt-6 sm:flex-row sm:items-center">
+              <div className="rounded-xl border border-border bg-background p-2"><QRCodeSVG id="public-profile-qr" value={`${window.location.origin}/u/${profile.publicSlug}`} size={88} bgColor="transparent" fgColor="currentColor" level="M" includeMargin /></div>
+              <div>
+                <p className="inline-flex items-center gap-2 text-sm font-medium text-card-foreground"><QrCode className="h-4 w-4 text-primary" />Share this profile</p>
+                <p className="mt-1 text-sm text-muted-foreground">Download a QR code for your portfolio, event badge, or printed materials.</p>
+                <button type="button" onClick={downloadQr} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-card-foreground transition-colors hover:bg-accent"><Download className="h-4 w-4" />Download QR code</button>
+              </div>
+            </div>
           </div>
         </div>
       </section>

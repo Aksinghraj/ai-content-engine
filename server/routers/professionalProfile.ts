@@ -3,6 +3,8 @@ import { publicProcedure, protectedProcedure, router } from "../_core/trpc";
 import {
   getProfessionalProfileByUserId,
   getPublicProfessionalProfileBySlug,
+  getProfessionalProfileViewSummary,
+  recordProfessionalProfileView,
   saveProfessionalProfile,
 } from "../db";
 
@@ -58,5 +60,21 @@ export const professionalProfileRouter = router({
 
   publicBySlug: publicProcedure
     .input(z.object({ slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(100) }))
-    .query(({ input }) => getPublicProfessionalProfileBySlug(input.slug)),
+    .query(async ({ input }) => {
+      const profile = await getPublicProfessionalProfileBySlug(input.slug);
+      if (!profile) return null;
+      const { ownerId, ...publicProfile } = profile;
+      return publicProfile;
+    }),
+
+  recordPublicView: publicProcedure
+    .input(z.object({ slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(100) }))
+    .mutation(async ({ input }) => {
+      const profile = await getPublicProfessionalProfileBySlug(input.slug);
+      if (!profile) return { recorded: false };
+      await recordProfessionalProfileView(profile.ownerId);
+      return { recorded: true };
+    }),
+
+  viewSummary: protectedProcedure.query(({ ctx }) => getProfessionalProfileViewSummary(ctx.user.id)),
 });
