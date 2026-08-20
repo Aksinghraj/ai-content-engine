@@ -910,3 +910,9 @@
 - [x] Create an accessible, keyboard-dismissible Light Pulse preview modal without changing dashboard structure
 - [x] Persist dismissal locally and use a static presentation when reduced motion is preferred
 - [x] Add modal regression coverage and verify the full test suite
+
+## Lumae Light Pulse Dismissal Analytics (IN PROGRESS)
+- [x] Define an aggregate-only, no-identity analytics model for introduction dismissals
+- [x] Record dismissal totals without storing user IDs, device identifiers, or event-level histories
+- [x] Report dismissals through the authenticated modal path with safe failure handling
+- [x] Add privacy and regression coverage, then verify the full suite

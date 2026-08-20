@@ -43,4 +43,25 @@ describe("Lumae Light Pulse motion system", () => {
     expect(modal).toContain("Got it");
     expect(layout).toContain("<LumaeLightPulseIntroModal />");
   });
+
+  it("records introduction dismissals only as privacy-safe daily aggregates", () => {
+    const schema = readFileSync(resolve(projectRoot, "drizzle", "schema.ts"), "utf8");
+    const database = readFileSync(resolve(projectRoot, "server", "db.ts"), "utf8");
+    const router = readFileSync(resolve(projectRoot, "server", "routers.ts"), "utf8");
+    const modal = readClient("components/LumaeLightPulseIntroModal.tsx");
+    const dismissalTable = schema.slice(
+      schema.indexOf("export const lumaePulseIntroDismissals"),
+      schema.indexOf("export type LumaePulseIntroDismissal")
+    );
+
+    expect(schema).toContain("lumaePulseIntroDismissals");
+    expect(schema).toContain("dismissalDate");
+    expect(dismissalTable).not.toMatch(/userId|sessionId|deviceId|ipAddress|userAgent/i);
+    expect(database).toContain("recordLumaePulseIntroDismissal");
+    expect(database).toContain("getLumaePulseIntroDismissalSummary");
+    expect(router).toContain("recordDismissal: protectedProcedure");
+    expect(router).toContain("dismissalSummary: protectedProcedure");
+    expect(modal).toContain("recordDismissal.mutateAsync().catch(() => undefined)");
+    expect(modal).toContain("dismissalRecordedRef");
+  });
 });

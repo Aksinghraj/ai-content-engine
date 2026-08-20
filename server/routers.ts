@@ -100,6 +100,17 @@ export const appRouter = router({
   encryption: encryptionRouter,
   aiPostGeneration: aiPostGenerationRouter,
   professionalProfile: professionalProfileRouter,
+  lightPulseIntro: router({
+    recordDismissal: protectedProcedure.mutation(async () => ({
+      recorded: await db.recordLumaePulseIntroDismissal(),
+    })),
+    dismissalSummary: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.user.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Product analytics are restricted to administrators." });
+      }
+      return db.getLumaePulseIntroDismissalSummary();
+    }),
+  }),
   aiMediaGeneration: aiMediaGeneration,
   freeTier: freeTierRouter,
   oauth: oauthCallbackRouter,

@@ -1,6 +1,6 @@
 
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, contentHistory, InsertContentHistory, tokenUsage, automationSchedules, automationExecutionLogs, contentAnalytics, userCredits, creditTransactions, creditPackages, passwordResetTokens, generatorLengthPreferences, professionalProfiles, professionalProfileViews } from "../drizzle/schema";
+import { InsertUser, users, contentHistory, InsertContentHistory, tokenUsage, automationSchedules, automationExecutionLogs, contentAnalytics, userCredits, creditTransactions, creditPackages, passwordResetTokens, generatorLengthPreferences, professionalProfiles, professionalProfileViews, lumaePulseIntroDismissals } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { eq, desc, and, gte, sql } from "drizzle-orm";
 
@@ -863,6 +863,32 @@ export async function getProfessionalProfileViewSummary(userId: number) {
   return {
     totalViews: rows.reduce((total, row) => total + row.views, 0),
     viewsLast30Days: rows.filter((row) => row.viewDate >= threshold).reduce((total, row) => total + row.views, 0),
+  };
+}
+
+/**
+ * Counts introduction dismissals as a single daily product metric. It does not
+ * accept or persist any user- or device-level identifier.
+ */
+export async function recordLumaePulseIntroDismissal(): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  const now = new Date();
+  const dismissalDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  await db.insert(lumaePulseIntroDismissals).values({ dismissalDate, dismissals: 1 }).onDuplicateKeyUpdate({
+    set: { dismissals: sql`${lumaePulseIntroDismissals.dismissals} + 1` },
+  });
+  return true;
+}
+
+export async function getLumaePulseIntroDismissalSummary() {
+  const db = await getDb();
+  if (!db) return { totalDismissals: 0, dismissalsLast30Days: 0 };
+  const rows = await db.select().from(lumaePulseIntroDismissals);
+  const threshold = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000);
+  return {
+    totalDismissals: rows.reduce((total, row) => total + row.dismissals, 0),
+    dismissalsLast30Days: rows.filter((row) => row.dismissalDate >= threshold).reduce((total, row) => total + row.dismissals, 0),
   };
 }
 

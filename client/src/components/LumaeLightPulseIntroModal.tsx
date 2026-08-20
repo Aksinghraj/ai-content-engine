@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { LumaeLightPulse } from "@/components/LumaeLightPulse";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { trpc } from "@/lib/trpc";
 
 export const LUMAE_PULSE_INTRO_STORAGE_KEY = "lumae_pulse_intro_seen";
 
@@ -20,6 +21,8 @@ export const LUMAE_PULSE_INTRO_STORAGE_KEY = "lumae_pulse_intro_seen";
 export function LumaeLightPulseIntroModal() {
   const [open, setOpen] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(true);
+  const dismissalRecordedRef = useRef(false);
+  const recordDismissal = trpc.lightPulseIntro.recordDismissal.useMutation();
 
   useEffect(() => {
     const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -42,12 +45,21 @@ export function LumaeLightPulseIntroModal() {
   }, []);
 
   const dismiss = () => {
+    if (dismissalRecordedRef.current) {
+      setOpen(false);
+      return;
+    }
+    dismissalRecordedRef.current = true;
+
     try {
       window.localStorage.setItem(LUMAE_PULSE_INTRO_STORAGE_KEY, "true");
     } catch {
       // Do not block dismissal if browser storage is unavailable.
     }
     setOpen(false);
+    // The metric is aggregate-only and intentionally non-blocking: the user
+    // can dismiss the dialog even if the analytics request cannot complete.
+    void recordDismissal.mutateAsync().catch(() => undefined);
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
