@@ -11,6 +11,7 @@ import {
   getAutomationSchedulesByUserId,
   updateAutomationScheduleForUser,
 } from "../db";
+import { getSocialConnectionByPlatform } from "../db/social";
 
 const platformSchema = z
   .string()
@@ -41,8 +42,25 @@ function getUserSession(cookieHeader: string | undefined) {
   return parseCookie(cookieHeader ?? "")[COOKIE_NAME] ?? "";
 }
 
+async function assertAutomationReadiness(userId: number, platform: string) {
+  const connection = await getSocialConnectionByPlatform(userId, platform);
+  if (!connection?.isConnected) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: `Connect your ${platform} account before creating an automation.`,
+    });
+  }
+  if (!connection.autoPost) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: `Enable Auto-Post for your connected ${platform} account before activating an automation.`,
+    });
+  }
+}
+
 export const automationRouter = router({
   create: protectedProcedure.input(automationInput).mutation(async ({ ctx, input }) => {
+    await assertAutomationReadiness(ctx.user.id, input.platform);
     const schedule = await createAutomationSchedule(ctx.user.id, {
       ...input,
       cronExpression: normalizeCron(input.cronExpression),
@@ -100,6 +118,10 @@ export const automationRouter = router({
       }
 
       const cronExpression = input.cronExpression ? normalizeCron(input.cronExpression) : undefined;
+      const targetPlatform = input.platform ?? existing.platform;
+      if (input.isActive !== false) {
+        await assertAutomationReadiness(ctx.user.id, targetPlatform);
+      }
       await updateHeartbeatJob(
         existing.scheduleCronTaskUid,
         {

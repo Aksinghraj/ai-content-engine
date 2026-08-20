@@ -41,8 +41,12 @@ async function handleOAuthCallback(
     );
 
     // Redirect to success page
+    const callbackPath = completed.returnPath.startsWith("/") && !completed.returnPath.startsWith("//")
+      ? completed.returnPath
+      : "/connected-accounts";
+    const separator = callbackPath.includes("?") ? "&" : "?";
     return res.redirect(
-      `${BASE_URL}/connected-accounts?platform=${platform}&success=true&username=${encodeURIComponent(completed.userInfo?.name || completed.userInfo?.username || platform)}`
+      `${BASE_URL}${callbackPath}${separator}platform=${platform}&success=true&username=${encodeURIComponent(completed.userInfo?.name || completed.userInfo?.username || platform)}`
     );
   } catch (error) {
     console.error(`[OAuth] ${platform} callback error:`, error);

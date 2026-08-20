@@ -437,6 +437,19 @@ export const scheduledPosts = mysqlTable("scheduledPosts", {
 export type ScheduledPost = typeof scheduledPosts.$inferSelect;
 export type InsertScheduledPost = typeof scheduledPosts.$inferInsert;
 
+/** One-time, encrypted OAuth state used to bind provider callbacks to the initiating account. */
+export const socialOAuthStates = mysqlTable("socialOAuthStates", {
+  state: varchar("state", { length: 128 }).primaryKey(),
+  userId: int("userId").notNull(),
+  platform: varchar("platform", { length: 50 }).notNull(),
+  encryptedCodeVerifier: text("encryptedCodeVerifier").notNull(),
+  returnPath: varchar("returnPath", { length: 512 }).notNull().default("/connected-accounts"),
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SocialOAuthState = typeof socialOAuthStates.$inferSelect;
+
 // Relations for social media tables
 export const socialConnectionsRelations = relations(socialConnections, ({ one, many }) => ({
   user: one(users, {

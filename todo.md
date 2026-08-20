@@ -879,3 +879,10 @@
 - [x] Add dynamic Open Graph title, description, and image metadata for public profiles
 - [x] Add a downloadable QR code for each enabled public profile link
 - [x] Add privacy and sharing regression coverage
+
+## Social Connect & Automation Repair (IN PROGRESS)
+- [x] Trace Connect button authentication state, OAuth request generation, callbacks, and return routes
+- [x] Replace in-memory OAuth state with durable callback-safe state and selected-integration return routing
+- [x] Add automation connection and Auto-Post preflight validation before schedule creation
+- [x] Improve automation execution failure feedback with actionable remediation
+- [x] Add focused regression coverage for OAuth return state and automation readiness feedback

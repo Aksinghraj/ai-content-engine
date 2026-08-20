@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach, vi } from "vitest";
 import { appRouter } from "../routers";
 import * as db from "../db";
 import * as heartbeat from "../_core/heartbeat";
+import * as socialDb from "../db/social";
 
 vi.mock("../db", () => ({
   createAutomationSchedule: vi.fn(),
@@ -15,6 +16,10 @@ vi.mock("../_core/heartbeat", () => ({
   createHeartbeatJob: vi.fn(),
   updateHeartbeatJob: vi.fn(),
   deleteHeartbeatJob: vi.fn(),
+}));
+
+vi.mock("../db/social", () => ({
+  getSocialConnectionByPlatform: vi.fn(),
 }));
 
 const context = () => ({
@@ -40,7 +45,14 @@ const createdSchedule = {
 };
 
 describe("Heartbeat-backed automation router", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(socialDb.getSocialConnectionByPlatform).mockResolvedValue({
+      isConnected: true,
+      isValidated: true,
+      autoPost: true,
+    } as any);
+  });
 
   it("creates a six-field Heartbeat job and persists its task UID", async () => {
     vi.mocked(db.createAutomationSchedule).mockResolvedValue(createdSchedule as any);
@@ -96,5 +108,24 @@ describe("Heartbeat-backed automation router", () => {
     expect(heartbeat.deleteHeartbeatJob).toHaveBeenCalledWith("task-42", "test-session");
     expect(db.deleteAutomationScheduleForUser).toHaveBeenCalledWith(42, 7);
     expect(result.success).toBe(true);
+  });
+
+  it("rejects a schedule before creating a durable job when Auto-Post is disabled", async () => {
+    vi.mocked(socialDb.getSocialConnectionByPlatform).mockResolvedValue({
+      isConnected: true,
+      isValidated: true,
+      autoPost: false,
+    } as any);
+
+    await expect(appRouter.createCaller(context()).automation.create({
+      name: "Daily X post",
+      niche: "Technology",
+      targetAudience: "Founders",
+      platform: "twitter",
+      goal: "Engagement",
+      contentStyle: "Professional",
+      cronExpression: "0 9 * * *",
+    })).rejects.toThrow("Enable Auto-Post");
+    expect(heartbeat.createHeartbeatJob).not.toHaveBeenCalled();
   });
 });

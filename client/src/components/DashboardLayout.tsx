@@ -53,7 +53,7 @@ export default function DashboardLayout({
   // Redirect unauthenticated users to login — must be called before any early returns (React rules of hooks)
   useEffect(() => {
     if (!loading && !user) {
-      window.location.href = getLoginUrl();
+      window.location.href = getLoginUrl(`${window.location.pathname}${window.location.search}`);
     }
   }, [loading, user]);
 

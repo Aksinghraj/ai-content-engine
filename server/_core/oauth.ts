@@ -35,9 +35,14 @@ export function registerOAuthRoutes(app: Express) {
     // hosts or a client-provided origin, either of which can cause a mismatch.
     const redirectUri = GOOGLE_OAUTH_REDIRECT_URI;
 
-    // State carries the return path and origin so the callback can redirect correctly
+    const requestedReturnPath = getQueryParam(req, "returnPath") || "/";
+    const returnPath = requestedReturnPath.startsWith("/") && !requestedReturnPath.startsWith("//") && !requestedReturnPath.startsWith("/api/")
+      ? requestedReturnPath
+      : "/";
+
+    // State carries only a validated relative path so the callback can resume the initiating page.
     const state = Buffer.from(
-      JSON.stringify({ returnPath: "/", ts: Date.now() })
+      JSON.stringify({ returnPath, ts: Date.now() })
     ).toString("base64url");
 
     // Escape HTML special chars to prevent XSS in attribute values
@@ -105,7 +110,9 @@ export function registerOAuthRoutes(app: Express) {
     try {
       if (stateRaw) {
         const parsed = JSON.parse(Buffer.from(stateRaw, "base64url").toString("utf8"));
-        if (parsed.returnPath) returnPath = parsed.returnPath;
+        if (typeof parsed.returnPath === "string" && parsed.returnPath.startsWith("/") && !parsed.returnPath.startsWith("//") && !parsed.returnPath.startsWith("/api/")) {
+          returnPath = parsed.returnPath;
+        }
       }
     } catch {
       // ignore malformed state

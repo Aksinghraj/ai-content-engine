@@ -10,6 +10,7 @@ import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { getLoginUrl } from "@/const";
 
 export default function Automation() {
   const { user, isAuthenticated } = useAuth();
@@ -29,6 +30,11 @@ export default function Automation() {
   const { data: schedulesData, isLoading: isLoadingSchedules, refetch } = trpc.automation.list.useQuery(undefined, {
     enabled: isAuthenticated && user?.subscriptionTier === "pro",
   });
+  const { data: connectedAccounts } = trpc.socialOAuthIntegration.getConnectedAccounts.useQuery(undefined, {
+    enabled: isAuthenticated && user?.subscriptionTier === "pro",
+  });
+  const selectedConnection = connectedAccounts?.find((account) => account.platform === formData.platform);
+  const selectedPlatformReady = Boolean(selectedConnection?.isValidated && selectedConnection?.autoPost);
 
   // Mutations
   const createMutation = trpc.automation.create.useMutation({
@@ -73,7 +79,7 @@ export default function Automation() {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate("/");
+      window.location.href = getLoginUrl("/automation/social-automation");
       return;
     }
 
@@ -86,6 +92,12 @@ export default function Automation() {
   const handleAddSchedule = () => {
     if (!formData.name || !formData.niche) {
       toast.error("Please fill in all required fields");
+      return;
+    }
+
+    if (!selectedPlatformReady) {
+      toast.error(`Connect ${formData.platform} and enable Auto-Post before creating this schedule.`);
+      navigate("/scheduling/connected-accounts");
       return;
     }
 
@@ -163,6 +175,14 @@ export default function Automation() {
             <CardHeader>
               <CardTitle className="text-white">Create Automation Schedule</CardTitle>
               <CardDescription className="text-slate-400">Connect the selected account and enable Auto-Post before its first scheduled run.</CardDescription>
+              {!selectedPlatformReady && (
+                <div className="mt-3 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-sm text-amber-100">
+                  {selectedConnection?.isValidated
+                    ? `Auto-Post is off for ${formData.platform}. Enable it in Connected Accounts before creating this schedule.`
+                    : `No active ${formData.platform} connection found. Connect the account and enable Auto-Post first.`}
+                  <Button type="button" variant="link" className="ml-1 h-auto p-0 text-amber-100 underline" onClick={() => navigate("/scheduling/connected-accounts")}>Open Connected Accounts</Button>
+                </div>
+              )}
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid md:grid-cols-2 gap-4">

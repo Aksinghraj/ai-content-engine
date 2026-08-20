@@ -1,4 +1,8 @@
 import crypto from "crypto";
+import { eq } from "drizzle-orm";
+import { getDb } from "../db";
+import { socialOAuthStates } from "../../drizzle/schema";
+import { decrypt, encrypt } from "./encryption";
 
 /**
  * OAuth 2.0 PKCE (Proof Key for Public Clients) Implementation
@@ -97,35 +101,53 @@ export interface OAuthState {
   userId: number;
   createdAt: number;
   expiresAt: number;
+  returnPath?: string;
 }
 
-/**
- * Store state in memory (in production, use Redis or database)
- */
-const stateStore = new Map<string, OAuthState>();
-
-export function storeOAuthState(state: OAuthState): void {
-  // Auto-cleanup after 10 minutes
-  setTimeout(() => {
-    stateStore.delete(state.state);
-  }, 10 * 60 * 1000);
-
-  stateStore.set(state.state, state);
+/** Persist state so provider callbacks survive restarts and route to the initiating user. */
+export async function storeOAuthState(state: OAuthState): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("OAuth state storage is temporarily unavailable");
+  await db.insert(socialOAuthStates).values({
+    state: state.state,
+    userId: state.userId,
+    platform: state.platform,
+    encryptedCodeVerifier: encrypt(state.codeVerifier),
+    returnPath: state.returnPath || "/connected-accounts",
+    expiresAt: new Date(state.expiresAt),
+  }).onDuplicateKeyUpdate({
+    set: {
+      userId: state.userId,
+      platform: state.platform,
+      encryptedCodeVerifier: encrypt(state.codeVerifier),
+      returnPath: state.returnPath || "/connected-accounts",
+      expiresAt: new Date(state.expiresAt),
+    },
+  });
 }
 
-export function getOAuthState(state: string): OAuthState | null {
-  const oauthState = stateStore.get(state);
+export async function getOAuthState(state: string): Promise<OAuthState | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const [oauthState] = await db.select().from(socialOAuthStates).where(eq(socialOAuthStates.state, state)).limit(1);
   if (!oauthState) return null;
-
-  // Check if expired
-  if (Date.now() > oauthState.expiresAt) {
-    stateStore.delete(state);
+  if (Date.now() > oauthState.expiresAt.getTime()) {
+    await db.delete(socialOAuthStates).where(eq(socialOAuthStates.state, state));
     return null;
   }
-
-  return oauthState;
+  return {
+    state: oauthState.state,
+    codeVerifier: decrypt(oauthState.encryptedCodeVerifier),
+    platform: oauthState.platform,
+    userId: oauthState.userId,
+    createdAt: oauthState.createdAt.getTime(),
+    expiresAt: oauthState.expiresAt.getTime(),
+    returnPath: oauthState.returnPath,
+  };
 }
 
-export function deleteOAuthState(state: string): void {
-  stateStore.delete(state);
+export async function deleteOAuthState(state: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(socialOAuthStates).where(eq(socialOAuthStates.state, state));
 }

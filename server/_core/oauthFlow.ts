@@ -37,7 +37,8 @@ const ENCRYPTION_KEY = process.env.OAUTH_ENCRYPTION_KEY || "default-encryption-k
 export async function generateAuthorizationUrl(
   baseUrl: string,
   platform: string,
-  userId: number
+  userId: number,
+  returnPath = "/connected-accounts"
 ): Promise<{ authorizationUrl: string; state: string }> {
   const platforms = initializeOAuthConfigs(baseUrl);
   const config = getPlatformConfig(platforms, platform);
@@ -54,13 +55,14 @@ export async function generateAuthorizationUrl(
   const state = generateState();
 
   // Store state for verification during callback
-  storeOAuthState({
+  await storeOAuthState({
     state,
     codeVerifier,
     platform,
     userId,
     createdAt: Date.now(),
     expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
+    returnPath,
   });
 
   // Build authorization URL
@@ -98,9 +100,10 @@ export async function handleOAuthCallback(
   refreshToken?: string;
   expiresIn?: number;
   userInfo: any;
+  returnPath: string;
 }> {
   // Verify state parameter
-  const oauthState = getOAuthState(state);
+  const oauthState = await getOAuthState(state);
   if (!oauthState) {
     throw new Error("Invalid or expired state parameter");
   }
@@ -190,7 +193,7 @@ export async function handleOAuthCallback(
   }
 
   // Clean up state
-  deleteOAuthState(state);
+  await deleteOAuthState(state);
 
   return {
     userId: oauthState.userId,
@@ -199,6 +202,7 @@ export async function handleOAuthCallback(
     refreshToken: tokenData.refresh_token,
     expiresIn: tokenData.expires_in,
     userInfo,
+    returnPath: oauthState.returnPath || "/connected-accounts",
   };
 }
 
