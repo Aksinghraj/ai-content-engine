@@ -12,6 +12,8 @@ import { handleStripeWebhook, verifyStripeSignature } from "./stripeWebhook";
 import { handleRazorpayWebhook, initializeRazorpayService } from "./razorpayWebhook";
 import { initializeAutomationEngine } from "./automationEngine";
 import { runScheduledAutomation } from "../routes/scheduledAutomation";
+import { refreshScheduledTrends } from "../routes/scheduledTrendRefresh";
+import { ensureTrendRefreshJob } from "./trendScheduler";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
@@ -175,6 +177,7 @@ async function startServer() {
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   app.post("/api/scheduled/social-automation", runScheduledAutomation);
+  app.post("/api/scheduled/trends/refresh", refreshScheduledTrends);
   // tRPC API
   app.use(
     "/api/trpc",
@@ -250,6 +253,7 @@ async function startServer() {
     console.log(`Server running on http://localhost:${port}/`);
     // Initialize automation engine after server starts
     initializeAutomationEngine().catch(console.error);
+    ensureTrendRefreshJob().catch((error) => console.error("[Trend Refresh] Unable to register durable refresh job", error));
   });
 }
 

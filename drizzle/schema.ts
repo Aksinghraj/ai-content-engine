@@ -596,6 +596,24 @@ export type SavedTrend = typeof savedTrends.$inferSelect;
 export type InsertSavedTrend = typeof savedTrends.$inferInsert;
 
 /**
+ * Shared cache for public and AI-estimated trend data. This is deliberately
+ * global rather than user-specific so external APIs and the model are never
+ * called once per page view.
+ */
+export const trendCache = mysqlTable("trendCache", {
+  id: int("id").autoincrement().primaryKey(),
+  cacheKey: varchar("cacheKey", { length: 100 }).notNull().unique(),
+  payload: json("payload").notNull(),
+  generatedAt: timestamp("generatedAt").defaultNow().notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TrendCache = typeof trendCache.$inferSelect;
+export type InsertTrendCache = typeof trendCache.$inferInsert;
+
+/**
  * Content ideas table for storing AI-generated content variations.
  * Stores generated content ideas based on trends.
  */

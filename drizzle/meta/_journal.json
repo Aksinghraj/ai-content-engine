@@ -92,6 +92,13 @@
       "when": 1787226502094,
       "tag": "0012_little_serpent_society",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "5",
+      "when": 1787231789595,
+      "tag": "0013_public_junta",
+      "breakpoints": true
     }
   ]
 }

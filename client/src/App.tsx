@@ -1,6 +1,6 @@
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Redirect, Route, Switch } from "wouter";
+import { Redirect, Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
@@ -83,6 +83,13 @@ function GroupedViralScore() {
 }
 
 function App() {
+  const [location] = useLocation();
+  const applicationPrefixes = [
+    "/dashboard", "/content-studio", "/scheduling", "/automation", "/analytics", "/account", "/billing",
+    "/ai-assistant", "/personal-ai", "/brand-voice", "/calendar", "/content-calendar", "/demo-videos", "/publishing-test-dashboard",
+  ];
+  const showPublicFooter = !applicationPrefixes.some((prefix) => location === prefix || location.startsWith(`${prefix}/`));
+
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="auto" switchable>
@@ -185,7 +192,7 @@ function App() {
             <Route path="/pricing" component={Pricing} />
             <Route path="*" component={NotFound} />
           </Switch>
-          <Footer />
+          {showPublicFooter && <Footer />}
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

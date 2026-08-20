@@ -829,3 +829,10 @@
 - [x] Add deterministic tests for the three-use cap and rolling 24-hour reset behavior
 - [x] Audit all internal application pages for legacy color-token references and correct inconsistencies
 - [x] Verify internal pages remain static except for standard hover/focus transitions
+
+## AI Assistant, Layout & Trending Topics (IN PROGRESS)
+- [x] Compact the AI Assistant empty state and keep its chat input visible without scrolling
+- [x] Eliminate authenticated sidebar/footer overlap on settings and responsive layouts
+- [x] Confirm budget and source policy for X, YouTube, and AI-estimated social trend data
+- [x] Add cached unified trending topics with source labels and brief-field suggestions
+- [x] Add automated coverage for layout contracts, trend mapping, cache, and selection behavior

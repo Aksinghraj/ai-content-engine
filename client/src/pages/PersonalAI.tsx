@@ -119,16 +119,16 @@ export default function PersonalAI() {
 
   return (
     <DashboardLayout>
-      <div className="h-[calc(100vh-200px)] flex flex-col bg-gradient-to-br from-slate-950 via-purple-950/30 to-slate-950 rounded-2xl border border-slate-800 overflow-hidden">
+      <div className="h-[min(680px,calc(100dvh-10rem))] min-h-[560px] flex flex-col rounded-2xl border border-[#26262b] bg-[#09090b] overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 border-b border-slate-800 px-6 py-4 flex items-center justify-between">
+        <div className="border-b border-[#26262b] bg-[#141417] px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg lumae-gradient-cta flex items-center justify-center">
               <Brain className="w-6 h-6 text-white" />
             </div>
             <div>
               <h2 className="text-xl font-bold">AI Assistant</h2>
-              <p className="text-xs text-slate-400">Powered by Advanced AI</p>
+              <p className="text-xs text-[#9a9aa2]">Powered by Advanced AI</p>
             </div>
           </div>
           <Button
@@ -143,15 +143,15 @@ export default function PersonalAI() {
         </div>
 
         {/* Messages Area */}
-        <ScrollArea className="flex-1 p-6" ref={scrollRef}>
+        <ScrollArea className="flex-1 min-h-0 p-6" ref={scrollRef}>
           <div className="space-y-4">
             {messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-96 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center mb-4">
-                  <Sparkles className="w-8 h-8 text-purple-400" />
+              <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#6366f1]/35 bg-[#141417]">
+                  <Sparkles className="h-7 w-7 text-[#8b5cf6]" />
                 </div>
                 <h3 className="text-2xl font-bold mb-2">Start a Conversation</h3>
-                <p className="text-slate-400 max-w-sm">
+                <p className="max-w-sm text-[#9a9aa2]">
                   Ask me anything about content creation, marketing, business, coding, or any other topic. I'm here to help!
                 </p>
               </div>
@@ -167,12 +167,12 @@ export default function PersonalAI() {
                     className={`max-w-md lg:max-w-2xl rounded-2xl px-4 py-3 ${
                       msg.role === "user"
                         ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                        : "bg-slate-800/50 border border-slate-700 text-slate-100"
+                        : "bg-[#141417] border border-[#26262b] text-[#f5f5f7]"
                     }`}
                   >
                     <p className="text-sm leading-relaxed">{msg.content}</p>
                     {msg.role === "assistant" && (
-                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-700">
+                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[#26262b]">
                         <Button
                           size="sm"
                           variant="ghost"
@@ -203,9 +203,9 @@ export default function PersonalAI() {
             )}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-slate-800/50 border border-slate-700 rounded-2xl px-4 py-3 flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
-                  <span className="text-sm text-slate-400">Thinking...</span>
+                <div className="bg-[#141417] border border-[#26262b] rounded-2xl px-4 py-3 flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-[#8b5cf6]" />
+                  <span className="text-sm text-[#9a9aa2]">Thinking...</span>
                 </div>
               </div>
             )}
@@ -213,7 +213,7 @@ export default function PersonalAI() {
         </ScrollArea>
 
         {/* Input Area */}
-        <div className="border-t border-slate-800 bg-slate-900/50 p-4">
+        <div className="border-t border-[#26262b] bg-[#141417] p-4">
           <div className="flex gap-3">
             <Textarea
               value={input}

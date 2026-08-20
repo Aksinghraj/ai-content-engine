@@ -109,6 +109,17 @@ const LANGUAGES = [
   { code: "pa", name: "Punjabi" },
 ];
 
+type UnifiedTrendTopic = {
+  id: string;
+  title: string;
+  source: "youtube" | "instagram" | "facebook" | "tiktok" | "twitter";
+  dataKind: "live" | "ai_estimated";
+  suggestedStyle: string;
+  suggestedGoal: string;
+};
+
+const sourceLabel = (topic: UnifiedTrendTopic) => `${topic.dataKind === "live" ? "Live" : "AI-estimated"} ${topic.source === "twitter" ? "X" : topic.source[0].toUpperCase() + topic.source.slice(1)}`;
+
 export default function Generator() {
   const { user, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
@@ -189,6 +200,17 @@ export default function Generator() {
       console.error("Clipboard error:", error);
       toast.error(`Failed to copy ${label}. Please try again.`);
     }
+  };
+
+  const applyTrendToBrief = (topic: UnifiedTrendTopic) => {
+    setTrendingTopics([topic.title]);
+    setFormData((current) => ({
+      ...current,
+      niche: topic.title,
+      contentStyle: topic.suggestedStyle,
+      goal: topic.suggestedGoal,
+    }));
+    toast.success(`Applied “${topic.title}” to your brief`);
   };
 
   const exportContent = (format: "pdf" | "csv" | "txt" | "json") => {
@@ -427,39 +449,38 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
                     </Select>
                   </div>
 
-                  {/* Trending Topics */}
+                  {/* Unified cached trends: Live YouTube + clearly labelled AI estimates. */}
                   {trendingQuery.data?.data && trendingQuery.data.data.length > 0 && (
                     <div>
-                      <Label className="text-slate-300 flex items-center gap-2">
-                        <Flame className="w-3 h-3 text-orange-400" />
-                        Trending Now
+                      <Label className="flex items-center gap-2 text-[#f5f5f7]">
+                        <Flame className="h-3 w-3 text-[#f59e0b]" />
+                        Trending Topics
                       </Label>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {trendingQuery.data.data.slice(0, 6).map((topic: any, i: number) => (
+                      <p className="mt-1 text-xs leading-relaxed text-[#9a9aa2]">
+                        Live YouTube topics and clearly labelled AI-estimated social signals. Choose one to fill Niche, Style, and Goal.
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {(trendingQuery.data.data as UnifiedTrendTopic[]).slice(0, 10).map((topic) => (
                           <button
-                            key={i}
+                            key={topic.id}
                             type="button"
-                            onClick={() => {
-                              const topicTitle = topic.title || topic;
-                              setTrendingTopics(prev => 
-                                prev.includes(topicTitle) 
-                                  ? prev.filter(t => t !== topicTitle)
-                                  : [...prev, topicTitle]
-                              );
-                            }}
-                            className={`text-xs px-2 py-1 rounded-full border transition-all ${
-                              trendingTopics.includes(topic.title || topic)
-                                ? 'bg-purple-600 border-purple-500 text-white'
-                                : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:border-purple-500/50'
+                            onClick={() => applyTrendToBrief(topic)}
+                            className={`rounded-full border px-2.5 py-1.5 text-left text-xs transition-colors ${
+                              trendingTopics.includes(topic.title)
+                                ? "border-[#6366f1] bg-[#6366f1]/20 text-[#f5f5f7]"
+                                : "border-[#26262b] bg-[#141417] text-[#f5f5f7] hover:border-[#8b5cf6]"
                             }`}
                           >
-                            {topic.title || topic}
+                            <span className="font-medium">{topic.title}</span>
+                            <span className={`ml-1.5 text-[10px] ${topic.dataKind === "live" ? "text-[#06b6d4]" : "text-[#9a9aa2]"}`}>
+                              {sourceLabel(topic)}
+                            </span>
                           </button>
                         ))}
                       </div>
                       {trendingTopics.length > 0 && (
-                        <p className="text-xs text-purple-400 mt-1">
-                          {trendingTopics.length} trend(s) selected - content will follow these topics
+                        <p className="mt-2 text-xs text-[#8b5cf6]">
+                          Selected topic will guide generation; you can still edit the suggested fields.
                         </p>
                       )}
                     </div>
