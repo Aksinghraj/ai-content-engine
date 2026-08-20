@@ -1,73 +1,24 @@
-import { getActiveAutomationSchedules, saveContentHistory, logAutomationExecution } from "../db";
+import type { AutomationSchedule } from "../../drizzle/schema";
+import { logAutomationExecution, saveContentHistory } from "../db";
+import { getSocialConnectionByPlatform } from "../db/social";
 import { generateContentPackage } from "./contentGenerator";
-import * as cron from "node-cron";
+import { postToMultiplePlatforms } from "./socialMediaPosting";
 
-interface ScheduledJob {
-  scheduleId: number;
-  task: cron.ScheduledTask;
-}
+const PUBLISHABLE_PLATFORMS = new Set([
+  "instagram",
+  "facebook",
+  "twitter",
+  "linkedin",
+  "youtube",
+  "tiktok",
+]);
 
-const activeJobs = new Map<number, ScheduledJob>();
-
-export async function initializeAutomationEngine() {
-  console.log("[Automation Engine] Initializing...");
-  
+/**
+ * The platform-managed Heartbeat callback invokes this executor. No in-process
+ * timers are used, so schedules survive autoscaling and sandbox restarts.
+ */
+export async function executeAutomation(schedule: AutomationSchedule) {
   try {
-    const schedules = await getActiveAutomationSchedules();
-    
-    for (const schedule of schedules) {
-      if (schedule.isActive) {
-        scheduleAutomation(schedule);
-      }
-    }
-    
-    console.log(`[Automation Engine] Initialized with ${schedules.length} active schedules`);
-  } catch (error) {
-    console.error("[Automation Engine] Failed to initialize:", error);
-  }
-}
-
-export function scheduleAutomation(schedule: any) {
-  try {
-    // Stop existing job if it exists
-    if (activeJobs.has(schedule.id)) {
-      const existingJob = activeJobs.get(schedule.id);
-      if (existingJob) {
-        existingJob.task.stop();
-        activeJobs.delete(schedule.id);
-      }
-    }
-
-    // Create new scheduled task
-    const task = cron.schedule(schedule.cronExpression, async () => {
-      await executeAutomation(schedule);
-    });
-
-    activeJobs.set(schedule.id, { scheduleId: schedule.id, task });
-    console.log(`[Automation Engine] Scheduled task ${schedule.id}: ${schedule.name}`);
-  } catch (error) {
-    console.error(`[Automation Engine] Failed to schedule task ${schedule.id}:`, error);
-  }
-}
-
-export function stopAutomation(scheduleId: number) {
-  try {
-    const job = activeJobs.get(scheduleId);
-    if (job) {
-      job.task.stop();
-      activeJobs.delete(scheduleId);
-      console.log(`[Automation Engine] Stopped task ${scheduleId}`);
-    }
-  } catch (error) {
-    console.error(`[Automation Engine] Failed to stop task ${scheduleId}:`, error);
-  }
-}
-
-async function executeAutomation(schedule: any) {
-  console.log(`[Automation] Executing schedule: ${schedule.name} (ID: ${schedule.id})`);
-  
-  try {
-    // Generate content using the schedule parameters
     const generatedContent = await generateContentPackage({
       niche: schedule.niche,
       targetAudience: schedule.targetAudience,
@@ -76,7 +27,6 @@ async function executeAutomation(schedule: any) {
       contentStyle: schedule.contentStyle,
     });
 
-    // Save to content history
     await saveContentHistory({
       userId: schedule.userId,
       niche: schedule.niche,
@@ -87,46 +37,49 @@ async function executeAutomation(schedule: any) {
       generatedContent: generatedContent as any,
     });
 
-    // Log execution success
-    await logAutomationExecution(
+    if (!PUBLISHABLE_PLATFORMS.has(schedule.platform)) {
+      throw new Error(`Unsupported scheduled publishing platform: ${schedule.platform}`);
+    }
+
+    const connection = await getSocialConnectionByPlatform(schedule.userId, schedule.platform);
+    if (!connection?.isConnected) {
+      throw new Error(`${schedule.platform} account is not connected`);
+    }
+    if (!connection.autoPost) {
+      throw new Error(`Auto-Post is disabled for the connected ${schedule.platform} account`);
+    }
+
+    const [publishResult] = await postToMultiplePlatforms(
       schedule.userId,
-      schedule.id,
-      'success',
-      generatedContent
+      [schedule.platform],
+      {
+        text: generatedContent.caption,
+        hashtags: generatedContent.hashtags,
+      },
     );
 
-    console.log(`[Automation] Successfully executed schedule: ${schedule.name}`);
-    
-    return {
-      success: true,
-      scheduleId: schedule.id,
-      executedAt: new Date(),
+    if (!publishResult?.success) {
+      throw new Error(publishResult?.error || `Failed to publish to ${schedule.platform}`);
+    }
+
+    const execution = {
+      generatedContent,
+      published: {
+        platform: schedule.platform,
+        postId: publishResult.postId,
+      },
     };
+
+    await logAutomationExecution(schedule.userId, schedule.id, "success", execution);
+    return { success: true, scheduleId: schedule.id, postId: publishResult.postId };
   } catch (error) {
-    console.error(`[Automation] Failed to execute schedule ${schedule.id}:`, error);
-    
-    // Log execution failure
-    await logAutomationExecution(
-      schedule.userId,
-      schedule.id,
-      'failed',
-      undefined,
-      error instanceof Error ? error.message : "Unknown error"
-    );
-    
-    return {
-      success: false,
-      scheduleId: schedule.id,
-      error: error instanceof Error ? error.message : "Unknown error",
-      executedAt: new Date(),
-    };
+    const message = error instanceof Error ? error.message : "Unknown automation error";
+    await logAutomationExecution(schedule.userId, schedule.id, "failed", undefined, message);
+    throw error;
   }
 }
 
-export function getActiveJobCount(): number {
-  return activeJobs.size;
-}
-
-export function getJobStatus(scheduleId: number): boolean {
-  return activeJobs.has(scheduleId);
+/** Kept only for server startup compatibility; Heartbeat owns all actual schedules. */
+export async function initializeAutomationEngine() {
+  console.log("[Automation] Heartbeat-managed scheduling enabled; no in-process jobs started.");
 }

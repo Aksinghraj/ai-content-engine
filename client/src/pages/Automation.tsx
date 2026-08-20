@@ -19,10 +19,10 @@ export default function Automation() {
     name: "",
     niche: "",
     targetAudience: "",
-    platform: "Instagram",
+    platform: "instagram",
     goal: "growth",
     contentStyle: "educational",
-    cronExpression: "0 0 * * MON",
+    cronExpression: "0 0 0 * * MON",
   });
 
   // Fetch automation schedules
@@ -38,10 +38,10 @@ export default function Automation() {
         name: "",
         niche: "",
         targetAudience: "",
-        platform: "Instagram",
+        platform: "instagram",
         goal: "growth",
         contentStyle: "educational",
-        cronExpression: "0 0 * * MON",
+        cronExpression: "0 0 0 * * MON",
       });
       setIsCreating(false);
       refetch();
@@ -142,8 +142,8 @@ export default function Automation() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header Section */}
         <div className="mb-12">
-          <h2 className="text-3xl font-bold text-white mb-2">Schedule Automatic Content Generation</h2>
-          <p className="text-slate-400">Create automated schedules to generate content at specific times</p>
+          <h2 className="text-3xl font-bold text-white mb-2">Schedule Automatic Social Publishing</h2>
+          <p className="text-slate-400">Schedules generate content and publish it only to a connected account with Auto-Post enabled.</p>
         </div>
 
         {/* Create New Schedule Button */}
@@ -162,7 +162,7 @@ export default function Automation() {
           <Card className="mb-8 border-slate-700 bg-slate-800/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="text-white">Create Automation Schedule</CardTitle>
-              <CardDescription className="text-slate-400">Set up a new automated content generation schedule</CardDescription>
+              <CardDescription className="text-slate-400">Connect the selected account and enable Auto-Post before its first scheduled run.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid md:grid-cols-2 gap-4">
@@ -214,11 +214,12 @@ export default function Automation() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-800 border-slate-700">
-                      <SelectItem value="Instagram">Instagram</SelectItem>
-                      <SelectItem value="Twitter">Twitter</SelectItem>
-                      <SelectItem value="LinkedIn">LinkedIn</SelectItem>
-                      <SelectItem value="YouTube">YouTube</SelectItem>
-                      <SelectItem value="TikTok">TikTok</SelectItem>
+                      <SelectItem value="instagram">Instagram</SelectItem>
+                      <SelectItem value="facebook">Facebook</SelectItem>
+                      <SelectItem value="twitter">Twitter / X</SelectItem>
+                      <SelectItem value="linkedin">LinkedIn</SelectItem>
+                      <SelectItem value="youtube">YouTube</SelectItem>
+                      <SelectItem value="tiktok">TikTok</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

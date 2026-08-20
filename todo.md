@@ -783,6 +783,6 @@
 - [x] Audit OAuth callback, encrypted token storage, refresh, and disconnect paths
 - [x] Audit social publishing and scheduled automation execution paths
 - [x] Run targeted tests and document which provider flows are operational versus awaiting provider-side approval
-- [ ] Replace non-durable node-cron automation with platform-managed scheduled execution
-- [ ] Ensure a scheduled automation publishes only to a connected account with Auto-Post enabled
-- [ ] Record deterministic publish outcomes and retries for scheduled social posts
+- [x] Replace non-durable node-cron automation with platform-managed scheduled execution
+- [x] Ensure a scheduled automation publishes only to a connected account with Auto-Post enabled
+- [x] Record deterministic publish outcomes and retries for scheduled social posts

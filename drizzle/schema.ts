@@ -105,6 +105,8 @@ export const automationSchedules = mysqlTable("automationSchedules", {
   contentStyle: varchar("contentStyle", { length: 100 }).notNull(),
   // Cron expression for scheduling
   cronExpression: varchar("cronExpression", { length: 100 }).notNull(),
+  // Manus Heartbeat task UID; durable schedule lifecycle is keyed by this value.
+  scheduleCronTaskUid: varchar("scheduleCronTaskUid", { length: 65 }).unique(),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

@@ -97,7 +97,7 @@ function App() {
             <Route path="/ai-assistant" component={AIAssistant} />
             <Route path="/personal-ai" component={PersonalAI} />
             <Route path="/social-automation-v3" component={SocialAutomationV3} />
-            <Route path="/social-automation" component={SocialAutomation} />
+            <Route path="/social-automation" component={Automation} />
             <Route path="/post-scheduling" component={PostScheduling} />
             <Route path="/demo-videos" component={DemoVideos} />
             <Route path="/simple-automation" component={SimpleAutomation} />

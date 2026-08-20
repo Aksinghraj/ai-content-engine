@@ -1,115 +1,130 @@
+import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import { parse as parseCookie } from "cookie";
+import { COOKIE_NAME } from "@shared/const";
+import { protectedProcedure, router } from "../_core/trpc";
+import { createHeartbeatJob, deleteHeartbeatJob, updateHeartbeatJob } from "../_core/heartbeat";
 import {
   createAutomationSchedule,
+  deleteAutomationScheduleForUser,
+  getAutomationScheduleByIdForUser,
   getAutomationSchedulesByUserId,
-  updateAutomationSchedule,
-  deleteAutomationSchedule,
-  deductCredits,
-  getUserCredits,
+  updateAutomationScheduleForUser,
 } from "../db";
-import { TRPCError } from "@trpc/server";
-import { protectedProcedure, router } from "../_core/trpc";
-import { z } from "zod";
+
+const platformSchema = z
+  .string()
+  .min(1)
+  .refine(
+    (value) => ["instagram", "facebook", "twitter", "linkedin", "youtube", "tiktok"].includes(value),
+    "Unsupported publishing platform",
+  );
+
+const automationInput = z.object({
+  name: z.string().min(1).max(255),
+  niche: z.string().min(1).max(255),
+  targetAudience: z.string().min(1).max(255),
+  platform: platformSchema,
+  goal: z.string().min(1).max(100),
+  contentStyle: z.string().min(1).max(100),
+  cronExpression: z.string().min(1).max(100),
+});
+
+function normalizeCron(expression: string) {
+  const parts = expression.trim().split(/\s+/);
+  if (parts.length === 5) return `0 ${parts.join(" ")}`;
+  if (parts.length === 6) return parts.join(" ");
+  throw new TRPCError({ code: "BAD_REQUEST", message: "Schedule must use a 5- or 6-field cron expression." });
+}
+
+function getUserSession(cookieHeader: string | undefined) {
+  return parseCookie(cookieHeader ?? "")[COOKIE_NAME] ?? "";
+}
 
 export const automationRouter = router({
-  create: protectedProcedure
-    .input(
-      z.object({
-        name: z.string().min(1),
-        niche: z.string().min(1),
-        targetAudience: z.string().min(1),
-        platform: z.string().min(1),
-        goal: z.string().min(1),
-        contentStyle: z.string().min(1),
-        cronExpression: z.string().min(1),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      try {
-        const result = await createAutomationSchedule(ctx.user.id, input);
-        const existingSchedules = await getAutomationSchedulesByUserId(ctx.user.id);
-        return {
-          success: true,
-          message: "Automation created (free)",
-          data: result,
-          creditsRemaining: null,
-          automationCount: existingSchedules.length,
-          freeAutomationsRemaining: null,
-        };
-      } catch (error) {
-        console.error("Error creating automation:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create automation",
-        });
-      }
-    }),
+  create: protectedProcedure.input(automationInput).mutation(async ({ ctx, input }) => {
+    const schedule = await createAutomationSchedule(ctx.user.id, {
+      ...input,
+      cronExpression: normalizeCron(input.cronExpression),
+    });
+    if (!schedule) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to create automation." });
 
-  list: protectedProcedure.query(async ({ ctx }) => {
     try {
+      const job = await createHeartbeatJob(
+        {
+          name: `social-automation-${ctx.user.id}-${schedule.id}`,
+          cron: schedule.cronExpression,
+          path: "/api/scheduled/social-automation",
+          description: `Lumae scheduled ${schedule.platform} publishing for ${schedule.name}`,
+        },
+        getUserSession(ctx.req.headers.cookie),
+      );
+      const persisted = await updateAutomationScheduleForUser(schedule.id, ctx.user.id, {
+        scheduleCronTaskUid: job.taskUid,
+      });
       const schedules = await getAutomationSchedulesByUserId(ctx.user.id);
       return {
         success: true,
-        data: schedules,
-        creditsRemaining: null,
+        data: persisted,
+        nextExecutionAt: job.nextExecutionAt,
         automationCount: schedules.length,
         freeAutomationsRemaining: null,
-        subscriptionTier: null,
+        creditsRemaining: null,
       };
     } catch (error) {
-      console.error("Error fetching automations:", error);
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to fetch automations",
-      });
+      await deleteAutomationScheduleForUser(schedule.id, ctx.user.id);
+      throw error;
     }
   }),
 
+  list: protectedProcedure.query(async ({ ctx }) => {
+    const schedules = await getAutomationSchedulesByUserId(ctx.user.id);
+    return {
+      success: true,
+      data: schedules,
+      automationCount: schedules.length,
+      freeAutomationsRemaining: null,
+      creditsRemaining: null,
+      subscriptionTier: null,
+    };
+  }),
+
   update: protectedProcedure
-    .input(
-      z.object({
-        id: z.string().min(1),
-        name: z.string().min(1).optional(),
-        niche: z.string().min(1).optional(),
-        targetAudience: z.string().min(1).optional(),
-        platform: z.string().min(1).optional(),
-        goal: z.string().min(1).optional(),
-        contentStyle: z.string().min(1).optional(),
-        cronExpression: z.string().min(1).optional(),
-        isActive: z.boolean().optional(),
-      })
-    )
+    .input(automationInput.partial().extend({ id: z.string().min(1), isActive: z.boolean().optional() }))
     .mutation(async ({ ctx, input }) => {
-      try {
-        const result = await updateAutomationSchedule(parseInt(input.id), input);
-        return {
-          success: true,
-          message: "Automation updated",
-          data: result,
-        };
-      } catch (error) {
-        console.error("Error updating automation:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update automation",
-        });
+      const scheduleId = Number(input.id);
+      const existing = await getAutomationScheduleByIdForUser(scheduleId, ctx.user.id);
+      if (!existing) throw new TRPCError({ code: "NOT_FOUND", message: "Automation not found." });
+      if (!existing.scheduleCronTaskUid) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "This legacy automation must be recreated to enable durable scheduling." });
       }
+
+      const cronExpression = input.cronExpression ? normalizeCron(input.cronExpression) : undefined;
+      await updateHeartbeatJob(
+        existing.scheduleCronTaskUid,
+        {
+          cron: cronExpression,
+          enable: input.isActive,
+          description: input.name ? `Lumae scheduled ${input.platform ?? existing.platform} publishing for ${input.name}` : undefined,
+        },
+        getUserSession(ctx.req.headers.cookie),
+      );
+
+      const { id: _id, ...updates } = input;
+      const persisted = await updateAutomationScheduleForUser(scheduleId, ctx.user.id, {
+        ...updates,
+        ...(cronExpression ? { cronExpression } : {}),
+      });
+      return { success: true, data: persisted };
     }),
 
-  delete: protectedProcedure
-    .input(z.object({ id: z.string().min(1) }))
-    .mutation(async ({ ctx, input }) => {
-      try {
-        await deleteAutomationSchedule(parseInt(input.id));
-        return {
-          success: true,
-          message: "Automation deleted",
-        };
-      } catch (error) {
-        console.error("Error deleting automation:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to delete automation",
-        });
-      }
-    }),
+  delete: protectedProcedure.input(z.object({ id: z.string().min(1) })).mutation(async ({ ctx, input }) => {
+    const schedule = await getAutomationScheduleByIdForUser(Number(input.id), ctx.user.id);
+    if (!schedule) throw new TRPCError({ code: "NOT_FOUND", message: "Automation not found." });
+    if (schedule.scheduleCronTaskUid) {
+      await deleteHeartbeatJob(schedule.scheduleCronTaskUid, getUserSession(ctx.req.headers.cookie));
+    }
+    await deleteAutomationScheduleForUser(schedule.id, ctx.user.id);
+    return { success: true };
+  }),
 });

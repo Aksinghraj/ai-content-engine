@@ -3,6 +3,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import {
   AlertCircle,
   CheckCircle2,
@@ -72,6 +73,7 @@ export default function ConnectedAccounts() {
   // Mutations
   const disconnectMutation = trpc.socialOAuthIntegration.disconnectAccount.useMutation();
   const refreshTokenMutation = trpc.socialOAuthIntegration.refreshToken.useMutation();
+  const autoPostMutation = trpc.socialOAuthIntegration.setAutoPost.useMutation();
 
   // Build connections map
   useEffect(() => {
@@ -153,6 +155,16 @@ export default function ConnectedAccounts() {
     }
   };
 
+  const handleAutoPostChange = async (platformId: string, enabled: boolean) => {
+    try {
+      await autoPostMutation.mutateAsync({ platform: platformId as any, enabled });
+      toast.success(`Auto-Post ${enabled ? "enabled" : "disabled"} for ${platformId}`);
+      refetch();
+    } catch (error) {
+      toast.error(`Unable to update Auto-Post: ${(error as Error).message || "Unknown error"}`);
+    }
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -214,6 +226,19 @@ export default function ConnectedAccounts() {
                           {new Date(isConnected.tokenExpiresAt).toLocaleDateString()}
                         </p>
                       )}
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-lg border border-slate-600 px-3 py-2">
+                      <div>
+                        <p className="text-sm font-medium text-white">Auto-Post</p>
+                        <p className="text-xs text-slate-400">Required for scheduled publishing</p>
+                      </div>
+                      <Switch
+                        checked={Boolean(isConnected.autoPost)}
+                        disabled={autoPostMutation.isPending}
+                        onCheckedChange={(enabled) => handleAutoPostChange(platform.id, enabled)}
+                        aria-label={`Toggle Auto-Post for ${platform.name}`}
+                      />
                     </div>
 
                     <div className="flex gap-2">

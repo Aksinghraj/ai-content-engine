@@ -274,7 +274,13 @@ export async function createAutomationSchedule(userId: number, schedule: any) {
       cronExpression: schedule.cronExpression,
       isActive: true,
     });
-    return result;
+    const scheduleId = Number((result as any).insertId);
+    const created = await db
+      .select()
+      .from(automationSchedules)
+      .where(eq(automationSchedules.id, scheduleId))
+      .limit(1);
+    return created[0] ?? null;
   } catch (error) {
     console.error("[Database] Failed to create automation schedule:", error);
     throw error;
@@ -299,6 +305,50 @@ export async function getAutomationSchedulesByUserId(userId: number) {
     console.error("[Database] Failed to get automation schedules:", error);
     return [];
   }
+}
+
+export async function getAutomationScheduleByIdForUser(scheduleId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db
+    .select()
+    .from(automationSchedules)
+    .where(and(eq(automationSchedules.id, scheduleId), eq(automationSchedules.userId, userId)))
+    .limit(1);
+  return result[0] ?? null;
+}
+
+export async function getAutomationScheduleByTaskUid(taskUid: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db
+    .select()
+    .from(automationSchedules)
+    .where(eq(automationSchedules.scheduleCronTaskUid, taskUid))
+    .limit(1);
+  return result[0] ?? null;
+}
+
+export async function updateAutomationScheduleForUser(
+  scheduleId: number,
+  userId: number,
+  updates: Partial<typeof automationSchedules.$inferInsert>,
+) {
+  const db = await getDb();
+  if (!db) return null;
+  await db
+    .update(automationSchedules)
+    .set(updates)
+    .where(and(eq(automationSchedules.id, scheduleId), eq(automationSchedules.userId, userId)));
+  return getAutomationScheduleByIdForUser(scheduleId, userId);
+}
+
+export async function deleteAutomationScheduleForUser(scheduleId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  return db
+    .delete(automationSchedules)
+    .where(and(eq(automationSchedules.id, scheduleId), eq(automationSchedules.userId, userId)));
 }
 
 export async function updateAutomationSchedule(scheduleId: number, updates: any) {

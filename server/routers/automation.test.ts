@@ -1,271 +1,100 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach, vi } from "vitest";
 import { appRouter } from "../routers";
-import { TrpcContext } from "../_core/trpc";
 import * as db from "../db";
+import * as heartbeat from "../_core/heartbeat";
 
-// Mock database functions
 vi.mock("../db", () => ({
-  getAutomationSchedulesByUserId: vi.fn(),
   createAutomationSchedule: vi.fn(),
-  updateAutomationSchedule: vi.fn(),
-  deleteAutomationSchedule: vi.fn(),
-  deductCredits: vi.fn(),
-  getUserCredits: vi.fn(),
+  getAutomationSchedulesByUserId: vi.fn(),
+  getAutomationScheduleByIdForUser: vi.fn(),
+  updateAutomationScheduleForUser: vi.fn(),
+  deleteAutomationScheduleForUser: vi.fn(),
 }));
 
-const createMockContext = (subscriptionTier: "free" | "pro" = "free"): TrpcContext => ({
-  user: {
-    id: "test-user-123",
-    email: "test@example.com",
-    subscriptionTier,
-    role: "user" as const,
-  },
-  req: {
-    headers: {
-      origin: "http://localhost:3000",
-    },
-  } as any,
-  res: {} as any,
-});
+vi.mock("../_core/heartbeat", () => ({
+  createHeartbeatJob: vi.fn(),
+  updateHeartbeatJob: vi.fn(),
+  deleteHeartbeatJob: vi.fn(),
+}));
 
-describe("Automation Router - 3 Free Automations System", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+const context = () => ({
+  user: { id: 7, openId: "user-7", name: "Test User", email: "test@example.com", role: "user" },
+  req: { headers: { cookie: "app_session_id=test-session" } },
+  res: {},
+}) as any;
+
+const createdSchedule = {
+  id: 42,
+  userId: 7,
+  name: "Daily X post",
+  niche: "Technology",
+  targetAudience: "Founders",
+  platform: "twitter",
+  goal: "Engagement",
+  contentStyle: "Professional",
+  cronExpression: "0 0 9 * * *",
+  scheduleCronTaskUid: null,
+  isActive: true,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
+describe("Heartbeat-backed automation router", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("creates a six-field Heartbeat job and persists its task UID", async () => {
+    vi.mocked(db.createAutomationSchedule).mockResolvedValue(createdSchedule as any);
+    vi.mocked(heartbeat.createHeartbeatJob).mockResolvedValue({ taskUid: "task-42", nextExecutionAt: null });
+    vi.mocked(db.updateAutomationScheduleForUser).mockResolvedValue({ ...createdSchedule, scheduleCronTaskUid: "task-42" } as any);
+    vi.mocked(db.getAutomationSchedulesByUserId).mockResolvedValue([{ ...createdSchedule, scheduleCronTaskUid: "task-42" }] as any);
+
+    const result = await appRouter.createCaller(context()).automation.create({
+      name: "Daily X post",
+      niche: "Technology",
+      targetAudience: "Founders",
+      platform: "twitter",
+      goal: "Engagement",
+      contentStyle: "Professional",
+      cronExpression: "0 9 * * *",
+    });
+
+    expect(heartbeat.createHeartbeatJob).toHaveBeenCalledWith(
+      expect.objectContaining({ cron: "0 0 9 * * *", path: "/api/scheduled/social-automation" }),
+      "test-session",
+    );
+    expect(db.updateAutomationScheduleForUser).toHaveBeenCalledWith(42, 7, { scheduleCronTaskUid: "task-42" });
+    expect(result.success).toBe(true);
+    expect(result.data?.scheduleCronTaskUid).toBe("task-42");
   });
 
-  describe("Free tier users", () => {
-    it("should allow creating automations (free for all)", async () => {
-      vi.mocked(db.getAutomationSchedulesByUserId).mockResolvedValueOnce([]);
-      vi.mocked(db.createAutomationSchedule).mockResolvedValueOnce({
-        id: "automation-1",
-        userId: "test-user-123",
-        name: "Test Automation",
-        niche: "Tech",
-        targetAudience: "Developers",
-        platform: "twitter",
-        goal: "Increase engagement",
-        contentStyle: "casual",
-        cronExpression: "0 0 * * *",
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as any);
+  it("updates an owned durable job before updating its schedule row", async () => {
+    vi.mocked(db.getAutomationScheduleByIdForUser).mockResolvedValue({ ...createdSchedule, scheduleCronTaskUid: "task-42" } as any);
+    vi.mocked(heartbeat.updateHeartbeatJob).mockResolvedValue({ nextExecutionAt: null });
+    vi.mocked(db.updateAutomationScheduleForUser).mockResolvedValue({ ...createdSchedule, cronExpression: "0 0 10 * * *" } as any);
 
-      const caller = appRouter.createCaller(createMockContext("free"));
-
-      const result = await caller.automation.create({
-        name: "Test Automation",
-        niche: "Tech",
-        targetAudience: "Developers",
-        platform: "twitter",
-        goal: "Increase engagement",
-        contentStyle: "casual",
-        cronExpression: "0 0 * * *",
-      });
-
-      expect(result.success).toBe(true);
-      expect(result.message).toBe("Automation created (free)");
-      expect(result.freeAutomationsRemaining).toBeNull();
+    const result = await appRouter.createCaller(context()).automation.update({
+      id: "42",
+      cronExpression: "0 10 * * *",
+      isActive: false,
     });
 
-    it("should allow unlimited automations for free tier users (free for all)", async () => {
-      // Mock 10 existing automations
-      const existingAutomations = Array.from({ length: 10 }, (_, i) => ({
-        id: `auto-${i + 1}`,
-      }));
-      vi.mocked(db.getAutomationSchedulesByUserId).mockResolvedValueOnce(existingAutomations as any);
-      vi.mocked(db.createAutomationSchedule).mockResolvedValueOnce({
-        id: "automation-11",
-        userId: "test-user-123",
-        name: "Test Automation 11",
-        niche: "Tech",
-        targetAudience: "Developers",
-        platform: "twitter",
-        goal: "Increase engagement",
-        contentStyle: "casual",
-        cronExpression: "0 0 * * *",
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as any);
-
-      const caller = appRouter.createCaller(createMockContext("free"));
-
-      const result = await caller.automation.create({
-        name: "Test Automation 11",
-        niche: "Tech",
-        targetAudience: "Developers",
-        platform: "twitter",
-        goal: "Increase engagement",
-        contentStyle: "casual",
-        cronExpression: "0 0 * * *",
-      });
-
-      expect(result.success).toBe(true);
-      expect(result.message).toBe("Automation created (free)");
-    });
-
-    it("should return unlimited automations for free users (free for all)", async () => {
-      // Mock 10 existing automations
-      const existingAutomations = Array.from({ length: 10 }, (_, i) => ({
-        id: `auto-${i + 1}`,
-      }));
-      vi.mocked(db.getAutomationSchedulesByUserId).mockResolvedValueOnce(existingAutomations as any);
-
-      const caller = appRouter.createCaller(createMockContext("free"));
-
-      const result = await caller.automation.list();
-
-      expect(result.success).toBe(true);
-      expect(result.automationCount).toBe(10);
-      expect(result.freeAutomationsRemaining).toBeNull();
-    });
+    expect(heartbeat.updateHeartbeatJob).toHaveBeenCalledWith(
+      "task-42",
+      expect.objectContaining({ cron: "0 0 10 * * *", enable: false }),
+      "test-session",
+    );
+    expect(result.success).toBe(true);
   });
 
-  describe("Pro tier users", () => {
-    it("should allow creating automations for pro users (free for all)", async () => {
-      vi.mocked(db.getAutomationSchedulesByUserId).mockResolvedValueOnce([]);
-      vi.mocked(db.createAutomationSchedule).mockResolvedValueOnce({
-        id: "automation-1",
-        userId: "test-user-123",
-        name: "Test Automation",
-        niche: "Tech",
-        targetAudience: "Developers",
-        platform: "twitter",
-        goal: "Increase engagement",
-        contentStyle: "casual",
-        cronExpression: "0 0 * * *",
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as any);
+  it("deletes the owned Heartbeat job before deleting its schedule row", async () => {
+    vi.mocked(db.getAutomationScheduleByIdForUser).mockResolvedValue({ ...createdSchedule, scheduleCronTaskUid: "task-42" } as any);
+    vi.mocked(heartbeat.deleteHeartbeatJob).mockResolvedValue(undefined);
+    vi.mocked(db.deleteAutomationScheduleForUser).mockResolvedValue({} as any);
 
-      const caller = appRouter.createCaller(createMockContext("pro"));
+    const result = await appRouter.createCaller(context()).automation.delete({ id: "42" });
 
-      const result = await caller.automation.create({
-        name: "Test Automation",
-        niche: "Tech",
-        targetAudience: "Developers",
-        platform: "twitter",
-        goal: "Increase engagement",
-        contentStyle: "casual",
-        cronExpression: "0 0 * * *",
-      });
-
-      expect(result.success).toBe(true);
-      expect(result.message).toBe("Automation created (free)");
-    });
-
-    it("should allow unlimited automations for pro users (free for all)", async () => {
-      // Mock 10 existing automations
-      const existingAutomations = Array.from({ length: 10 }, (_, i) => ({
-        id: `auto-${i + 1}`,
-      }));
-      vi.mocked(db.getAutomationSchedulesByUserId).mockResolvedValueOnce(existingAutomations as any);
-      vi.mocked(db.createAutomationSchedule).mockResolvedValueOnce({
-        id: "automation-11",
-        userId: "test-user-123",
-        name: "Test Automation 11",
-        niche: "Tech",
-        targetAudience: "Developers",
-        platform: "twitter",
-        goal: "Increase engagement",
-        contentStyle: "casual",
-        cronExpression: "0 0 * * *",
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as any);
-
-      const caller = appRouter.createCaller(createMockContext("pro"));
-
-      const result = await caller.automation.create({
-        name: "Test Automation 11",
-        niche: "Tech",
-        targetAudience: "Developers",
-        platform: "twitter",
-        goal: "Increase engagement",
-        contentStyle: "casual",
-        cronExpression: "0 0 * * *",
-      });
-
-      expect(result.success).toBe(true);
-      expect(result.message).toBe("Automation created (free)");
-    });
-
-    it("should handle multiple automations for pro users (free for all)", async () => {
-      // Mock 5 existing automations
-      const existingAutomations = Array.from({ length: 5 }, (_, i) => ({
-        id: `auto-${i + 1}`,
-      }));
-      vi.mocked(db.getAutomationSchedulesByUserId).mockResolvedValueOnce(existingAutomations as any);
-      vi.mocked(db.createAutomationSchedule).mockResolvedValueOnce({
-        id: "automation-6",
-        userId: "test-user-123",
-        name: "Test Automation 6",
-        niche: "Tech",
-        targetAudience: "Developers",
-        platform: "twitter",
-        goal: "Increase engagement",
-        contentStyle: "casual",
-        cronExpression: "0 0 * * *",
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as any);
-
-      const caller = appRouter.createCaller(createMockContext("pro"));
-
-      const result = await caller.automation.create({
-        name: "Test Automation 6",
-        niche: "Tech",
-        targetAudience: "Developers",
-        platform: "twitter",
-        goal: "Increase engagement",
-        contentStyle: "casual",
-        cronExpression: "0 0 * * *",
-      });
-
-      expect(result.success).toBe(true);
-      expect(result.message).toBe("Automation created (free)");
-    });
-
-
-  });
-
-  describe("Automation list endpoint", () => {
-    it("should return automations for free users (free for all)", async () => {
-      vi.mocked(db.getAutomationSchedulesByUserId).mockResolvedValueOnce([
-        { id: "auto-1" },
-        { id: "auto-2" },
-      ] as any);
-
-      const caller = appRouter.createCaller(createMockContext("free"));
-
-      const result = await caller.automation.list();
-
-      expect(result.success).toBe(true);
-      expect(result.automationCount).toBe(2);
-      expect(result.freeAutomationsRemaining).toBeNull();
-      expect(result.subscriptionTier).toBeNull();
-    });
-
-    it("should return automations for pro users (free for all)", async () => {
-      vi.mocked(db.getAutomationSchedulesByUserId).mockResolvedValueOnce([
-        { id: "auto-1" },
-        { id: "auto-2" },
-        { id: "auto-3" },
-        { id: "auto-4" },
-      ] as any);
-
-      const caller = appRouter.createCaller(createMockContext("pro"));
-
-      const result = await caller.automation.list();
-
-      expect(result.success).toBe(true);
-      expect(result.automationCount).toBe(4);
-      expect(result.creditsRemaining).toBeNull();
-      expect(result.subscriptionTier).toBeNull();
-    });
+    expect(heartbeat.deleteHeartbeatJob).toHaveBeenCalledWith("task-42", "test-session");
+    expect(db.deleteAutomationScheduleForUser).toHaveBeenCalledWith(42, 7);
+    expect(result.success).toBe(true);
   });
 });

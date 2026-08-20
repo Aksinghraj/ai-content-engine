@@ -11,6 +11,7 @@ import { serveStatic, setupVite } from "./vite";
 import { handleStripeWebhook, verifyStripeSignature } from "./stripeWebhook";
 import { handleRazorpayWebhook, initializeRazorpayService } from "./razorpayWebhook";
 import { initializeAutomationEngine } from "./automationEngine";
+import { runScheduledAutomation } from "../routes/scheduledAutomation";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
@@ -173,6 +174,7 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "10mb", extended: true }));
   registerStorageProxy(app);
   registerOAuthRoutes(app);
+  app.post("/api/scheduled/social-automation", runScheduledAutomation);
   // tRPC API
   app.use(
     "/api/trpc",

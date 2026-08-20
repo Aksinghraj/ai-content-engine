@@ -1,0 +1,2 @@
+ALTER TABLE `automationSchedules` ADD `scheduleCronTaskUid` varchar(65);--> statement-breakpoint
+ALTER TABLE `automationSchedules` ADD CONSTRAINT `automationSchedules_scheduleCronTaskUid_unique` UNIQUE(`scheduleCronTaskUid`);

@@ -57,6 +57,9 @@ export const socialOAuthIntegrationRouter = router({
         username: connection.username,
         followers: 0,
         isValidated: connection.isValidated,
+        autoPost: connection.autoPost,
+        autoReply: connection.autoReply,
+        tokenExpiresAt: connection.tokenExpiresAt,
         connectedAt: connection.createdAt,
       }));
     } catch (error) {
@@ -112,5 +115,26 @@ export const socialOAuthIntegrationRouter = router({
           message: `Unable to refresh the ${input.platform} connection. Please reconnect the account.`,
         });
       }
+    }),
+
+  setAutoPost: protectedProcedure
+    .input(z.object({ platform: supportedPlatforms, enabled: z.boolean() }))
+    .mutation(async ({ input, ctx }) => {
+      const database = await getDb();
+      if (!database) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable." });
+      }
+
+      await database
+        .update(socialConnections)
+        .set({ autoPost: input.enabled, updatedAt: new Date() })
+        .where(
+          and(
+            eq(socialConnections.userId, ctx.user.id),
+            eq(socialConnections.platform, input.platform),
+            eq(socialConnections.isConnected, true),
+          ),
+        );
+      return { success: true, autoPost: input.enabled };
     }),
 });
