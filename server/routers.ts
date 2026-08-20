@@ -261,6 +261,26 @@ export const appRouter = router({
         return generatedContent;
       }),
 
+    lengthPreferences: protectedProcedure.query(async ({ ctx }) => {
+      return db.getGeneratorLengthPreference(ctx.user.id);
+    }),
+
+    saveLengthPreferences: protectedProcedure
+      .input(z.object({
+        videoLength: z.string().refine((value) => ["15s", "30s", "60s", "90s", "3min", "5min", "custom"].includes(value), "Invalid video length"),
+        scriptLength: z.string().refine((value) => ["brief", "short", "medium", "long", "extended", "custom"].includes(value), "Invalid script length"),
+        customVideoSeconds: z.number().int().min(5).max(3600).optional(),
+        customScriptWordTarget: z.number().int().min(25).max(3000).optional(),
+      }).superRefine((input, refinement) => {
+        if (input.videoLength === "custom" && !input.customVideoSeconds) refinement.addIssue({ code: "custom", path: ["customVideoSeconds"], message: "A custom video duration is required" });
+        if (input.scriptLength === "custom" && !input.customScriptWordTarget) refinement.addIssue({ code: "custom", path: ["customScriptWordTarget"], message: "A custom script word target is required" });
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const saved = await db.saveGeneratorLengthPreference(ctx.user.id, input);
+        if (!saved) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to save length preferences" });
+        return saved;
+      }),
+
     history: protectedProcedure.query(async ({ ctx }) => {
       const history = await getContentHistoryByUserId(ctx.user.id);
       return history.map((item: any) => ({

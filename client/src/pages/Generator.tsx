@@ -97,6 +97,20 @@ const SCRIPT_LENGTHS = [
   { code: "extended", name: "Extended (~800-1200 words)" },
   { code: "custom", name: "Custom word target…" },
 ];
+
+const PLATFORM_LENGTH_PRESETS: Record<string, { videoLength: string; scriptLength: string; label: string }> = {
+  Instagram: { videoLength: "30s", scriptLength: "short", label: "Short-form Reel" },
+  TikTok: { videoLength: "15s", scriptLength: "brief", label: "Fast hook" },
+  YouTube: { videoLength: "3min", scriptLength: "long", label: "Explainer video" },
+  LinkedIn: { videoLength: "60s", scriptLength: "medium", label: "Professional insight" },
+  Twitter: { videoLength: "30s", scriptLength: "short", label: "Concise update" },
+  Facebook: { videoLength: "60s", scriptLength: "medium", label: "Community post" },
+};
+
+const VIDEO_SECONDS: Record<string, number> = { "15s": 15, "30s": 30, "60s": 60, "90s": 90, "3min": 180, "5min": 300 };
+const SCRIPT_WORDS: Record<string, number> = { brief: 50, short: 125, medium: 250, long: 500, extended: 1000 };
+
+const formatDuration = (seconds: number) => seconds >= 60 ? `${Math.floor(seconds / 60)}m ${seconds % 60 ? `${seconds % 60}s` : ""}`.trim() : `${seconds}s`;
 const LANGUAGES = [
   { code: "en", name: "English" },
   { code: "hi", name: "Hindi" },
@@ -153,6 +167,47 @@ export default function Generator() {
   const getHistoryQuery = trpc.content.history.useQuery(undefined, {
     enabled: isAuthenticated,
   });
+  const lengthPreferencesQuery = trpc.content.lengthPreferences.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+  const saveLengthPreferences = trpc.content.saveLengthPreferences.useMutation({
+    onSuccess: () => toast.success("Length defaults saved for your next generation."),
+    onError: (error) => toast.error(error.message || "Unable to save length defaults."),
+  });
+  const [hasRestoredLengthPreferences, setHasRestoredLengthPreferences] = useState(false);
+
+  const platformPreset = PLATFORM_LENGTH_PRESETS[formData.platform];
+  const requestedVideoSeconds = formData.videoLength === "custom" ? Number(formData.customVideoSeconds) : VIDEO_SECONDS[formData.videoLength];
+  const requestedScriptWords = formData.scriptLength === "custom" ? Number(formData.customScriptWordTarget) : SCRIPT_WORDS[formData.scriptLength];
+  const applyPlatformPreset = () => {
+    if (!platformPreset) return;
+    setFormData((current) => ({
+      ...current,
+      videoLength: platformPreset.videoLength,
+      scriptLength: platformPreset.scriptLength,
+      customVideoSeconds: "",
+      customScriptWordTarget: "",
+    }));
+  };
+
+  const saveCurrentLengthPreferences = () => {
+    const customVideoSeconds = Number(formData.customVideoSeconds);
+    const customScriptWordTarget = Number(formData.customScriptWordTarget);
+    if (formData.videoLength === "custom" && (!Number.isInteger(customVideoSeconds) || customVideoSeconds < 5 || customVideoSeconds > 3600)) {
+      toast.error("Choose a custom video duration between 5 seconds and 60 minutes before saving.");
+      return;
+    }
+    if (formData.scriptLength === "custom" && (!Number.isInteger(customScriptWordTarget) || customScriptWordTarget < 25 || customScriptWordTarget > 3000)) {
+      toast.error("Choose a custom script target between 25 and 3,000 words before saving.");
+      return;
+    }
+    saveLengthPreferences.mutate({
+      videoLength: formData.videoLength,
+      scriptLength: formData.scriptLength,
+      customVideoSeconds: formData.videoLength === "custom" ? customVideoSeconds : undefined,
+      customScriptWordTarget: formData.scriptLength === "custom" ? customScriptWordTarget : undefined,
+    });
+  };
 
   useEffect(() => {
     if (getHistoryQuery.data && history.length === 0 && !getHistoryQuery.isLoading) {
@@ -160,6 +215,19 @@ export default function Generator() {
       setHistory(historyData);
     }
   }, [getHistoryQuery.data, getHistoryQuery.isLoading, history.length]);
+
+  useEffect(() => {
+    const saved = lengthPreferencesQuery.data;
+    if (!saved || hasRestoredLengthPreferences) return;
+    setFormData((current) => ({
+      ...current,
+      videoLength: saved.videoLength,
+      scriptLength: saved.scriptLength,
+      customVideoSeconds: saved.customVideoSeconds?.toString() ?? "",
+      customScriptWordTarget: saved.customScriptWordTarget?.toString() ?? "",
+    }));
+    setHasRestoredLengthPreferences(true);
+  }, [hasRestoredLengthPreferences, lengthPreferencesQuery.data]);
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -478,6 +546,31 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
                       </div>
                     )}
                   </div>
+
+                  {platformPreset && (
+                    <div className="rounded-xl border border-[#26262b] bg-[#09090b] p-3 text-xs">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="font-medium text-[#f5f5f7]">Recommended for {formData.platform}</p>
+                          <p className="mt-0.5 text-[#9a9aa2]">{platformPreset.label}: {VIDEO_LENGTHS.find((item) => item.code === platformPreset.videoLength)?.name} · {SCRIPT_LENGTHS.find((item) => item.code === platformPreset.scriptLength)?.name}</p>
+                        </div>
+                        <Button type="button" variant="outline" size="sm" onClick={applyPlatformPreset} className="shrink-0 border-[#6366f1]/50 bg-transparent text-[#f5f5f7] hover:bg-[#141417]">Apply</Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {(requestedVideoSeconds > 0 || requestedScriptWords > 0) && (
+                    <div className="rounded-xl border border-[#26262b] bg-[#141417] px-3 py-2 text-xs text-[#9a9aa2]">
+                      <div className="flex items-center justify-between gap-3">
+                        <p><span className="font-medium text-[#f5f5f7]">Length guide:</span>{" "}
+                          {requestedVideoSeconds > 0 && <>~{formatDuration(requestedVideoSeconds)} spoken video · ~{Math.round(requestedVideoSeconds * 2.5)} spoken words</>}
+                          {requestedVideoSeconds > 0 && requestedScriptWords > 0 && " · "}
+                          {requestedScriptWords > 0 && <>target ~{requestedScriptWords.toLocaleString()} script words</>}
+                        </p>
+                        <Button type="button" variant="ghost" size="sm" onClick={saveCurrentLengthPreferences} disabled={saveLengthPreferences.isPending} className="h-7 shrink-0 px-2 text-[#8b5cf6] hover:bg-[#09090b] hover:text-[#f5f5f7]">{saveLengthPreferences.isPending ? "Saving…" : "Save defaults"}</Button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Unified cached trends: Live YouTube + clearly labelled AI estimates. */}
                   {trendingQuery.data?.data && trendingQuery.data.data.length > 0 && (

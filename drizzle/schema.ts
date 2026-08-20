@@ -271,6 +271,25 @@ export type DailyFreeAction = typeof dailyFreeActions.$inferSelect;
 export type InsertDailyFreeAction = typeof dailyFreeActions.$inferInsert;
 
 /**
+ * Stores each user's preferred paid-generator length settings independently
+ * from content history, free quotas, and paid credit accounting.
+ */
+export const generatorLengthPreferences = mysqlTable("generatorLengthPreferences", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  videoLength: varchar("videoLength", { length: 32 }).notNull().default("60s"),
+  scriptLength: varchar("scriptLength", { length: 32 }).notNull().default("medium"),
+  customVideoSeconds: int("customVideoSeconds"),
+  customScriptWordTarget: int("customScriptWordTarget"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  userUnique: uniqueIndex("generator_length_preferences_user_unique").on(table.userId),
+}));
+
+export type GeneratorLengthPreference = typeof generatorLengthPreferences.$inferSelect;
+export type InsertGeneratorLengthPreference = typeof generatorLengthPreferences.$inferInsert;
+
+/**
  * Credit packages table.
  * Defines available credit purchase options.
  */

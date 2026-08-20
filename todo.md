@@ -852,3 +852,9 @@
 - [x] Pass custom length targets to the generation service without affecting Basic Script Free limits
 - [x] Clarify the three-per-rolling-24-hours Basic Script Free quota in Content Studio
 - [x] Add mobile and regression coverage for custom lengths and quota messaging
+
+## Smart Generator Length Preferences (IN PROGRESS)
+- [x] Add platform-aware video and script length presets to the AI Generator
+- [x] Show live estimated speaking time and word guidance for all selected lengths
+- [x] Persist and restore each user’s preferred video and script length settings
+- [x] Add regression coverage for presets, estimates, and saved preferences

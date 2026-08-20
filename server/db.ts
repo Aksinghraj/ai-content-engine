@@ -1,6 +1,6 @@
 
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, contentHistory, InsertContentHistory, tokenUsage, automationSchedules, automationExecutionLogs, contentAnalytics, userCredits, creditTransactions, creditPackages, passwordResetTokens } from "../drizzle/schema";
+import { InsertUser, users, contentHistory, InsertContentHistory, tokenUsage, automationSchedules, automationExecutionLogs, contentAnalytics, userCredits, creditTransactions, creditPackages, passwordResetTokens, generatorLengthPreferences } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { eq, desc, and, gte, sql } from "drizzle-orm";
 
@@ -973,5 +973,58 @@ export async function updateSocialConnectionToken(
   } catch (error) {
     console.error("[Database] Failed to update social connection token:", error);
     return false;
+  }
+}
+
+export type GeneratorLengthPreferenceInput = {
+  videoLength: string;
+  scriptLength: string;
+  customVideoSeconds?: number;
+  customScriptWordTarget?: number;
+};
+
+/** Returns only the requesting user's saved paid-generator length defaults. */
+export async function getGeneratorLengthPreference(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    const result = await db
+      .select()
+      .from(generatorLengthPreferences)
+      .where(eq(generatorLengthPreferences.userId, userId))
+      .limit(1);
+    return result[0] ?? null;
+  } catch (error) {
+    console.error("[Database] Failed to get generator length preference:", error);
+    return null;
+  }
+}
+
+/** Upserts only the requesting user's validated paid-generator length defaults. */
+export async function saveGeneratorLengthPreference(userId: number, input: GeneratorLengthPreferenceInput) {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    const values = {
+      userId,
+      videoLength: input.videoLength,
+      scriptLength: input.scriptLength,
+      customVideoSeconds: input.videoLength === "custom" ? input.customVideoSeconds ?? null : null,
+      customScriptWordTarget: input.scriptLength === "custom" ? input.customScriptWordTarget ?? null : null,
+      updatedAt: new Date(),
+    };
+    await db.insert(generatorLengthPreferences).values(values).onDuplicateKeyUpdate({
+      set: {
+        videoLength: values.videoLength,
+        scriptLength: values.scriptLength,
+        customVideoSeconds: values.customVideoSeconds,
+        customScriptWordTarget: values.customScriptWordTarget,
+        updatedAt: values.updatedAt,
+      },
+    });
+    return values;
+  } catch (error) {
+    console.error("[Database] Failed to save generator length preference:", error);
+    return null;
   }
 }
