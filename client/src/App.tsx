@@ -11,6 +11,7 @@ import SimpleDashboard from "./pages/SimpleDashboard";
 import Settings from "./pages/Settings";
 import Payments from "./pages/Payments";
 import Generator from "./pages/Generator";
+import BasicScriptGeneration from "./pages/BasicScriptGeneration";
 import Pricing from "./pages/Pricing";
 import Automation from "./pages/Automation";
 import AdvancedAutomation from "./pages/AdvancedAutomation";
@@ -101,6 +102,7 @@ function App() {
             <Route path="/dashboard" component={SimpleDashboard} />
 
             <Route path="/content-studio/ai-generator" component={GroupedGenerator} />
+            <Route path="/content-studio/basic-script" component={BasicScriptGeneration} />
             <Route path="/content-studio/media-generation" component={MediaGeneration} />
             <Route path="/content-studio/content-rewriter" component={GroupedContentRewriter} />
             <Route path="/content-studio/repurposing" component={GroupedRepurposing} />

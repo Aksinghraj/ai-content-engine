@@ -1,4 +1,4 @@
-import { int, json, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, decimal, date } from "drizzle-orm/mysql-core";
+import { int, json, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, decimal, date, uniqueIndex } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
 
 /**
@@ -249,6 +249,26 @@ export const creditTransactions = mysqlTable("creditTransactions", {
 
 export type CreditTransaction = typeof creditTransactions.$inferSelect;
 export type InsertCreditTransaction = typeof creditTransactions.$inferInsert;
+
+/**
+ * Free actions are tracked independently from credits.
+ * The Basic Script Generation quota uses a rolling 24-hour window starting on
+ * the first successful free generation in that window.
+ */
+export const dailyFreeActions = mysqlTable("dailyFreeActions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  actionType: varchar("actionType", { length: 64 }).notNull(),
+  count: int("count").default(0).notNull(),
+  resetAt: timestamp("resetAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  userActionUnique: uniqueIndex("daily_free_actions_user_action_unique").on(table.userId, table.actionType),
+}));
+
+export type DailyFreeAction = typeof dailyFreeActions.$inferSelect;
+export type InsertDailyFreeAction = typeof dailyFreeActions.$inferInsert;
 
 /**
  * Credit packages table.

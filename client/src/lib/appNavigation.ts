@@ -29,6 +29,7 @@ export const appNavigation: AppNavigationArea[] = [
     icon: Sparkles,
     tabs: [
       { label: "AI Generator", path: "/content-studio/ai-generator" },
+      { label: "Basic Script Free", path: "/content-studio/basic-script" },
       { label: "Media Generation", path: "/content-studio/media-generation" },
       { label: "Content Rewriter", path: "/content-studio/content-rewriter" },
       { label: "Repurposing Engine", path: "/content-studio/repurposing" },

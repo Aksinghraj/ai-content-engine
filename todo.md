@@ -807,3 +807,10 @@
 - [x] Remove decorative animation from internal application pages while preserving concise interaction transitions
 - [x] Add reduced-motion-aware hero and feature-card animation exclusively to the landing page
 - [x] Validate palette consistency, motion boundaries, and accessible reduced-motion behavior
+
+## Basic Script Generation Free Tier (IN PROGRESS)
+- [x] Audit current generator and credit accounting paths against the new free-tier rules
+- [x] Add isolated rolling 24-hour daily_free_actions tracking with atomic enforcement
+- [x] Create a constrained no-credit Basic Script Generation server procedure
+- [x] Add premium static free-tier UI, remaining-use feedback, and cap upsell messaging
+- [x] Add regression tests for limit resets, no-credit usage, and output constraints
