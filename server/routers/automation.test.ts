@@ -3,6 +3,7 @@ import { appRouter } from "../routers";
 import * as db from "../db";
 import * as heartbeat from "../_core/heartbeat";
 import * as socialDb from "../db/social";
+import * as automationEngine from "../_core/automationEngine";
 
 vi.mock("../db", () => ({
   createAutomationSchedule: vi.fn(),
@@ -20,6 +21,10 @@ vi.mock("../_core/heartbeat", () => ({
 
 vi.mock("../db/social", () => ({
   getSocialConnectionByPlatform: vi.fn(),
+}));
+
+vi.mock("../_core/automationEngine", () => ({
+  executeAutomation: vi.fn(),
 }));
 
 const context = () => ({
@@ -52,6 +57,7 @@ describe("Heartbeat-backed automation router", () => {
       isValidated: true,
       autoPost: true,
     } as any);
+    vi.mocked(automationEngine.executeAutomation).mockResolvedValue({ success: true, scheduleId: 42, postId: "post-42" });
   });
 
   it("creates a six-field Heartbeat job and persists its task UID", async () => {
@@ -127,5 +133,14 @@ describe("Heartbeat-backed automation router", () => {
       cronExpression: "0 9 * * *",
     })).rejects.toThrow("Enable Auto-Post");
     expect(heartbeat.createHeartbeatJob).not.toHaveBeenCalled();
+  });
+
+  it("runs only an owned automation immediately and returns its publish diagnostic", async () => {
+    vi.mocked(db.getAutomationScheduleByIdForUser).mockResolvedValue(createdSchedule as any);
+
+    const result = await appRouter.createCaller(context()).automation.runNow({ id: "42" });
+
+    expect(automationEngine.executeAutomation).toHaveBeenCalledWith(createdSchedule);
+    expect(result).toMatchObject({ success: true, scheduleId: 42, platform: "twitter", postId: "post-42" });
   });
 });

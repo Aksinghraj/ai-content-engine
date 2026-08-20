@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Zap, Plus, Trash2, Clock, ToggleRight, ToggleLeft, ArrowLeft } from "lucide-react";
+import { Zap, Plus, Trash2, Clock, ToggleRight, ToggleLeft, ArrowLeft, Play } from "lucide-react";
 import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -67,6 +67,16 @@ export default function Automation() {
     },
   });
 
+  const runNowMutation = trpc.automation.runNow.useMutation({
+    onSuccess: (result) => {
+      toast.success(result.message);
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Diagnostic run failed");
+    },
+  });
+
   const deleteMutation = trpc.automation.delete.useMutation({
     onSuccess: () => {
       toast.success("Schedule deleted");
@@ -113,6 +123,14 @@ export default function Automation() {
 
   const handleDeleteSchedule = (id: number) => {
     deleteMutation.mutate({ id: id.toString() });
+  };
+
+  const handleRunNow = (schedule: { id: number; name: string; platform: string }) => {
+    const confirmed = window.confirm(
+      `Run “${schedule.name}” now? This generates content and publishes a real post to your connected ${schedule.platform} account.`,
+    );
+    if (!confirmed) return;
+    runNowMutation.mutate({ id: schedule.id.toString() });
   };
 
   const cronExpressions = [
@@ -370,6 +388,17 @@ export default function Automation() {
                         </div>
                       </div>
                       <div className="flex gap-2 ml-4">
+                        <Button
+                          onClick={() => handleRunNow(schedule)}
+                          variant="outline"
+                          size="sm"
+                          disabled={runNowMutation.isPending}
+                          className="border-primary/40 text-primary hover:bg-primary/10"
+                          title="Generate and publish this automation immediately"
+                        >
+                          <Play className="w-4 h-4 mr-1" />
+                          {runNowMutation.isPending ? "Running…" : "Run now"}
+                        </Button>
                         <Button
                           onClick={() => handleToggleSchedule(schedule.id, schedule.isActive)}
                           variant="outline"

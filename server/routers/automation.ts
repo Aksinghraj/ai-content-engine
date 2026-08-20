@@ -4,6 +4,7 @@ import { parse as parseCookie } from "cookie";
 import { COOKIE_NAME } from "@shared/const";
 import { protectedProcedure, router } from "../_core/trpc";
 import { createHeartbeatJob, deleteHeartbeatJob, updateHeartbeatJob } from "../_core/heartbeat";
+import { executeAutomation } from "../_core/automationEngine";
 import {
   createAutomationSchedule,
   deleteAutomationScheduleForUser,
@@ -138,6 +139,30 @@ export const automationRouter = router({
         ...(cronExpression ? { cronExpression } : {}),
       });
       return { success: true, data: persisted };
+    }),
+
+  runNow: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const schedule = await getAutomationScheduleByIdForUser(Number(input.id), ctx.user.id);
+      if (!schedule) throw new TRPCError({ code: "NOT_FOUND", message: "Automation not found." });
+      await assertAutomationReadiness(ctx.user.id, schedule.platform);
+      try {
+        const result = await executeAutomation(schedule);
+        return {
+          success: true,
+          scheduleId: schedule.id,
+          platform: schedule.platform,
+          postId: result.postId || null,
+          message: `Generated and published a diagnostic ${schedule.platform} post successfully.`,
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown automation error";
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Diagnostic run failed: ${message}`,
+        });
+      }
     }),
 
   delete: protectedProcedure.input(z.object({ id: z.string().min(1) })).mutation(async ({ ctx, input }) => {

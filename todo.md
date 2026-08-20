@@ -886,3 +886,9 @@
 - [x] Add automation connection and Auto-Post preflight validation before schedule creation
 - [x] Improve automation execution failure feedback with actionable remediation
 - [x] Add focused regression coverage for OAuth return state and automation readiness feedback
+
+## Automation Run Now Diagnostic (IN PROGRESS)
+- [x] Add an ownership-safe immediate automation execution procedure
+- [x] Return actionable readiness, generation, and publish outcomes to the owner
+- [x] Add a Run Now diagnostic control and result feedback to Automation
+- [x] Add immediate-execution security and regression coverage
