@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { LumaeLightPulse } from "@/components/LumaeLightPulse";
 
 export default function AnalyticsDashboardEnhanced() {
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -56,7 +57,7 @@ export default function AnalyticsDashboardEnhanced() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-96">
-          <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+          <LumaeLightPulse state="active" size={34} label="Lumae is preparing analytics" />
         </div>
       </DashboardLayout>
     );
@@ -93,7 +94,7 @@ export default function AnalyticsDashboardEnhanced() {
               disabled={isRefreshing}
               className="border-purple-500/50 hover:bg-purple-500/10"
             >
-              {isRefreshing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+              {isRefreshing ? <LumaeLightPulse state="active" size={18} className="mr-2" label="Lumae is refreshing analytics" /> : <RefreshCw className="w-4 h-4 mr-2" />}
               Refresh
             </Button>
             <Button

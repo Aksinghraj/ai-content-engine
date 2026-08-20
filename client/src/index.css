@@ -239,6 +239,79 @@
   }
 }
 
+/* Lumae Light Pulse — the shared, restrained AI activity language. */
+.lumae-light-pulse {
+  display: inline-flex;
+  flex: 0 0 auto;
+  line-height: 0;
+}
+
+.lumae-light-pulse__path {
+  stroke: color-mix(in srgb, var(--primary) 72%, transparent);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lumae-light-pulse__trail {
+  stroke: url(#lumae-light-gradient);
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 16 84;
+  stroke-dashoffset: 100;
+  opacity: 0;
+}
+
+.lumae-light-pulse--active .lumae-light-pulse__trail {
+  opacity: 0.88;
+  animation: lumae-light-flow 1.5s ease-in-out infinite;
+}
+
+.lumae-light-pulse--complete .lumae-light-pulse__trail {
+  opacity: 0.9;
+  animation: lumae-light-complete 1.45s ease-in-out 1 forwards;
+}
+
+.lumae-light-pulse--complete .lumae-light-pulse__path {
+  stroke: var(--primary);
+}
+
+.lumae-light-pulse--error .lumae-light-pulse__path {
+  stroke: #ef4444;
+}
+
+.lumae-light-pulse--error .lumae-light-pulse__trail,
+.lumae-light-pulse--idle .lumae-light-pulse__trail {
+  display: none;
+}
+
+@keyframes lumae-light-flow {
+  0% { stroke-dashoffset: 112; opacity: 0; }
+  20% { opacity: 0.82; }
+  78% { opacity: 0.74; }
+  100% { stroke-dashoffset: -12; opacity: 0; }
+}
+
+@keyframes lumae-light-complete {
+  0% { stroke-dashoffset: 112; opacity: 0; }
+  28% { opacity: 0.86; }
+  82% { stroke-dashoffset: -12; opacity: 0.82; }
+  100% { stroke-dashoffset: -12; opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lumae-light-pulse__trail {
+    animation: none !important;
+    display: none;
+  }
+
+  .lumae-light-pulse--active .lumae-light-pulse__path,
+  .lumae-light-pulse--complete .lumae-light-pulse__path {
+    stroke: var(--primary);
+  }
+}
+
 @layer utilities {
   .lumae-gradient-cta {
     background-image: linear-gradient(105deg, #6366f1 0%, #8b5cf6 52%, #06b6d4 100%);

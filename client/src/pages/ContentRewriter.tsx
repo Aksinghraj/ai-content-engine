@@ -5,6 +5,7 @@ import { trpc } from "@/lib/trpc";
 import { Copy, RefreshCw, Download, Sparkles, FileText, TrendingUp } from "lucide-react";
 import { useState, useEffect } from "react";
 import { exportToPDF } from "@/lib/pdfExport";
+import { LumaeLightPulse } from "@/components/LumaeLightPulse";
 
 const REWRITE_STYLES = [
   { id: "professional", label: "Professional", description: "Formal and business-appropriate" },
@@ -144,7 +145,10 @@ export default function ContentRewriter() {
               </div>
               <div className="space-y-2">
                 {trendingQuery.isLoading ? (
-                  <p className="text-xs text-slate-500">Loading trending topics...</p>
+                  <p className="flex items-center gap-2 text-xs text-slate-500">
+                    <LumaeLightPulse state="active" size={16} label="Lumae is analysing current topics" />
+                    Loading trending topics...
+                  </p>
                 ) : trendingTopics.length > 0 ? (
                   trendingTopics.map((topic) => (
                     <button
@@ -236,7 +240,7 @@ export default function ContentRewriter() {
               >
                 {isRewriting ? (
                   <>
-                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    <LumaeLightPulse state="active" size={20} className="mr-2" label="Lumae is rewriting your content" />
                     Rewriting...
                   </>
                 ) : (

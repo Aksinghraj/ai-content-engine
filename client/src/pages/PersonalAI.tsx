@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/DashboardLayout";
+import { LumaeLightPulse } from "@/components/LumaeLightPulse";
 
 interface Message {
   id: string;
@@ -204,7 +205,7 @@ export default function PersonalAI() {
             {isLoading && (
               <div className="flex justify-start">
                 <div className="bg-[#141417] border border-[#26262b] rounded-2xl px-4 py-3 flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-[#8b5cf6]" />
+                  <LumaeLightPulse state="active" size={18} label="Lumae is thinking" />
                   <span className="text-sm text-[#9a9aa2]">Thinking...</span>
                 </div>
               </div>
@@ -234,7 +235,7 @@ export default function PersonalAI() {
               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 h-auto"
             >
               {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <LumaeLightPulse state="active" size={20} label="Lumae is preparing a response" />
               ) : (
                 <Send className="w-5 h-5" />
               )}

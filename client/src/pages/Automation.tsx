@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { getLoginUrl } from "@/const";
+import { LumaeLightPulse } from "@/components/LumaeLightPulse";
 
 export default function Automation() {
   const { user, isAuthenticated } = useAuth();
@@ -343,7 +344,10 @@ export default function Automation() {
           {isLoadingSchedules ? (
             <Card className="border-slate-700 bg-slate-800/50 backdrop-blur-sm">
               <CardContent className="py-12">
-                <p className="text-center text-slate-400">Loading schedules...</p>
+                <p className="flex items-center justify-center gap-3 text-center text-slate-400">
+                  <LumaeLightPulse state="active" size={22} label="Lumae is checking automation schedules" />
+                  Loading schedules...
+                </p>
               </CardContent>
             </Card>
           ) : schedules.length === 0 ? (
@@ -396,7 +400,11 @@ export default function Automation() {
                           className="border-primary/40 text-primary hover:bg-primary/10"
                           title="Generate and publish this automation immediately"
                         >
-                          <Play className="w-4 h-4 mr-1" />
+                          {runNowMutation.isPending ? (
+                            <LumaeLightPulse state="active" size={17} className="mr-1" label="Lumae is running this automation" />
+                          ) : (
+                            <Play className="w-4 h-4 mr-1" />
+                          )}
                           {runNowMutation.isPending ? "Running…" : "Run now"}
                         </Button>
                         <Button

@@ -898,3 +898,9 @@
 - [x] Correct application-side provider configuration or scopes where possible
 - [x] Add provider-specific in-app status and remediation guidance
 - [x] Add regression coverage for canonical LinkedIn and YouTube authorization requests
+
+## Lumae Light Pulse Motion System (IN PROGRESS)
+- [x] Audit existing AI-active, loading, completion, and error states without changing layouts
+- [x] Create the reusable L-shaped Light Pulse component with static, active, complete, and error variants
+- [x] Apply the shared motion primitive to existing generation, analysis, automation, analytics, video, and suggestion states
+- [x] Add reduced-motion and motion-system regression coverage

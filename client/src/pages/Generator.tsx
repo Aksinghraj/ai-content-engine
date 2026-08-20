@@ -16,6 +16,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LumaeLightPulse, type LumaeLightPulseState } from "@/components/LumaeLightPulse";
 import { toast } from "sonner";
 import {
   Sparkles,
@@ -161,6 +162,7 @@ export default function Generator() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [generationPulse, setGenerationPulse] = useState<LumaeLightPulseState>("idle");
   const [selectedLanguage, setSelectedLanguage] = useState("hinglish");
 
   const generateMutation = trpc.content.generate.useMutation();
@@ -249,6 +251,7 @@ export default function Generator() {
 
     setIsLoading(true);
     setProgress(0);
+    setGenerationPulse("active");
 
     const progressInterval = setInterval(() => {
       setProgress((prev) => Math.min(prev + 10, 90));
@@ -263,10 +266,14 @@ export default function Generator() {
           });
       setGeneratedContent(result);
       setProgress(100);
+      setGenerationPulse("complete");
+      window.setTimeout(() => setGenerationPulse("idle"), 1500);
       toast.success("Content generated successfully!");
 
       await getHistoryQuery.refetch();
     } catch (error) {
+      setGenerationPulse("error");
+      window.setTimeout(() => setGenerationPulse("idle"), 1500);
       toast.error("Failed to generate content. Please try again.");
       console.error(error);
     } finally {
@@ -630,10 +637,10 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
                     disabled={isLoading}
                     className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
                   >
-                    {isLoading ? (
+                    {isLoading || generationPulse !== "idle" ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Generating...
+                        <LumaeLightPulse state={generationPulse} size={18} className="mr-2" label={generationPulse === "error" ? "Content generation needs attention" : "Lumae is generating content"} />
+                        {isLoading ? "Generating..." : "Generate Content"}
                       </>
                     ) : (
                       <>
@@ -643,7 +650,12 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
                     )}
                   </Button>
 
-                  {isLoading && <Progress value={progress} className="h-2" />}
+                  {isLoading && (
+                    <div className="flex items-center gap-3">
+                      <LumaeLightPulse state="active" size={22} label="Lumae is preparing your content package" />
+                      <Progress value={progress} className="h-2 flex-1" />
+                    </div>
+                  )}
                 </form>
 
                 {history.length > 0 && (
