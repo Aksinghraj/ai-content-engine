@@ -949,3 +949,9 @@
 - [x] Add Account Settings controls to inspect expiry and revoke trusted devices
 - [x] Apply migration, add security regression coverage, validate the full suite, and document the security boundaries
 - [x] Enforce trusted-device safeguards without email alerts, magic links, or temporary-login mechanisms
+
+## Business Navigation Row (IN PROGRESS)
+- [x] Add Business directly after Automation in the centralized top-level navigation model
+- [x] Add Email Automation and WhatsApp Automation nested routes and tabs
+- [x] Provide safe, clearly labelled entry pages without implementing outbound messaging services
+- [x] Add navigation regression coverage and validate the full suite

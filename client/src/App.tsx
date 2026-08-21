@@ -63,6 +63,7 @@ import BlogCategory from "./pages/BlogCategory";
 import BlogPost from "./pages/BlogPost";
 import PublicProfile from "./pages/PublicProfile";
 import TwoFactorLogin from "./pages/TwoFactorLogin";
+import BusinessAutomation from "./pages/BusinessAutomation";
 
 function GroupedGenerator() {
   return <GroupedRouteShell><Generator /></GroupedRouteShell>;
@@ -84,10 +85,18 @@ function GroupedViralScore() {
   return <GroupedRouteShell><ViralScoreGenerator /></GroupedRouteShell>;
 }
 
+function BusinessEmailAutomation() {
+  return <GroupedRouteShell><BusinessAutomation channel="email" /></GroupedRouteShell>;
+}
+
+function BusinessWhatsAppAutomation() {
+  return <GroupedRouteShell><BusinessAutomation channel="whatsapp" /></GroupedRouteShell>;
+}
+
 function App() {
   const [location] = useLocation();
   const applicationPrefixes = [
-    "/dashboard", "/content-studio", "/scheduling", "/automation", "/analytics", "/account", "/billing",
+    "/dashboard", "/content-studio", "/scheduling", "/automation", "/business", "/analytics", "/account", "/billing",
     "/ai-assistant", "/personal-ai", "/brand-voice", "/calendar", "/content-calendar", "/demo-videos", "/publishing-test-dashboard",
   ];
   const showPublicFooter = !applicationPrefixes.some((prefix) => location === prefix || location.startsWith(`${prefix}/`));
@@ -135,6 +144,9 @@ function App() {
             <Route path="/automation/reply-inbox" component={AutoReplyAdvanced} />
             <Route path="/automation/escalation" component={SentimentEscalation} />
             <Route path="/automation/social-automation" component={GroupedAutomation} />
+
+            <Route path="/business/email-automation" component={BusinessEmailAutomation} />
+            <Route path="/business/whatsapp-automation" component={BusinessWhatsAppAutomation} />
 
             <Route path="/analytics/usage" component={UsageAnalytics} />
             <Route path="/analytics/roi" component={ROIDashboard} />

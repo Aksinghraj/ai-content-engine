@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  BriefcaseBusiness,
   CalendarDays,
   CircleUserRound,
   CreditCard,
@@ -57,6 +58,15 @@ export const appNavigation: AppNavigationArea[] = [
       { label: "Reply Inbox", path: "/automation/reply-inbox" },
       { label: "Escalation", path: "/automation/escalation" },
       { label: "Social Automation", path: "/automation/social-automation" },
+    ],
+  },
+  {
+    label: "Business",
+    path: "/business/email-automation",
+    icon: BriefcaseBusiness,
+    tabs: [
+      { label: "Email Automation", path: "/business/email-automation" },
+      { label: "WhatsApp Automation", path: "/business/whatsapp-automation" },
     ],
   },
   {
