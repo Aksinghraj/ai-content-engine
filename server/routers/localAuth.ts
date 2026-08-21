@@ -8,7 +8,8 @@ import { sdk, TWO_FACTOR_CHALLENGE_COOKIE } from "../_core/sdk";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { COOKIE_NAME } from "../../shared/const";
 
-const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30;
+const STANDARD_SESSION_TTL_MS = 1000 * 60 * 60 * 12;
+const REMEMBER_ME_SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30;
 const VERIFY_TTL_MS = 1000 * 60 * 30;
 const emailInput = z.string().trim().email("Enter a valid email address.").max(320).transform((value) => value.toLowerCase());
 const passwordInput = z.string().min(12, "Use at least 12 characters.").max(128).refine((value) => /[a-z]/.test(value) && /[A-Z]/.test(value) && /\d/.test(value) && /[^A-Za-z0-9]/.test(value), "Use upper- and lowercase letters, a number, and a symbol.");
@@ -27,16 +28,17 @@ async function sendLocalVerificationEmail(email: string, token: string) {
   });
 }
 
-async function establishLocalSession(ctx: { req: Parameters<typeof getSessionCookieOptions>[0]; res: { cookie: (name: string, value: string, options: Record<string, unknown>) => unknown } }, user: { id: number; openId: string; name: string | null; email: string | null }) {
+async function establishLocalSession(ctx: { req: Parameters<typeof getSessionCookieOptions>[0]; res: { cookie: (name: string, value: string, options: Record<string, unknown>) => unknown } }, user: { id: number; openId: string; name: string | null; email: string | null }, rememberMe: boolean) {
   const name = user.name || user.email?.split("@")[0] || "User";
   const cookieOptions = getSessionCookieOptions(ctx.req);
   if (await isTwoFactorEnabled(user.id)) {
-    const challenge = await sdk.createTwoFactorChallenge(user.openId, name, "/dashboard");
+    const challenge = await sdk.createTwoFactorChallenge(user.openId, name, "/dashboard", rememberMe);
     ctx.res.cookie(TWO_FACTOR_CHALLENGE_COOKIE, challenge, { ...cookieOptions, sameSite: "lax", maxAge: 1000 * 60 * 10 });
     return { requiresTwoFactor: true, returnPath: "/two-factor" };
   }
-  const sessionToken = await sdk.createSessionToken(user.openId, { name, expiresInMs: SESSION_TTL_MS });
-  ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: SESSION_TTL_MS });
+  const expiresInMs = rememberMe ? REMEMBER_ME_SESSION_TTL_MS : STANDARD_SESSION_TTL_MS;
+  const sessionToken = await sdk.createSessionToken(user.openId, { name, expiresInMs });
+  ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, ...(rememberMe ? { maxAge: REMEMBER_ME_SESSION_TTL_MS } : {}) });
   return { requiresTwoFactor: false, returnPath: "/dashboard" };
 }
 
@@ -48,7 +50,7 @@ export const localAuthRouter = router({
     return { verificationRequired: true, emailDeliveryAvailable: delivered, expiresInMs: VERIFY_TTL_MS };
   }),
 
-  login: publicProcedure.input(z.object({ email: emailInput, password: z.string().min(1).max(128) })).mutation(async ({ ctx, input }) => {
+  login: publicProcedure.input(z.object({ email: emailInput, password: z.string().min(1).max(128), rememberMe: z.boolean().default(false) })).mutation(async ({ ctx, input }) => {
     const account = await getLocalAccountByEmail(input.email);
     if (!account || !(await verifyPassword(input.password, account.credential.passwordHash))) {
       throw new TRPCError({ code: "UNAUTHORIZED", message: "Email or password is incorrect." });
@@ -56,7 +58,7 @@ export const localAuthRouter = router({
     if (!account.user.emailVerified || !account.credential.verifiedAt) {
       throw new TRPCError({ code: "FORBIDDEN", message: "Confirm your email before signing in. You can request a new verification link below." });
     }
-    return establishLocalSession(ctx, account.user);
+    return establishLocalSession(ctx, account.user, input.rememberMe);
   }),
 
   verifyEmail: publicProcedure.input(z.object({ token: z.string().min(20).max(255) })).mutation(async ({ input }) => {

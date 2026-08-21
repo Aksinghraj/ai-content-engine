@@ -39,4 +39,28 @@ describe("local email/password authentication", () => {
     expect(router).toContain("SMS_OTP_PROVIDER");
     expect(router).toContain("SMS_OTP_API_KEY");
   });
+
+  it("uses an explicit bounded Remember Me choice without bypassing two-factor verification", () => {
+    const localRouter = read("server/routers/localAuth.ts");
+    const twoFactorRouter = read("server/routers/twoFactor.ts");
+    const sdk = read("server/_core/sdk.ts");
+    const page = read("client/src/pages/LoginEnhanced.tsx");
+
+    expect(localRouter).toContain("STANDARD_SESSION_TTL_MS = 1000 * 60 * 60 * 12");
+    expect(localRouter).toContain("REMEMBER_ME_SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30");
+    expect(localRouter).toContain("rememberMe: z.boolean().default(false)");
+    expect(sdk).toContain("rememberMe: boolean");
+    expect(twoFactorRouter).toContain("challenge.rememberMe ? SESSION_TTL_MS : STANDARD_SESSION_TTL_MS");
+    expect(page).toContain("Remember me for 30 days");
+    expect(page).toContain("Leave unchecked on shared devices.");
+  });
+
+  it("renders an accessible visual password-strength indicator during registration", () => {
+    const page = read("client/src/pages/LoginEnhanced.tsx");
+
+    expect(page).toContain("function passwordStrength");
+    expect(page).toContain("Password strength");
+    expect(page).toContain('aria-live="polite"');
+    expect(page).toContain("Add a password");
+  });
 });

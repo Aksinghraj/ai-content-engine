@@ -46,6 +46,7 @@ const otpCode = z.string().trim().regex(/^\d{6}$/, "Enter the six-digit code fro
 const recoveryCode = z.string().trim().regex(/^[A-Fa-f0-9]{10}$/, "Enter a valid recovery code.");
 const APP_NAME = "Lumae AI";
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30;
+const STANDARD_SESSION_TTL_MS = 1000 * 60 * 60 * 12;
 const trustedDeviceDays = z.union([z.literal(1), z.literal(7), z.literal(30)]);
 
 function getWebAuthnConfig(req: { protocol: string; get(name: string): string | undefined }) {
@@ -249,10 +250,11 @@ export const twoFactorRouter = router({
       throw new TRPCError({ code: "BAD_REQUEST", message: "That code was not accepted. Try again or use a recovery code." });
     }
     if (result.remainingCodes) await consumeRecoveryCode(user.id, result.remainingCodes);
-    const sessionToken = await sdk.createSessionToken(challenge.openId, { name: challenge.name, expiresInMs: SESSION_TTL_MS });
+    const expiresInMs = challenge.rememberMe ? SESSION_TTL_MS : STANDARD_SESSION_TTL_MS;
+    const sessionToken = await sdk.createSessionToken(challenge.openId, { name: challenge.name, expiresInMs });
     const cookieOptions = getSessionCookieOptions(ctx.req);
     ctx.res.clearCookie(TWO_FACTOR_CHALLENGE_COOKIE, { ...cookieOptions, maxAge: -1 });
-    ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: SESSION_TTL_MS });
+    ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, ...(challenge.rememberMe ? { maxAge: SESSION_TTL_MS } : {}) });
     await issueTrustedDeviceIfRequested(ctx, user.id, input.trustedDeviceDays);
     return { returnPath: challenge.returnPath };
   }),
@@ -300,10 +302,11 @@ export const twoFactorRouter = router({
       });
       if (!verification.verified) throw new Error("Passkey authentication was not verified");
       await updatePasskeyUsage(passkey.id, verification.authenticationInfo.newCounter);
-      const sessionToken = await sdk.createSessionToken(challenge.openId, { name: challenge.name, expiresInMs: SESSION_TTL_MS });
+      const expiresInMs = challenge.rememberMe ? SESSION_TTL_MS : STANDARD_SESSION_TTL_MS;
+      const sessionToken = await sdk.createSessionToken(challenge.openId, { name: challenge.name, expiresInMs });
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(TWO_FACTOR_CHALLENGE_COOKIE, { ...cookieOptions, maxAge: -1 });
-      ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: SESSION_TTL_MS });
+      ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, ...(challenge.rememberMe ? { maxAge: SESSION_TTL_MS } : {}) });
       await issueTrustedDeviceIfRequested(ctx, user.id, input.trustedDeviceDays);
       return { returnPath: challenge.returnPath };
     } catch {

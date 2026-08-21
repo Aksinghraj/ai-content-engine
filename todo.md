@@ -971,3 +971,10 @@
 - [x] Refresh the login surface with the supplied restrained dark background direction and Google entry point
 - [x] Add a provider-aware phone OTP entry point that remains disabled until an SMS provider is configured
 - [x] Add security regression coverage, validate the full suite, and document activation prerequisites
+
+## Password Strength and Remember Me Controls (IN PROGRESS)
+- [x] Add a visual, accessible password-strength indicator to the sign-up form
+- [x] Add an explicit Remember Me sign-in choice with bounded, secure session duration
+- [x] Preserve two-factor verification and trusted-device security boundaries regardless of Remember Me selection
+- [x] Prepare provider activation states for phone OTP, Resend email, and Meta WhatsApp without outbound operations
+- [x] Add regression coverage, validate the full suite, and document owner-provided credential prerequisites
