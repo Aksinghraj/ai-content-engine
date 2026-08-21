@@ -27,6 +27,14 @@ import {
   saveWebAuthnCeremony,
   updatePasskeyUsage,
 } from "../db/passkeys";
+import {
+  createTrustedDevice,
+  getTrustedDevices,
+  revokeAllTrustedDevices,
+  revokeTrustedDevice,
+  TRUSTED_DEVICE_COOKIE,
+  type TrustedDeviceDays,
+} from "../db/trustedDevices";
 import { createHMAC, decrypt, encrypt } from "../_core/encryption";
 import { sdk, TWO_FACTOR_CHALLENGE_COOKIE } from "../_core/sdk";
 import { getSessionCookieOptions } from "../_core/cookies";
@@ -38,6 +46,7 @@ const otpCode = z.string().trim().regex(/^\d{6}$/, "Enter the six-digit code fro
 const recoveryCode = z.string().trim().regex(/^[A-Fa-f0-9]{10}$/, "Enter a valid recovery code.");
 const APP_NAME = "Lumae AI";
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30;
+const trustedDeviceDays = z.union([z.literal(1), z.literal(7), z.literal(30)]);
 
 function getWebAuthnConfig(req: { protocol: string; get(name: string): string | undefined }) {
   const configuredOrigin = process.env.FRONTEND_URL;
@@ -86,16 +95,32 @@ function ensureEnabledAuthenticator(authenticator: Awaited<ReturnType<typeof get
   return authenticator;
 }
 
+async function issueTrustedDeviceIfRequested(
+  ctx: { req: Parameters<typeof getSessionCookieOptions>[0]; res: { cookie: (name: string, value: string, options: Record<string, unknown>) => unknown } },
+  userId: number,
+  days: TrustedDeviceDays | undefined,
+) {
+  if (!days) return;
+  const trustedDevice = await createTrustedDevice(userId, days);
+  const cookieOptions = getSessionCookieOptions(ctx.req);
+  ctx.res.cookie(TRUSTED_DEVICE_COOKIE, trustedDevice.token, {
+    ...cookieOptions,
+    maxAge: trustedDevice.expiresAt.getTime() - Date.now(),
+  });
+}
+
 export const twoFactorRouter = router({
   status: protectedProcedure.query(async ({ ctx }) => {
     const authenticator = await getTwoFactorAuthenticator(ctx.user.id);
     const passkeys = await getUserPasskeys(ctx.user.id);
+    const trustedDevices = await getTrustedDevices(ctx.user.id);
     return {
       enabled: authenticator?.isEnabled === true,
       recoveryCodesRemaining: authenticator?.isEnabled && Array.isArray(authenticator.recoveryCodeHashes)
         ? authenticator.recoveryCodeHashes.length
         : 0,
       passkeys: passkeys.map((passkey) => ({ id: passkey.id, name: passkey.name, createdAt: passkey.createdAt, lastUsedAt: passkey.lastUsedAt })),
+      trustedDevices,
     };
   }),
 
@@ -195,10 +220,21 @@ export const twoFactorRouter = router({
       throw new TRPCError({ code: "BAD_REQUEST", message: "Enter a current authenticator or recovery code to disable two-factor authentication." });
     }
     await deleteTwoFactorAuthenticator(ctx.user.id);
+    await revokeAllTrustedDevices(ctx.user.id);
     return { success: true };
   }),
 
-  verifyLogin: publicProcedure.input(z.object({ code: z.union([otpCode, recoveryCode]) })).mutation(async ({ ctx, input }) => {
+  revokeTrustedDevice: protectedProcedure.input(z.object({ deviceId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+    await revokeTrustedDevice(ctx.user.id, input.deviceId);
+    return { success: true };
+  }),
+
+  revokeAllTrustedDevices: protectedProcedure.mutation(async ({ ctx }) => {
+    await revokeAllTrustedDevices(ctx.user.id);
+    return { success: true };
+  }),
+
+  verifyLogin: publicProcedure.input(z.object({ code: z.union([otpCode, recoveryCode]), trustedDeviceDays: trustedDeviceDays.optional() })).mutation(async ({ ctx, input }) => {
     const challenge = await sdk.verifyTwoFactorChallenge(parseCookie(ctx.req.headers.cookie ?? "")[TWO_FACTOR_CHALLENGE_COOKIE]);
     if (!challenge) {
       throw new TRPCError({ code: "UNAUTHORIZED", message: "Your security check expired. Please sign in again." });
@@ -217,6 +253,7 @@ export const twoFactorRouter = router({
     const cookieOptions = getSessionCookieOptions(ctx.req);
     ctx.res.clearCookie(TWO_FACTOR_CHALLENGE_COOKIE, { ...cookieOptions, maxAge: -1 });
     ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: SESSION_TTL_MS });
+    await issueTrustedDeviceIfRequested(ctx, user.id, input.trustedDeviceDays);
     return { returnPath: challenge.returnPath };
   }),
 
@@ -237,7 +274,7 @@ export const twoFactorRouter = router({
     return options;
   }),
 
-  finishPasskeyLogin: publicProcedure.input(z.object({ response: z.custom<AuthenticationResponseJSON>() })).mutation(async ({ ctx, input }) => {
+  finishPasskeyLogin: publicProcedure.input(z.object({ response: z.custom<AuthenticationResponseJSON>(), trustedDeviceDays: trustedDeviceDays.optional() })).mutation(async ({ ctx, input }) => {
     const challenge = await sdk.verifyTwoFactorChallenge(parseCookie(ctx.req.headers.cookie ?? "")[TWO_FACTOR_CHALLENGE_COOKIE]);
     if (!challenge) throw new TRPCError({ code: "UNAUTHORIZED", message: "Your security check expired. Please sign in again." });
     const user = await getUserByOpenId(challenge.openId);
@@ -267,6 +304,7 @@ export const twoFactorRouter = router({
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(TWO_FACTOR_CHALLENGE_COOKIE, { ...cookieOptions, maxAge: -1 });
       ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: SESSION_TTL_MS });
+      await issueTrustedDeviceIfRequested(ctx, user.id, input.trustedDeviceDays);
       return { returnPath: challenge.returnPath };
     } catch {
       console.warn("[WebAuthn] Authentication verification failed");

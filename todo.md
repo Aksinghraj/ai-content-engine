@@ -942,3 +942,10 @@
 - [x] Add protected recovery-code regeneration that invalidates previous codes
 - [x] Extend Account Settings and the two-factor challenge UI with accessible passkey controls
 - [x] Apply migration, add regression coverage, validate the full suite, and document compatibility guidance
+
+## Trusted-Device Sessions (IN PROGRESS)
+- [x] Audit the post-two-factor session flow and define a hashed, revocable trusted-device model
+- [x] Add optional trusted-device issuance with explicit expiry choices after successful second-factor verification
+- [x] Add Account Settings controls to inspect expiry and revoke trusted devices
+- [x] Apply migration, add security regression coverage, validate the full suite, and document the security boundaries
+- [x] Enforce trusted-device safeguards without email alerts, magic links, or temporary-login mechanisms

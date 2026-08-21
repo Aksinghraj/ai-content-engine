@@ -9,6 +9,7 @@ import { sendVerificationEmail } from "./emailService";
 import oauthCallbackRouter from "../routes/oauthCallbackSecure";
 import { isTwoFactorEnabled } from "../db/twoFactor";
 import { TWO_FACTOR_CHALLENGE_COOKIE } from "./sdk";
+import { TRUSTED_DEVICE_COOKIE, validateTrustedDevice } from "../db/trustedDevices";
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -52,8 +53,16 @@ async function redirectForTwoFactorIfEnabled(
 ): Promise<boolean> {
   const account = await db.getUserByOpenId(openId);
   if (!account || !(await isTwoFactorEnabled(account.id))) return false;
-  const challenge = await sdk.createTwoFactorChallenge(openId, name, returnPath);
   const cookieOptions = getSessionCookieOptions(req);
+  const trustedDeviceToken = parseCookie(req.headers.cookie ?? "")[TRUSTED_DEVICE_COOKIE];
+  if (trustedDeviceToken && await validateTrustedDevice(account.id, trustedDeviceToken)) {
+    const sessionToken = await sdk.createSessionToken(openId, { name, expiresInMs: SESSION_TTL_MS });
+    res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: SESSION_TTL_MS });
+    res.redirect(302, returnPath);
+    return true;
+  }
+  if (trustedDeviceToken) res.clearCookie(TRUSTED_DEVICE_COOKIE, { ...cookieOptions, maxAge: -1 });
+  const challenge = await sdk.createTwoFactorChallenge(openId, name, returnPath);
   res.cookie(TWO_FACTOR_CHALLENGE_COOKIE, challenge, {
     ...cookieOptions,
     sameSite: "lax",

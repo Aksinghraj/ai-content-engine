@@ -98,4 +98,29 @@ describe("two-factor authentication and rate-limit feedback", () => {
     expect(login).toContain("Use a passkey");
     expect(login).toContain("startAuthentication");
   });
+
+  it("uses opt-in, hashed, expiring trusted-device tokens without email or temporary-login flows", () => {
+    const schema = read("drizzle/schema.ts");
+    const trustedDevices = read("server/db/trustedDevices.ts");
+    const oauth = read("server/_core/oauth.ts");
+    const router = read("server/routers/twoFactor.ts");
+    const login = read("client/src/pages/TwoFactorLogin.tsx");
+    const panel = read("client/src/components/TwoFactorSecurityPanel.tsx");
+
+    expect(schema).toContain('export const trustedDevices');
+    expect(schema).toContain('tokenHash: varchar("tokenHash", { length: 128 }).notNull()');
+    expect(trustedDevices).toContain("crypto.randomBytes(32)");
+    expect(trustedDevices).toContain("createHMAC(token)");
+    expect(trustedDevices).toContain("device.expiresAt <= new Date()");
+    expect(oauth).toContain("validateTrustedDevice(account.id, trustedDeviceToken)");
+    expect(router).toContain("trustedDeviceDays: trustedDeviceDays.optional()");
+    expect(router).toContain("revokeAllTrustedDevices(ctx.user.id)");
+    expect(router).toContain("issueTrustedDeviceIfRequested");
+    expect(router).not.toContain("sendTrustedDeviceEmail");
+    expect(router).not.toContain("magicLink");
+    expect(login).toContain("Trust this private device");
+    expect(login).toContain("Do not use this on shared or test devices.");
+    expect(panel).toContain("Trusted devices");
+    expect(panel).toContain("They do not use emails or temporary-login links.");
+  });
 });

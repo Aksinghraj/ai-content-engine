@@ -98,6 +98,19 @@ export const webAuthnCeremonies = mysqlTable("webAuthnCeremonies", {
 
 export type WebAuthnPasskey = typeof webAuthnPasskeys.$inferSelect;
 
+/** Opaque, HMAC-hashed device tokens that may bypass a second-factor prompt until expiry. */
+export const trustedDevices = mysqlTable("trustedDevices", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  tokenHash: varchar("tokenHash", { length: 128 }).notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  lastUsedAt: timestamp("lastUsedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => ({
+  tokenUnique: uniqueIndex("trusted_devices_token_unique").on(table.tokenHash),
+  userIndex: uniqueIndex("trusted_devices_user_expiry_unique").on(table.userId, table.expiresAt),
+}));
+
 /**
  * Professional profile fields are stored separately from the authentication
  * record. Profiles are private by default; only non-sensitive fields are
