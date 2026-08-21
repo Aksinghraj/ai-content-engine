@@ -64,6 +64,7 @@ import BlogPost from "./pages/BlogPost";
 import PublicProfile from "./pages/PublicProfile";
 import TwoFactorLogin from "./pages/TwoFactorLogin";
 import BusinessAutomation from "./pages/BusinessAutomation";
+import VerifyLocalEmail from "./pages/VerifyLocalEmail";
 
 function GroupedGenerator() {
   return <GroupedRouteShell><Generator /></GroupedRouteShell>;
@@ -118,6 +119,7 @@ function App() {
             <Route path="/cookie-policy" component={CookiePolicy} />
             <Route path="/cookies" component={CookiePolicy} />
             <Route path="/verify-email" component={VerifyEmail} />
+            <Route path="/verify-local-email" component={VerifyLocalEmail} />
             <Route path="/two-factor" component={TwoFactorLogin} />
             <Route path="/blog" component={Blog} />
             <Route path="/blog/category/:category" component={BlogCategory} />

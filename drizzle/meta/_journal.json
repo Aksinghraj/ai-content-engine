@@ -169,6 +169,13 @@
       "when": 1787297121962,
       "tag": "0023_previous_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "5",
+      "when": 1787297928698,
+      "tag": "0024_common_titanium_man",
+      "breakpoints": true
     }
   ]
 }

@@ -159,6 +159,21 @@ export const whatsappBusinessConnections = mysqlTable("whatsappBusinessConnectio
   userUnique: uniqueIndex("whatsapp_business_connections_user_unique").on(table.userId),
 }));
 
+/** Local email/password credential material. Passwords and verification tokens are never stored in plaintext. */
+export const localAuthCredentials = mysqlTable("localAuthCredentials", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
+  verificationTokenHash: varchar("verificationTokenHash", { length: 128 }),
+  verificationExpiresAt: timestamp("verificationExpiresAt"),
+  verifiedAt: timestamp("verifiedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  userUnique: uniqueIndex("local_auth_credentials_user_unique").on(table.userId),
+  verificationTokenUnique: uniqueIndex("local_auth_credentials_verification_token_unique").on(table.verificationTokenHash),
+}));
+
 /**
  * Professional profile fields are stored separately from the authentication
  * record. Profiles are private by default; only non-sensitive fields are

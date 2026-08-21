@@ -1,277 +1,50 @@
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
-import { Sparkles, Zap, Flame, ArrowRight, Mail, Lock, ArrowLeft, CheckCircle } from "lucide-react";
+import { useLocation } from "wouter";
+import { ArrowLeft, CheckCircle2, Eye, EyeOff, Fingerprint, KeyRound, Loader2, LockKeyhole, Mail, Phone, ShieldCheck, Sparkles } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
+
+type Mode = "signin" | "register";
+
+function GoogleMark() {
+  return <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>;
+}
 
 export default function LoginEnhanced() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const [, navigate] = useLocation();
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState("");
-  const [resetSent, setResetSent] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [mode, setMode] = useState<Mode>("signin");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [registrationPending, setRegistrationPending] = useState(false);
+  const googleLoginUrl = "/api/oauth/google/login";
+  const register = trpc.localAuth.register.useMutation({
+    onSuccess: (result) => {
+      setRegistrationPending(true);
+      toast.success(result.emailDeliveryAvailable ? "Check your inbox to verify your email." : "Account created. Email delivery is temporarily unavailable; try resending verification later.");
+    },
+    onError: (error) => toast.error(error.message),
+  });
+  const login = trpc.localAuth.login.useMutation({
+    onSuccess: ({ returnPath }) => window.location.assign(returnPath),
+    onError: (error) => toast.error(error.message),
+  });
+  const resend = trpc.localAuth.resendVerification.useMutation({ onSuccess: () => toast.success("If an unverified account exists, a new verification email has been requested.") });
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/dashboard");
-    }
-  }, [isAuthenticated, navigate]);
+    if (!loading && isAuthenticated) navigate("/dashboard");
+  }, [isAuthenticated, loading, navigate]);
 
-  // Google OAuth: navigate to our server endpoint which auto-submits a form to Google
-  // The server owns the canonical registered Google callback URI.
-  const googleLoginUrl = "/api/oauth/google/login";
-
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    try {
-      // Simulate API call to send reset email
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setResetSent(true);
-      
-      // Reset form after 3 seconds
-      setTimeout(() => {
-        setShowForgotPassword(false);
-        setResetSent(false);
-        setForgotEmail("");
-      }, 3000);
-    } catch (error) {
-      console.error("Error sending reset email:", error);
-    } finally {
-      setIsLoading(false);
-    }
+  const submit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (mode === "register") register.mutate({ name, email, password });
+    else login.mutate({ email, password });
   };
+  const busy = register.isPending || login.isPending;
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
-      </div>
-
-      {/* Back to Home - top left corner */}
-      <div className="absolute top-6 left-6 z-20">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/")}
-          className="text-slate-300 hover:text-white hover:bg-slate-700/50 gap-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Home
-        </Button>
-      </div>
-
-      <div className="relative z-10 w-full max-w-md">
-        {/* Logo Section */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold text-white">Lumae AI</h1>
-          </div>
-          <p className="text-slate-400">Create viral content in seconds</p>
-        </div>
-
-        {/* Main Card */}
-        <Card className="border-slate-700 bg-slate-800/50 backdrop-blur-sm p-8 mb-8">
-          {!showForgotPassword ? (
-            <div className="space-y-6">
-              {/* Heading */}
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-white mb-2">Welcome Back</h2>
-                <p className="text-slate-400">Sign in to start creating amazing content</p>
-              </div>
-
-              {/* Features List */}
-              <div className="space-y-3 py-6">
-                <div className="flex items-start gap-3">
-                  <Zap className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-white font-medium">Instant Content Generation</p>
-                    <p className="text-sm text-slate-400">Get 10 viral ideas in seconds</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Flame className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-white font-medium">Multiple Platforms</p>
-                    <p className="text-sm text-slate-400">Instagram, Twitter, LinkedIn, YouTube & more</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Sparkles className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-white font-medium">Pro Automation</p>
-                    <p className="text-sm text-slate-400">Schedule content generation automatically</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Google Sign In Button */}
-              <Button
-                onClick={() => {
-                  window.location.href = googleLoginUrl;
-                }}
-                className="w-full bg-white hover:bg-gray-50 text-gray-800 font-semibold py-6 text-lg border border-gray-200 shadow-sm"
-              >
-                <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                Sign in with Google
-              </Button>
-
-              {/* Divider */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-700"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-slate-800 text-slate-400">Having trouble?</span>
-                </div>
-              </div>
-
-              {/* Forgot Password Link */}
-              <Button
-                variant="ghost"
-                onClick={() => setShowForgotPassword(true)}
-                className="w-full text-slate-300 hover:text-white hover:bg-slate-700/50"
-              >
-                <Lock className="w-4 h-4 mr-2" />
-                Forgot Password?
-              </Button>
-
-              {/* Sign Up Info */}
-              <p className="text-center text-slate-400 text-sm">
-                Sign in to create your account or log in to an existing one
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {/* Back Button */}
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setShowForgotPassword(false);
-                  setForgotEmail("");
-                  setResetSent(false);
-                }}
-                className="text-slate-300 hover:text-white hover:bg-slate-700/50 p-0 h-auto"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Login
-              </Button>
-
-              {!resetSent ? (
-                <>
-                  {/* Forgot Password Heading */}
-                  <div className="text-center">
-                    <h2 className="text-2xl font-bold text-white mb-2">Reset Password</h2>
-                    <p className="text-slate-400">Enter your email to receive a password reset link</p>
-                  </div>
-
-                  {/* Email Form */}
-                  <form onSubmit={handleForgotPassword} className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">
-                        Email Address
-                      </label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
-                        <Input
-                          type="email"
-                          placeholder="your@email.com"
-                          value={forgotEmail}
-                          onChange={(e) => setForgotEmail(e.target.value)}
-                          required
-                          className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder-slate-500"
-                        />
-                      </div>
-                      <p className="text-xs text-slate-400 mt-2">
-                        We'll send you a link to reset your password
-                      </p>
-                    </div>
-
-                    <Button
-                      type="submit"
-                      disabled={isLoading || !forgotEmail}
-                      className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-6"
-                    >
-                      {isLoading ? "Sending..." : "Send Reset Link"}
-                    </Button>
-                  </form>
-
-                  {/* Security Note */}
-                  <div className="bg-slate-700/30 border border-slate-600 rounded-lg p-4">
-                    <p className="text-xs text-slate-400">
-                      <strong>Security:</strong> We'll never ask for your password via email. Always verify you're on the official site before entering credentials.
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center space-y-4">
-                  <div className="flex justify-center">
-                    <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center">
-                      <CheckCircle className="w-8 h-8 text-green-400" />
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white mb-2">Email Sent!</h3>
-                    <p className="text-slate-400">
-                      Check your email at <span className="text-white font-semibold">{forgotEmail}</span> for password reset instructions.
-                    </p>
-                  </div>
-                  <p className="text-xs text-slate-500">
-                    The reset link will expire in 24 hours. If you don't see the email, check your spam folder.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-        </Card>
-
-        {/* Trust Section */}
-        <div className="text-center">
-          <p className="text-slate-500 text-sm mb-4">Trusted by creators worldwide</p>
-          <div className="flex items-center justify-center gap-4">
-            <div className="text-center">
-              <p className="text-white font-bold text-lg">10K+</p>
-              <p className="text-slate-400 text-xs">Active Users</p>
-            </div>
-            <div className="w-px h-8 bg-slate-700"></div>
-            <div className="text-center">
-              <p className="text-white font-bold text-lg">1M+</p>
-              <p className="text-slate-400 text-xs">Content Generated</p>
-            </div>
-            <div className="w-px h-8 bg-slate-700"></div>
-            <div className="text-center">
-              <p className="text-white font-bold text-lg">99.9%</p>
-              <p className="text-slate-400 text-xs">Uptime</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-8 text-center">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/")}
-            className="text-slate-400 hover:text-white hover:bg-slate-700/50 gap-2 mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
-          </Button>
-          <p className="text-xs text-slate-500">By signing in, you agree to our Terms of Service and Privacy Policy</p>
-        </div>
-      </div>
-    </div>
-  );
+  return <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#09090b] px-4 py-10 text-[#f5f5f7]"><div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(circle_at_78%_14%,rgba(255,255,255,0.16),transparent_16%),radial-gradient(circle_at_100%_0%,rgba(148,163,184,0.14),transparent_28%),linear-gradient(115deg,#09090b_12%,#141417_52%,#09090b_100%)]" /><div aria-hidden="true" className="absolute -right-24 -top-24 h-[38rem] w-[25rem] rotate-[-24deg] rounded-[45%] border border-white/10 bg-gradient-to-b from-white/15 via-white/[0.035] to-transparent blur-[1px]" /><button onClick={() => navigate("/")} className="absolute left-5 top-5 z-10 inline-flex items-center gap-2 text-sm text-[#9a9aa2] transition-colors hover:text-[#f5f5f7]"><ArrowLeft className="h-4 w-4" />Back to home</button><section className="relative z-10 w-full max-w-sm"><div className="mb-7 text-center"><div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-[#141417] shadow-lg"><Sparkles className="h-5 w-5 text-[#a78bfa]" /></div><h1 className="mt-4 text-2xl font-semibold tracking-tight">Lumae AI</h1><p className="mt-1 text-sm text-[#9a9aa2]">Securely create and manage your content.</p></div><div className="rounded-2xl border border-white/10 bg-[#141417]/90 p-6 shadow-2xl backdrop-blur"><div className="flex rounded-xl border border-white/10 bg-[#09090b]/70 p-1"><button onClick={() => { setMode("signin"); setRegistrationPending(false); }} className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${mode === "signin" ? "bg-white/10 text-white" : "text-[#9a9aa2] hover:text-white"}`}>Sign in</button><button onClick={() => { setMode("register"); setRegistrationPending(false); }} className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${mode === "register" ? "bg-white/10 text-white" : "text-[#9a9aa2] hover:text-white"}`}>Create account</button></div>{registrationPending ? <div className="py-8 text-center"><CheckCircle2 className="mx-auto h-10 w-10 text-[#10b981]" /><h2 className="mt-4 text-xl font-semibold">Confirm your email</h2><p className="mt-2 text-sm leading-6 text-[#9a9aa2]">We sent a 30-minute verification link to <span className="text-[#f5f5f7]">{email}</span>. Verify it before using email/password sign-in.</p><Button variant="outline" className="mt-5 border-white/10" disabled={resend.isPending} onClick={() => resend.mutate({ email })}>Resend verification</Button></div> : <form className="mt-6 space-y-4" onSubmit={submit}>{mode === "register" && <label className="block text-sm font-medium">Name<input value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" required maxLength={120} className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#09090b] px-3 py-2.5 text-sm text-white outline-none placeholder:text-[#6b6b72] focus:ring-2 focus:ring-[#8b5cf6]" placeholder="Your name" /></label>}<label className="block text-sm font-medium">Email<div className="relative mt-1.5"><Mail className="absolute left-3 top-3 h-4 w-4 text-[#9a9aa2]" /><input value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="email" required className="w-full rounded-xl border border-white/10 bg-[#09090b] py-2.5 pl-10 pr-3 text-sm text-white outline-none placeholder:text-[#6b6b72] focus:ring-2 focus:ring-[#8b5cf6]" placeholder="you@example.com" /></div></label><label className="block text-sm font-medium">Password<div className="relative mt-1.5"><LockKeyhole className="absolute left-3 top-3 h-4 w-4 text-[#9a9aa2]" /><input value={password} onChange={(event) => setPassword(event.target.value)} type={showPassword ? "text" : "password"} autoComplete={mode === "register" ? "new-password" : "current-password"} required className="w-full rounded-xl border border-white/10 bg-[#09090b] py-2.5 pl-10 pr-10 text-sm text-white outline-none placeholder:text-[#6b6b72] focus:ring-2 focus:ring-[#8b5cf6]" placeholder={mode === "register" ? "12+ characters" : "Your password"} /><button type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? "Hide password" : "Show password"} className="absolute right-3 top-3 text-[#9a9aa2] hover:text-white">{showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></div>{mode === "register" && <p className="mt-1.5 text-xs text-[#9a9aa2]">Use 12+ characters with upper- and lowercase letters, a number, and a symbol.</p>}</label><Button type="submit" disabled={busy} className="w-full lumae-gradient-cta">{busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{mode === "register" ? "Create secure account" : "Continue with email"}</Button></form>}<div className="my-5 flex items-center gap-3 text-xs text-[#6b6b72] before:h-px before:flex-1 before:bg-white/10 after:h-px after:flex-1 after:bg-white/10">or</div><Button variant="outline" type="button" className="w-full border-white/10 bg-white text-[#141417] hover:bg-white/90" onClick={() => window.location.assign(googleLoginUrl)}><GoogleMark />Continue with Google</Button><Button variant="outline" type="button" disabled className="mt-3 w-full border-white/10 text-[#9a9aa2]"><Phone className="mr-2 h-4 w-4" />Phone OTP coming soon</Button><p className="mt-2 text-center text-xs text-[#6b6b72]">Phone OTP will activate after an SMS provider is configured.</p><div className="mt-5 flex gap-2 rounded-xl border border-white/10 bg-[#09090b]/70 p-3 text-xs leading-5 text-[#9a9aa2]"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#10b981]" />Email/password sign-in uses strong password hashing and requires email confirmation. Existing accounts can continue with Google.</div></div><p className="mt-5 text-center text-xs text-[#6b6b72]">By continuing, you agree to Lumae’s Terms and Privacy Policy.</p></section></main>;
 }

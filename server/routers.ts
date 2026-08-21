@@ -38,6 +38,7 @@ import { freeTierRouter } from "./routers/freeTier";
 import { professionalProfileRouter } from "./routers/professionalProfile";
 import { twoFactorRouter } from "./routers/twoFactor";
 import { businessMessagingRouter } from "./routers/businessMessaging";
+import { localAuthRouter } from "./routers/localAuth";
 
 export const appRouter = router({
   system: systemRouter,
@@ -97,6 +98,7 @@ export const appRouter = router({
   professionalProfile: professionalProfileRouter,
   twoFactor: twoFactorRouter,
   businessMessaging: businessMessagingRouter,
+  localAuth: localAuthRouter,
   lightPulseIntro: router({
     recordDismissal: protectedProcedure.mutation(async () => ({
       recorded: await db.recordLumaePulseIntroDismissal(),

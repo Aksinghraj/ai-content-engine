@@ -38,9 +38,11 @@ describe("defensive security hardening", () => {
     expect(server).toContain("const contactLimiter");
     expect(server).toContain("const paymentLimiter");
     expect(server).toContain("const twoFactorLimiter");
+    expect(server).toContain("const localAuthLimiter");
     expect(server).toContain('app.use("/api/trpc/system.sendContactMessage", contactLimiter)');
     expect(server).toContain('app.use("/api/trpc/credits", paymentLimiter)');
     expect(server).toContain('app.use("/api/trpc/twoFactor", twoFactorLimiter)');
+    expect(server).toContain('app.use("/api/trpc/localAuth", localAuthLimiter)');
     expect(server).toContain('return res.status(403).json({ error: "untrusted-origin" })');
     expect(server).toContain('express.json({ limit: "1mb" })');
     expect(server).toContain('express.raw({ type: "application/json", limit: "256kb" })');

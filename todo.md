@@ -960,6 +960,14 @@
 - [x] Define compliant contact consent, unsubscribe, and audit-record requirements
 - [x] Build owned contact management with explicit channel consent and no outbound sending by default
 - [x] Build an official WhatsApp Embedded Signup connection-state flow with clear linking feedback
-- [ ] Select and configure a compliant email provider after confirming provider credentials and sender verification
+- [x] Defer email-provider activation to the owner and show Coming Soon until credentials and sender verification are available
 - [x] Add security and consent regression coverage, validate the full suite, and document provider prerequisites
 - [x] Keep email and WhatsApp sending disabled until the owner completes provider onboarding and supplies verified credentials
+
+## Secure Multi-Method Authentication Refresh (IN PROGRESS)
+- [x] Show clear Coming Soon states for unconfigured email delivery, WhatsApp, and phone OTP providers
+- [x] Audit existing authentication, verification, and session issuance before adding local credentials
+- [x] Add secure email/password registration and sign-in with strong password hashing and verification safeguards
+- [x] Refresh the login surface with the supplied restrained dark background direction and Google entry point
+- [x] Add a provider-aware phone OTP entry point that remains disabled until an SMS provider is configured
+- [x] Add security regression coverage, validate the full suite, and document activation prerequisites
