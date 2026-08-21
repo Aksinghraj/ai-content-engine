@@ -978,3 +978,10 @@
 - [x] Preserve two-factor verification and trusted-device security boundaries regardless of Remember Me selection
 - [x] Prepare provider activation states for phone OTP, Resend email, and Meta WhatsApp without outbound operations
 - [x] Add regression coverage, validate the full suite, and document owner-provided credential prerequisites
+
+## Authentication Completion and Recovery (IN PROGRESS)
+- [x] Audit and fix sign-out so it clears only Lumae session state and returns to a Lumae route
+- [x] Add secure email password-reset request, single-use reset link, session invalidation, and explicit OAuth-only guidance
+- [x] Add GitHub OAuth and phone-OTP entry states with clear provider activation requirements
+- [x] Define consistent same-email account-linking behavior without unintended account takeover
+- [x] Add security regressions, validate the full suite, and document required external credentials and costs

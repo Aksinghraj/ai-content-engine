@@ -19,7 +19,7 @@ export default function Header() {
 
   const handleLogout = async () => {
     await logout();
-    window.location.href = "/";
+    window.location.assign("/login");
   };
 
   return (

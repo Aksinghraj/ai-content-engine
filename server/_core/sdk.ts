@@ -22,6 +22,7 @@ export type SessionPayload = {
   openId: string;
   appId: string;
   name: string;
+  localSessionVersion?: number;
 };
 
 export const TWO_FACTOR_CHALLENGE_COOKIE = "lumae_2fa_challenge";
@@ -180,13 +181,14 @@ class SDKServer {
    */
   async createSessionToken(
     openId: string,
-    options: { expiresInMs?: number; name?: string } = {}
+    options: { expiresInMs?: number; name?: string; localSessionVersion?: number } = {}
   ): Promise<string> {
     return this.signSession(
       {
         openId,
         appId: ENV.appId,
         name: options.name || "",
+        ...(options.localSessionVersion === undefined ? {} : { localSessionVersion: options.localSessionVersion }),
       },
       options
     );
@@ -211,7 +213,7 @@ class SDKServer {
       .sign(secretKey);
   }
 
-  async createTwoFactorChallenge(openId: string, name: string, returnPath: string, rememberMe = false): Promise<string> {
+  async createTwoFactorChallenge(openId: string, name: string, returnPath: string, rememberMe = false, localSessionVersion?: number): Promise<string> {
     const issuedAt = Date.now();
     const secretKey = this.getSessionSecret();
     return new SignJWT({
@@ -221,6 +223,7 @@ class SDKServer {
       purpose: "two_factor_challenge",
       returnPath,
       rememberMe,
+      ...(localSessionVersion === undefined ? {} : { localSessionVersion }),
     } satisfies TwoFactorChallengePayload)
       .setProtectedHeader({ alg: "HS256", typ: "JWT" })
       .setExpirationTime(Math.floor((issuedAt + 1000 * 60 * 10) / 1000))
@@ -232,7 +235,7 @@ class SDKServer {
     try {
       const secretKey = this.getSessionSecret();
       const { payload } = await jwtVerify(cookieValue, secretKey, { algorithms: ["HS256"] });
-      const { openId, appId, name, purpose, returnPath, rememberMe } = payload as Record<string, unknown>;
+      const { openId, appId, name, purpose, returnPath, rememberMe, localSessionVersion } = payload as Record<string, unknown>;
       if (
         !isNonEmptyString(openId) ||
         !isNonEmptyString(appId) ||
@@ -246,7 +249,7 @@ class SDKServer {
       ) {
         return null;
       }
-      return { openId, appId, name, purpose, returnPath, rememberMe: rememberMe === true };
+      return { openId, appId, name, purpose, returnPath, rememberMe: rememberMe === true, ...(typeof localSessionVersion === "number" ? { localSessionVersion } : {}) };
     } catch {
       return null;
     }
@@ -254,7 +257,7 @@ class SDKServer {
 
   async verifySession(
     cookieValue: string | undefined | null
-  ): Promise<{ openId: string; appId: string; name: string } | null> {
+  ): Promise<SessionPayload | null> {
     if (!cookieValue) {
       console.warn("[Auth] Missing session cookie");
       return null;
@@ -265,7 +268,7 @@ class SDKServer {
       const { payload } = await jwtVerify(cookieValue, secretKey, {
         algorithms: ["HS256"],
       });
-      const { openId, appId, name } = payload as Record<string, unknown>;
+      const { openId, appId, name, localSessionVersion } = payload as Record<string, unknown>;
 
       if (
         !isNonEmptyString(openId) ||
@@ -281,6 +284,7 @@ class SDKServer {
         openId,
         appId,
         name,
+        ...(typeof localSessionVersion === "number" ? { localSessionVersion } : {}),
       };
     } catch {
       // Never log session material or JWT parsing details: logs are an attack
@@ -369,6 +373,13 @@ class SDKServer {
 
     if (!user) {
       throw ForbiddenError("User not found");
+    }
+
+    if (session.localSessionVersion !== undefined) {
+      const { getLocalSessionVersion } = await import("../db/localAuth");
+      if (await getLocalSessionVersion(user.id) !== session.localSessionVersion) {
+        throw ForbiddenError("Session has been invalidated");
+      }
     }
 
     await db.upsertUser({

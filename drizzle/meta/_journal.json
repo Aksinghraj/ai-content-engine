@@ -176,6 +176,13 @@
       "when": 1787297928698,
       "tag": "0024_common_titanium_man",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1787300458962,
+      "tag": "0025_foamy_wendell_rand",
+      "breakpoints": true
     }
   ]
 }

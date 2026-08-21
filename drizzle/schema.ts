@@ -1,4 +1,4 @@
-import { int, json, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, decimal, date, uniqueIndex } from "drizzle-orm/mysql-core";
+import { int, json, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, decimal, date, uniqueIndex, index } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
 
 /**
@@ -173,6 +173,26 @@ export const localAuthCredentials = mysqlTable("localAuthCredentials", {
   userUnique: uniqueIndex("local_auth_credentials_user_unique").on(table.userId),
   verificationTokenUnique: uniqueIndex("local_auth_credentials_verification_token_unique").on(table.verificationTokenHash),
 }));
+
+/** Single-use, SHA-256-hashed local password reset links. Raw reset tokens never enter storage. */
+export const localPasswordResetTokens = mysqlTable("localPasswordResetTokens", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  tokenHash: varchar("tokenHash", { length: 128 }).notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  usedAt: timestamp("usedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => ({
+  tokenUnique: uniqueIndex("local_password_reset_tokens_token_unique").on(table.tokenHash),
+  userIndex: index("local_password_reset_tokens_user_index").on(table.userId),
+}));
+
+/** Monotonic local-session version used to invalidate every email/password session after a reset. */
+export const localAuthSessionVersions = mysqlTable("localAuthSessionVersions", {
+  userId: int("userId").primaryKey(),
+  version: int("version").default(0).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
 
 /**
  * Professional profile fields are stored separately from the authentication

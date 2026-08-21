@@ -216,7 +216,7 @@ function DashboardLayoutContent({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem
-                  onClick={async () => { await logout(); window.location.href = "/"; }}
+                  onClick={async () => { await logout(); window.location.assign("/login"); }}
                   className="cursor-pointer text-destructive focus:text-destructive"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
@@ -278,7 +278,7 @@ function DashboardLayoutContent({
                     <p className="text-xs text-muted-foreground">{user.email}</p>
                   </div>
                   <DropdownMenuItem
-                    onClick={async () => { await logout(); window.location.href = "/"; }}
+                    onClick={async () => { await logout(); window.location.assign("/login"); }}
                     className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950"
                   >
                     <LogOut className="mr-2 h-4 w-4" />

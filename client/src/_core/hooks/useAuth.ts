@@ -39,6 +39,7 @@ export function useAuth(options?: UseAuthOptions) {
     } finally {
       // Immediately wipe the cached user from React Query
       utils.auth.me.setData(undefined, null);
+      localStorage.removeItem("manus-runtime-user-info");
       // Force a fresh fetch so any component reading useAuth sees null
       await utils.auth.me.invalidate();
     }

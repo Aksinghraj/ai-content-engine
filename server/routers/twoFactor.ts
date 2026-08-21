@@ -251,7 +251,7 @@ export const twoFactorRouter = router({
     }
     if (result.remainingCodes) await consumeRecoveryCode(user.id, result.remainingCodes);
     const expiresInMs = challenge.rememberMe ? SESSION_TTL_MS : STANDARD_SESSION_TTL_MS;
-    const sessionToken = await sdk.createSessionToken(challenge.openId, { name: challenge.name, expiresInMs });
+    const sessionToken = await sdk.createSessionToken(challenge.openId, { name: challenge.name, expiresInMs, localSessionVersion: challenge.localSessionVersion });
     const cookieOptions = getSessionCookieOptions(ctx.req);
     ctx.res.clearCookie(TWO_FACTOR_CHALLENGE_COOKIE, { ...cookieOptions, maxAge: -1 });
     ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, ...(challenge.rememberMe ? { maxAge: SESSION_TTL_MS } : {}) });
@@ -303,7 +303,7 @@ export const twoFactorRouter = router({
       if (!verification.verified) throw new Error("Passkey authentication was not verified");
       await updatePasskeyUsage(passkey.id, verification.authenticationInfo.newCounter);
       const expiresInMs = challenge.rememberMe ? SESSION_TTL_MS : STANDARD_SESSION_TTL_MS;
-      const sessionToken = await sdk.createSessionToken(challenge.openId, { name: challenge.name, expiresInMs });
+      const sessionToken = await sdk.createSessionToken(challenge.openId, { name: challenge.name, expiresInMs, localSessionVersion: challenge.localSessionVersion });
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(TWO_FACTOR_CHALLENGE_COOKIE, { ...cookieOptions, maxAge: -1 });
       ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, ...(challenge.rememberMe ? { maxAge: SESSION_TTL_MS } : {}) });
