@@ -935,3 +935,10 @@
 - [x] Add a polished Account Settings security UI and post-login two-factor verification step
 - [x] Turn API rate-limit responses into accessible, courteous user notifications with retry guidance
 - [x] Apply migration, add regression coverage, validate the full suite, and document recovery safeguards
+
+## WebAuthn Passkeys and Recovery-Code Regeneration (IN PROGRESS)
+- [x] Audit the two-factor challenge, secure settings UI, and maintained WebAuthn packages
+- [x] Add WebAuthn passkey registration, server-side credential verification, and counter persistence
+- [x] Add protected recovery-code regeneration that invalidates previous codes
+- [x] Extend Account Settings and the two-factor challenge UI with accessible passkey controls
+- [x] Apply migration, add regression coverage, validate the full suite, and document compatibility guidance

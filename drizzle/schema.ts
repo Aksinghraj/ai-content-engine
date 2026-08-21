@@ -65,6 +65,39 @@ export const twoFactorAuthenticators = mysqlTable("twoFactorAuthenticators", {
 
 export type TwoFactorAuthenticator = typeof twoFactorAuthenticators.$inferSelect;
 
+/** Public WebAuthn credential metadata. Private key material never leaves the authenticator. */
+export const webAuthnPasskeys = mysqlTable("webAuthnPasskeys", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  credentialId: varchar("credentialId", { length: 512 }).notNull(),
+  publicKey: text("publicKey").notNull(),
+  counter: int("counter").default(0).notNull(),
+  deviceType: varchar("deviceType", { length: 32 }).notNull(),
+  backedUp: boolean("backedUp").default(false).notNull(),
+  transports: json("transports"),
+  name: varchar("name", { length: 80 }).notNull().default("Passkey"),
+  lastUsedAt: timestamp("lastUsedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  credentialUnique: uniqueIndex("web_authn_passkeys_credential_unique").on(table.credentialId),
+  userIndex: uniqueIndex("web_authn_passkeys_user_credential_unique").on(table.userId, table.credentialId),
+}));
+
+/** One short-lived server-side challenge per user and WebAuthn ceremony type. */
+export const webAuthnCeremonies = mysqlTable("webAuthnCeremonies", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  type: varchar("type", { length: 32 }).notNull(),
+  challenge: varchar("challenge", { length: 255 }).notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => ({
+  userTypeUnique: uniqueIndex("web_authn_ceremonies_user_type_unique").on(table.userId, table.type),
+}));
+
+export type WebAuthnPasskey = typeof webAuthnPasskeys.$inferSelect;
+
 /**
  * Professional profile fields are stored separately from the authentication
  * record. Profiles are private by default; only non-sensitive fields are

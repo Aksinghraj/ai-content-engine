@@ -49,6 +49,13 @@ export async function consumeRecoveryCode(userId: number, remainingRecoveryCodeH
     .where(and(eq(twoFactorAuthenticators.userId, userId), eq(twoFactorAuthenticators.isEnabled, true)));
 }
 
+export async function replaceRecoveryCodeHashes(userId: number, recoveryCodeHashes: string[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(twoFactorAuthenticators).set({ recoveryCodeHashes })
+    .where(and(eq(twoFactorAuthenticators.userId, userId), eq(twoFactorAuthenticators.isEnabled, true)));
+}
+
 export async function deleteTwoFactorAuthenticator(userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");

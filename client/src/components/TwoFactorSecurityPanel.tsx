@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Check, Copy, KeyRound, Loader2, ShieldCheck, Smartphone } from "lucide-react";
+import { browserSupportsWebAuthn, startRegistration } from "@simplewebauthn/browser";
+import { Copy, KeyRound, Loader2, ShieldCheck, Smartphone, Fingerprint, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,8 @@ export function TwoFactorSecurityPanel() {
   const [disableCode, setDisableCode] = useState("");
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
   const [codesAcknowledged, setCodesAcknowledged] = useState(false);
+  const [recoveryRegenerationCode, setRecoveryRegenerationCode] = useState("");
+  const [passkeySupported] = useState(() => browserSupportsWebAuthn());
 
   const beginSetup = trpc.twoFactor.beginSetup.useMutation({
     onSuccess: (result) => {
@@ -42,11 +45,37 @@ export function TwoFactorSecurityPanel() {
     },
     onError: (error) => toast.error(error.message),
   });
+  const regenerateRecoveryCodes = trpc.twoFactor.regenerateRecoveryCodes.useMutation({
+    onSuccess: async (result) => {
+      setRecoveryCodes(result.recoveryCodes);
+      setCodesAcknowledged(false);
+      setRecoveryRegenerationCode("");
+      await utils.twoFactor.status.invalidate();
+      toast.success("Previous recovery codes are no longer valid.");
+    },
+    onError: (error) => toast.error(error.message),
+  });
+  const beginPasskeyRegistration = trpc.twoFactor.beginPasskeyRegistration.useMutation();
+  const finishPasskeyRegistration = trpc.twoFactor.finishPasskeyRegistration.useMutation();
 
   const copyManualKey = async () => {
     if (!setup) return;
     await navigator.clipboard.writeText(setup.manualKey);
     toast.success("Setup key copied.");
+  };
+
+  const addPasskey = async () => {
+    if (!passkeySupported) return;
+    try {
+      const optionsJSON = await beginPasskeyRegistration.mutateAsync();
+      const response = await startRegistration({ optionsJSON });
+      await finishPasskeyRegistration.mutateAsync({ response });
+      await utils.twoFactor.status.invalidate();
+      toast.success("Passkey added. You can now use it after sign-in.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "We could not add that passkey. Please try again.";
+      toast.error(message);
+    }
   };
 
   if (isLoading) {
@@ -77,6 +106,8 @@ export function TwoFactorSecurityPanel() {
     return (
       <Card className="border-border bg-card p-6">
         <div className="flex items-start justify-between gap-4"><div className="flex gap-3"><ShieldCheck className="mt-0.5 h-5 w-5 text-[#10b981]" /><div><h3 className="font-semibold text-card-foreground">Two-factor authentication</h3><p className="mt-1 text-sm text-muted-foreground">Your authenticator app is required after sign-in. {status.recoveryCodesRemaining} recovery codes remain.</p></div></div><span className="rounded-full bg-[#10b981]/15 px-2.5 py-1 text-xs font-medium text-[#10b981]">Enabled</span></div>
+        <div className="mt-5 rounded-xl border border-border bg-muted/25 p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-medium text-card-foreground">Passkeys</p><p className="mt-1 text-xs text-muted-foreground">Use Face ID, Touch ID, Windows Hello, or a security key as a faster second-factor option.</p></div><Fingerprint className="h-5 w-5 shrink-0 text-primary" /></div>{status.passkeys.length > 0 && <p className="mt-3 text-xs text-muted-foreground">{status.passkeys.length} passkey{status.passkeys.length === 1 ? "" : "s"} connected.</p>}<Button className="mt-3 lumae-gradient-cta" disabled={!passkeySupported || beginPasskeyRegistration.isPending || finishPasskeyRegistration.isPending} onClick={addPasskey}>{(beginPasskeyRegistration.isPending || finishPasskeyRegistration.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Add a passkey</Button>{!passkeySupported && <p className="mt-2 text-xs text-muted-foreground">Passkeys are not available in this browser. Use a current browser or continue with your authenticator app.</p>}</div>
+        <div className="mt-4 rounded-xl border border-border bg-muted/25 p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-medium text-card-foreground">Regenerate recovery codes</p><p className="mt-1 text-xs text-muted-foreground">This invalidates every previous recovery code. Confirm with a current authenticator code.</p></div><RefreshCw className="h-5 w-5 shrink-0 text-primary" /></div><div className="mt-3 flex flex-col gap-2 sm:flex-row"><input inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={recoveryRegenerationCode} onChange={(event) => setRecoveryRegenerationCode(event.target.value.replace(/\D/g, ""))} className="rounded-lg border border-border bg-background px-3 py-2 font-mono tracking-[0.2em] text-foreground outline-none focus:ring-2 focus:ring-primary" placeholder="000000" /><Button variant="outline" className="border-border" disabled={recoveryRegenerationCode.length !== 6 || regenerateRecoveryCodes.isPending} onClick={() => regenerateRecoveryCodes.mutate({ code: recoveryRegenerationCode })}>{regenerateRecoveryCodes.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Regenerate codes</Button></div></div>
         <div className="mt-5 rounded-xl border border-border bg-muted/25 p-4"><p className="font-medium text-card-foreground">Disable two-factor authentication</p><p className="mt-1 text-xs text-muted-foreground">Enter a current authenticator or recovery code to confirm this security-sensitive change.</p><div className="mt-3 flex flex-col gap-2 sm:flex-row"><input value={disableCode} onChange={(event) => setDisableCode(event.target.value.replace(/\s/g, ""))} className="rounded-lg border border-border bg-background px-3 py-2 font-mono text-sm text-foreground outline-none focus:ring-2 focus:ring-primary" placeholder="Authenticator or recovery code" /><Button variant="outline" className="border-[#ef4444]/45 text-[#ef4444] hover:bg-[#ef4444]/10" disabled={!disableCode || disable.isPending} onClick={() => disable.mutate({ code: disableCode })}>{disable.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Disable</Button></div></div>
       </Card>
     );

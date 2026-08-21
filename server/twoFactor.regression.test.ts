@@ -63,4 +63,39 @@ describe("two-factor authentication and rate-limit feedback", () => {
     expect(feedback).toContain("lastRateLimitNoticeAt");
     expect(main).toContain("response.status === 429");
   });
+
+  it("stores only public WebAuthn credential data and consumes short-lived ceremony challenges", () => {
+    const schema = read("drizzle/schema.ts");
+    const db = read("server/db/passkeys.ts");
+    const router = read("server/routers/twoFactor.ts");
+
+    expect(schema).toContain('export const webAuthnPasskeys');
+    expect(schema).toContain('publicKey: text("publicKey").notNull()');
+    expect(schema).not.toContain("privateKey");
+    expect(schema).toContain('export const webAuthnCeremonies');
+    expect(db).toContain("5 * 60 * 1000");
+    expect(db).toContain("Consume challenge before response verification");
+    expect(db).toContain("await db.delete(webAuthnCeremonies)");
+    expect(router).toContain("generateRegistrationOptions");
+    expect(router).toContain("verifyRegistrationResponse");
+    expect(router).toContain("generateAuthenticationOptions");
+    expect(router).toContain("verifyAuthenticationResponse");
+    expect(router).toContain("requireUserVerification: true");
+    expect(router).toContain("updatePasskeyUsage");
+  });
+
+  it("requires a current authenticator code to rotate recovery codes and offers passkeys in both security interfaces", () => {
+    const router = read("server/routers/twoFactor.ts");
+    const panel = read("client/src/components/TwoFactorSecurityPanel.tsx");
+    const login = read("client/src/pages/TwoFactorLogin.tsx");
+
+    expect(router).toContain("regenerateRecoveryCodes");
+    expect(router).toContain("Enter a current authenticator code to regenerate recovery codes.");
+    expect(router).toContain("replaceRecoveryCodeHashes");
+    expect(panel).toContain("Regenerate recovery codes");
+    expect(panel).toContain("Previous recovery codes are no longer valid.");
+    expect(panel).toContain("startRegistration");
+    expect(login).toContain("Use a passkey");
+    expect(login).toContain("startAuthentication");
+  });
 });
