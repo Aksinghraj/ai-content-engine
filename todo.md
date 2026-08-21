@@ -993,3 +993,16 @@
 - [x] Leave phone OTP disabled pending a future provider decision
 - [ ] Configure a verified email sender/domain and delivery credentials after owner setup
 - [x] Add delivery and abuse-protection regression coverage, validate the full suite, and document activation status
+
+## Resend Password Reset Delivery (IN PROGRESS)
+- [ ] Add Resend delivery support with safe fallback to the existing delivery service
+- [ ] Require a verified sender address and keep reset emails disabled if configuration is incomplete
+- [ ] Add the Resend API key and verified sender address through secure project configuration
+- [ ] Add provider-selection and delivery-safety regressions, validate the full suite, and confirm activation
+
+## Google Play Launch Preparation (IN PROGRESS)
+- [x] Assess the current web app, Android packaging options, and Google Play account/policy requirements
+- [x] Create a step-by-step owner guide covering Play Console, testing, Data safety, and release actions
+- [ ] Prepare a mobile app foundation with Lumae branding, secure authentication, and production-safe navigation
+- [ ] Create Play Store listing copy, privacy/data-safety inventory, and testing/release checklist
+- [ ] Validate Android build/signing readiness and document the Play Console submission path
