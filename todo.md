@@ -985,3 +985,11 @@
 - [x] Add GitHub OAuth and phone-OTP entry states with clear provider activation requirements
 - [x] Define consistent same-email account-linking behavior without unintended account takeover
 - [x] Add security regressions, validate the full suite, and document required external credentials and costs
+
+## SMS OTP and Password Reset Delivery Activation (IN PROGRESS)
+- [x] Compare compliant SMS OTP and email delivery providers, including sender verification and usage-cost requirements
+- [x] Preserve the existing bounded Remember Me implementation and verify it remains available on the login form
+- [x] Harden provider-neutral password-reset email delivery with no sending before verified email configuration
+- [x] Leave phone OTP disabled pending a future provider decision
+- [ ] Configure a verified email sender/domain and delivery credentials after owner setup
+- [x] Add delivery and abuse-protection regression coverage, validate the full suite, and document activation status

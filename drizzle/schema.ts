@@ -167,6 +167,7 @@ export const localAuthCredentials = mysqlTable("localAuthCredentials", {
   verificationTokenHash: varchar("verificationTokenHash", { length: 128 }),
   verificationExpiresAt: timestamp("verificationExpiresAt"),
   verifiedAt: timestamp("verifiedAt"),
+  lastResetRequestedAt: timestamp("lastResetRequestedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (table) => ({

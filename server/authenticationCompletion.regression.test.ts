@@ -31,6 +31,9 @@ describe("authentication completion and recovery", () => {
     expect(storage).toContain("hashVerificationToken(token)");
     expect(storage).toContain("isNull(localPasswordResetTokens.usedAt)");
     expect(storage).toContain("localAuthSessionVersions.version} + 1");
+    expect(storage).toContain("RESET_REQUEST_COOLDOWN_MS");
+    expect(storage).toContain("lastResetRequestedAt");
+    expect(storage).toContain("revokeLocalPasswordResetToken");
     expect(sdk).toContain("Session has been invalidated");
     expect(sdk).toContain("localSessionVersion");
   });
@@ -43,10 +46,13 @@ describe("authentication completion and recovery", () => {
     expect(login).toContain("Forgot password?");
     expect(login).toContain("GitHub sign-in coming soon");
     expect(login).toContain("Phone OTP coming soon");
+    expect(login).toContain("Remember me for 30 days");
     expect(forgot).toContain("single-use link that expires in 30 minutes");
     expect(router).toContain('status: "oauth_only"');
     expect(router).toContain("requestPasswordReset");
     expect(router).toContain("resetPassword");
+    expect(router).toContain('status: "throttled"');
+    expect(router).toContain("if (!delivered) await revokeLocalPasswordResetToken");
     expect(router).toContain("original sign-in method instead of creating a second account");
   });
 });

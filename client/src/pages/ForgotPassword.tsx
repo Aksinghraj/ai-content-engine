@@ -10,9 +10,10 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const requestReset = trpc.localAuth.requestPasswordReset.useMutation({
-    onSuccess: ({ status }) => {
+    onSuccess: ({ status, retryAfterSeconds }) => {
       if (status === "oauth_only") toast.message("This account uses an external sign-in method. Please continue with Google or its original provider.");
       else if (status === "delivery_unavailable") toast.error("Email delivery is temporarily unavailable. Please try again later.");
+      else if (status === "throttled") toast.message(`Please wait about ${Math.max(1, Math.ceil((retryAfterSeconds ?? 60) / 60))} minute before requesting another reset email.`);
       else { setSent(true); toast.success("If a password account exists, a reset email is on its way."); }
     },
     onError: (error) => toast.error(error.message),

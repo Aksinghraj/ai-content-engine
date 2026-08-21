@@ -5,6 +5,7 @@ import { getDb } from "../db";
 
 const SCRYPT_COST = 16_384;
 const RESET_TTL_MS = 1000 * 60 * 30;
+const RESET_REQUEST_COOLDOWN_MS = 1000 * 60 * 5;
 
 function deriveScrypt(password: string, salt: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -108,10 +109,20 @@ export async function createLocalPasswordResetToken(email: string) {
   const credentials = await db.select().from(localAuthCredentials).where(eq(localAuthCredentials.userId, user.id)).limit(1);
   if (!credentials[0]) return { kind: "oauth_only" as const };
   if (!user.emailVerified || !credentials[0].verifiedAt) return { kind: "unverified" as const };
+  if (credentials[0].lastResetRequestedAt && credentials[0].lastResetRequestedAt.getTime() > Date.now() - RESET_REQUEST_COOLDOWN_MS) {
+    return { kind: "throttled" as const, retryAfterSeconds: Math.ceil((credentials[0].lastResetRequestedAt.getTime() + RESET_REQUEST_COOLDOWN_MS - Date.now()) / 1000) };
+  }
   const token = crypto.randomBytes(32).toString("base64url");
   await db.delete(localPasswordResetTokens).where(and(eq(localPasswordResetTokens.userId, user.id), isNull(localPasswordResetTokens.usedAt)));
   await db.insert(localPasswordResetTokens).values({ userId: user.id, tokenHash: hashVerificationToken(token), expiresAt: new Date(Date.now() + RESET_TTL_MS) });
+  await db.update(localAuthCredentials).set({ lastResetRequestedAt: new Date() }).where(eq(localAuthCredentials.id, credentials[0].id));
   return { kind: "local" as const, user, token, expiresInMs: RESET_TTL_MS };
+}
+
+export async function revokeLocalPasswordResetToken(token: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(localPasswordResetTokens).set({ usedAt: new Date() }).where(and(eq(localPasswordResetTokens.tokenHash, hashVerificationToken(token)), isNull(localPasswordResetTokens.usedAt)));
 }
 
 export async function resetLocalPassword(token: string, passwordHash: string) {

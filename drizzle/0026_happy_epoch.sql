@@ -1,0 +1,1 @@
+ALTER TABLE `localAuthCredentials` ADD `lastResetRequestedAt` timestamp;

@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { createLocalAccount, createLocalPasswordResetToken, createLocalVerificationToken, getLocalAccountByEmail, getLocalSessionVersion, getUserByNormalizedEmail, hashPassword, resetLocalPassword, verifyLocalAccountEmail, verifyPassword } from "../db/localAuth";
+import { createLocalAccount, createLocalPasswordResetToken, createLocalVerificationToken, getLocalAccountByEmail, getLocalSessionVersion, getUserByNormalizedEmail, hashPassword, resetLocalPassword, revokeLocalPasswordResetToken, verifyLocalAccountEmail, verifyPassword } from "../db/localAuth";
 import { isTwoFactorEnabled } from "../db/twoFactor";
 import { sendEmail } from "../_core/emailService";
 import { getSessionCookieOptions } from "../_core/cookies";
@@ -94,9 +94,11 @@ export const localAuthRouter = router({
     const result = await createLocalPasswordResetToken(input.email);
     if (result.kind === "local") {
       const delivered = await sendPasswordResetEmail(result.user.email!, result.token);
+      if (!delivered) await revokeLocalPasswordResetToken(result.token);
       return { status: delivered ? "sent" as const : "delivery_unavailable" as const };
     }
     if (result.kind === "oauth_only") return { status: "oauth_only" as const };
+    if (result.kind === "throttled") return { status: "throttled" as const, retryAfterSeconds: result.retryAfterSeconds };
     return { status: "sent" as const };
   }),
 

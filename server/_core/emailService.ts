@@ -59,7 +59,7 @@ export async function sendEmail(payload: EmailPayload): Promise<boolean> {
       return false;
     }
 
-    console.log("[Email] Email sent successfully to", payload.to);
+    console.log("[Email] Email sent successfully");
     return true;
   } catch (error) {
     console.error("[Email] Error sending email:", error);
