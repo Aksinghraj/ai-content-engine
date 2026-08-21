@@ -7,6 +7,8 @@ import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
 import { sendVerificationEmail } from "./emailService";
 import oauthCallbackRouter from "../routes/oauthCallbackSecure";
+import { isTwoFactorEnabled } from "../db/twoFactor";
+import { TWO_FACTOR_CHALLENGE_COOKIE } from "./sdk";
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -39,6 +41,26 @@ function readGoogleOAuthState(req: Request): GoogleOAuthState | null {
   } catch {
     return null;
   }
+}
+
+async function redirectForTwoFactorIfEnabled(
+  req: Request,
+  res: Response,
+  openId: string,
+  name: string,
+  returnPath: string
+): Promise<boolean> {
+  const account = await db.getUserByOpenId(openId);
+  if (!account || !(await isTwoFactorEnabled(account.id))) return false;
+  const challenge = await sdk.createTwoFactorChallenge(openId, name, returnPath);
+  const cookieOptions = getSessionCookieOptions(req);
+  res.cookie(TWO_FACTOR_CHALLENGE_COOKIE, challenge, {
+    ...cookieOptions,
+    sameSite: "lax",
+    maxAge: GOOGLE_OAUTH_STATE_TTL_MS,
+  });
+  res.redirect(302, "/two-factor");
+  return true;
 }
 
 // Build: 2026-06-21 — form-based Google OAuth (no redirect, no double-encoding)
@@ -267,6 +289,8 @@ export function registerOAuthRoutes(app: Express) {
 
       // Ensure name is never empty — verifySession rejects tokens with empty name
       const displayName = profile.name || profile.email?.split("@")[0] || "User";
+      const redirectTarget = returnPath === "/" ? "/dashboard" : returnPath;
+      if (await redirectForTwoFactorIfEnabled(req, res, openId, displayName, redirectTarget)) return;
 
       const sessionToken = await sdk.createSessionToken(openId, {
         name: displayName,
@@ -278,9 +302,6 @@ export function registerOAuthRoutes(app: Express) {
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: SESSION_TTL_MS });
       
-      // Redirect to dashboard after login, not home page
-      // This prevents the ?code= param from being visible on the home page
-      const redirectTarget = returnPath === "/" ? "/dashboard" : returnPath;
       console.log("[Google OAuth] Cookie set, redirecting to", redirectTarget);
       return res.redirect(302, redirectTarget);
     } catch (err: unknown) {
@@ -347,8 +368,10 @@ export function registerOAuthRoutes(app: Express) {
         }
       }
 
+      const displayName = userInfo.name || "User";
+      if (await redirectForTwoFactorIfEnabled(req, res, userInfo.openId, displayName, "/")) return;
       const sessionToken = await sdk.createSessionToken(userInfo.openId, {
-        name: userInfo.name || "",
+        name: displayName,
         expiresInMs: SESSION_TTL_MS,
       });
 

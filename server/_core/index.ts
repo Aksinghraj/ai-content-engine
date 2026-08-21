@@ -69,6 +69,14 @@ const paymentLimiter = rateLimit({
   message: { error: "Too many payment requests. Please try again later." },
 });
 
+const twoFactorLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many security-code attempts. Please wait before trying again." },
+});
+
 const allowedOrigins = [
   "https://lumae.co.in",
   "https://www.lumae.co.in",
@@ -126,6 +134,7 @@ async function startServer() {
   app.use("/api/trpc/auth", authLimiter);
   app.use("/api/trpc/system.sendContactMessage", contactLimiter);
   app.use("/api/trpc/credits", paymentLimiter);
+  app.use("/api/trpc/twoFactor", twoFactorLimiter);
   app.use("/api/trpc", (req, res, next) => {
     const origin = req.headers.origin;
     const unsafeMethod = ["POST", "PUT", "PATCH", "DELETE"].includes(req.method);

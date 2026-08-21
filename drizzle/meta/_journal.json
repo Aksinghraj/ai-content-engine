@@ -141,6 +141,13 @@
       "when": 1787256386479,
       "tag": "0019_lively_dazzler",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "5",
+      "when": 1787293197580,
+      "tag": "0020_fixed_revanche",
+      "breakpoints": true
     }
   ]
 }

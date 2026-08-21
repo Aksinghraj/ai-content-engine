@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
+import { TwoFactorSecurityPanel } from "@/components/TwoFactorSecurityPanel";
 
 interface NotificationSetting {
   id: string;
@@ -407,51 +408,7 @@ export default function SettingsAdvanced() {
           {/* Security Tab */}
           <TabsContent value="security" className="space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Security Settings */}
-              <Card className="bg-slate-800/50 border-slate-700/50 p-6 space-y-4">
-                <h3 className="text-white font-semibold flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-green-400" />
-                  Security Settings
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-slate-700/20 rounded-lg">
-                    <div>
-                      <p className="text-white font-medium">Two-Factor Auth</p>
-                      <p className="text-xs text-slate-400">Enhanced security</p>
-                    </div>
-                    <Badge className={securitySettings.twoFactorEnabled ? "bg-green-500/20 text-green-300" : "bg-slate-500/20 text-slate-300"}>
-                      {securitySettings.twoFactorEnabled ? "Enabled" : "Disabled"}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-slate-700/20 rounded-lg">
-                    <div>
-                      <p className="text-white font-medium">Login Alerts</p>
-                      <p className="text-xs text-slate-400">Notify on new logins</p>
-                    </div>
-                    <Badge className={securitySettings.loginAlerts ? "bg-green-500/20 text-green-300" : "bg-slate-500/20 text-slate-300"}>
-                      {securitySettings.loginAlerts ? "On" : "Off"}
-                    </Badge>
-                  </div>
-                  <div>
-                    <label className="text-sm text-slate-400">Session Timeout (minutes)</label>
-                    <input
-                      type="number"
-                      value={securitySettings.sessionTimeout}
-                      onChange={(e) =>
-                        setSecuritySettings({
-                          ...securitySettings,
-                          sessionTimeout: e.target.value,
-                        })
-                      }
-                      className="w-full mt-1 px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:border-purple-500/50 focus:outline-none"
-                    />
-                  </div>
-                  <Button className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700">
-                    <Key className="w-4 h-4 mr-2" />
-                    Change Password
-                  </Button>
-                </div>
-              </Card>
+              <TwoFactorSecurityPanel />
 
               {/* Active Sessions */}
               <Card className="bg-slate-800/50 border-slate-700/50 p-6 space-y-4">

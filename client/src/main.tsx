@@ -7,6 +7,7 @@ import superjson from "superjson";
 import App from "./App";
 import { getLoginUrl } from "./const";
 import { registerServiceWorker } from "./serviceWorkerRegister";
+import { notifyRateLimited } from "./lib/rateLimitFeedback";
 import "./index.css";
 
 // Register service worker for PWA support
@@ -23,7 +24,7 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!isUnauthorized) return;
 
   // Don't redirect if we're already on the home page or a public page
-  const publicPages = ["/", "/login", "/privacy", "/terms"];
+  const publicPages = ["/", "/login", "/privacy", "/terms", "/two-factor"];
   const currentPath = window.location.pathname;
   
   if (publicPages.includes(currentPath)) {
@@ -64,11 +65,13 @@ const trpcClient = trpc.createClient({
     httpBatchLink({
       url: "/api/trpc",
       transformer: superjson,
-      fetch(input, init) {
-        return globalThis.fetch(input, {
+      async fetch(input, init) {
+        const response = await globalThis.fetch(input, {
           ...(init ?? {}),
           credentials: "include",
         });
+        if (response.status === 429) notifyRateLimited(response.headers);
+        return response;
       },
     }),
   ],

@@ -928,3 +928,10 @@
 - [x] Implement prioritized server-side hardening for abuse resistance, safe errors, and protected data access
 - [x] Add browser and HTTP protections that preserve login, payments, and social OAuth behavior
 - [x] Add security regression tests, validate the full suite, and document residual operational controls
+
+## Two-Factor Authentication and Rate-Limit Notifications (IN PROGRESS)
+- [x] Audit Account Settings, authentication issuance, notification components, and API error handling
+- [x] Add encrypted TOTP enrollment, confirmation, recovery codes, and protected disable flow
+- [x] Add a polished Account Settings security UI and post-login two-factor verification step
+- [x] Turn API rate-limit responses into accessible, courteous user notifications with retry guidance
+- [x] Apply migration, add regression coverage, validate the full suite, and document recovery safeguards

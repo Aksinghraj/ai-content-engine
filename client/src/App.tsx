@@ -62,6 +62,7 @@ import Blog from "./pages/Blog";
 import BlogCategory from "./pages/BlogCategory";
 import BlogPost from "./pages/BlogPost";
 import PublicProfile from "./pages/PublicProfile";
+import TwoFactorLogin from "./pages/TwoFactorLogin";
 
 function GroupedGenerator() {
   return <GroupedRouteShell><Generator /></GroupedRouteShell>;
@@ -108,6 +109,7 @@ function App() {
             <Route path="/cookie-policy" component={CookiePolicy} />
             <Route path="/cookies" component={CookiePolicy} />
             <Route path="/verify-email" component={VerifyEmail} />
+            <Route path="/two-factor" component={TwoFactorLogin} />
             <Route path="/blog" component={Blog} />
             <Route path="/blog/category/:category" component={BlogCategory} />
             <Route path="/blog/:category/:slug" component={BlogPost} />

@@ -24,6 +24,12 @@ export type SessionPayload = {
   name: string;
 };
 
+export const TWO_FACTOR_CHALLENGE_COOKIE = "lumae_2fa_challenge";
+type TwoFactorChallengePayload = SessionPayload & {
+  purpose: "two_factor_challenge";
+  returnPath: string;
+};
+
 export type AuthenticatedUser = User & {
   taskUid?: string;
   isCron?: boolean;
@@ -202,6 +208,46 @@ class SDKServer {
       .setProtectedHeader({ alg: "HS256", typ: "JWT" })
       .setExpirationTime(expirationSeconds)
       .sign(secretKey);
+  }
+
+  async createTwoFactorChallenge(openId: string, name: string, returnPath: string): Promise<string> {
+    const issuedAt = Date.now();
+    const secretKey = this.getSessionSecret();
+    return new SignJWT({
+      openId,
+      appId: ENV.appId,
+      name,
+      purpose: "two_factor_challenge",
+      returnPath,
+    } satisfies TwoFactorChallengePayload)
+      .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+      .setExpirationTime(Math.floor((issuedAt + 1000 * 60 * 10) / 1000))
+      .sign(secretKey);
+  }
+
+  async verifyTwoFactorChallenge(cookieValue: string | undefined | null): Promise<TwoFactorChallengePayload | null> {
+    if (!cookieValue) return null;
+    try {
+      const secretKey = this.getSessionSecret();
+      const { payload } = await jwtVerify(cookieValue, secretKey, { algorithms: ["HS256"] });
+      const { openId, appId, name, purpose, returnPath } = payload as Record<string, unknown>;
+      if (
+        !isNonEmptyString(openId) ||
+        !isNonEmptyString(appId) ||
+        !isNonEmptyString(name) ||
+        appId !== ENV.appId ||
+        purpose !== "two_factor_challenge" ||
+        !isNonEmptyString(returnPath) ||
+        !returnPath.startsWith("/") ||
+        returnPath.startsWith("//") ||
+        returnPath.startsWith("/api/")
+      ) {
+        return null;
+      }
+      return { openId, appId, name, purpose, returnPath };
+    } catch {
+      return null;
+    }
   }
 
   async verifySession(

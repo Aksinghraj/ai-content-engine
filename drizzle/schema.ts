@@ -47,6 +47,25 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
 /**
+ * One encrypted TOTP authenticator per account. The seed is never returned to
+ * the browser after enrollment; recovery codes are stored only as keyed hashes.
+ */
+export const twoFactorAuthenticators = mysqlTable("twoFactorAuthenticators", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  encryptedSecret: text("encryptedSecret").notNull(),
+  recoveryCodeHashes: json("recoveryCodeHashes"),
+  isEnabled: boolean("isEnabled").default(false).notNull(),
+  enabledAt: timestamp("enabledAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  userUnique: uniqueIndex("two_factor_authenticators_user_unique").on(table.userId),
+}));
+
+export type TwoFactorAuthenticator = typeof twoFactorAuthenticators.$inferSelect;
+
+/**
  * Professional profile fields are stored separately from the authentication
  * record. Profiles are private by default; only non-sensitive fields are
  * exposed through the public sharing route when explicitly enabled.

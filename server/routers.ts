@@ -36,6 +36,7 @@ import { aiMediaGeneration } from "./routers/aiMediaGeneration";
 import { socialOAuthIntegrationRouter } from "./routers/socialOAuthIntegration";
 import { freeTierRouter } from "./routers/freeTier";
 import { professionalProfileRouter } from "./routers/professionalProfile";
+import { twoFactorRouter } from "./routers/twoFactor";
 
 export const appRouter = router({
   system: systemRouter,
@@ -93,6 +94,7 @@ export const appRouter = router({
   socialPosting: socialPostingRouter,
   aiPostGeneration: aiPostGenerationRouter,
   professionalProfile: professionalProfileRouter,
+  twoFactor: twoFactorRouter,
   lightPulseIntro: router({
     recordDismissal: protectedProcedure.mutation(async () => ({
       recorded: await db.recordLumaePulseIntroDismissal(),
