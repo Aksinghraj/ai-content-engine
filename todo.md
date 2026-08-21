@@ -1003,6 +1003,8 @@
 ## Google Play Launch Preparation (IN PROGRESS)
 - [x] Assess the current web app, Android packaging options, and Google Play account/policy requirements
 - [x] Create a step-by-step owner guide covering Play Console, testing, Data safety, and release actions
-- [ ] Prepare a mobile app foundation with Lumae branding, secure authentication, and production-safe navigation
-- [ ] Create Play Store listing copy, privacy/data-safety inventory, and testing/release checklist
-- [ ] Validate Android build/signing readiness and document the Play Console submission path
+- [x] Prepare a mobile app foundation with Lumae branding, secure authentication, and production-safe navigation
+- [x] Create Play Store listing copy, privacy/data-safety inventory, and testing/release checklist
+- [x] Validate the unsigned API 36 Android App Bundle and document the Play Console submission path
+- [x] Configure the permanent Android package name as in.lumae.app across mobile build and OAuth/App Link planning
+- [ ] Complete owner-controlled Play App Signing, App Link certificate association, and Play Console test release
