@@ -955,3 +955,11 @@
 - [x] Add Email Automation and WhatsApp Automation nested routes and tabs
 - [x] Provide safe, clearly labelled entry pages without implementing outbound messaging services
 - [x] Add navigation regression coverage and validate the full suite
+
+## Consent-First Business Messaging Foundation (IN PROGRESS)
+- [x] Define compliant contact consent, unsubscribe, and audit-record requirements
+- [x] Build owned contact management with explicit channel consent and no outbound sending by default
+- [x] Build an official WhatsApp Embedded Signup connection-state flow with clear linking feedback
+- [ ] Select and configure a compliant email provider after confirming provider credentials and sender verification
+- [x] Add security and consent regression coverage, validate the full suite, and document provider prerequisites
+- [x] Keep email and WhatsApp sending disabled until the owner completes provider onboarding and supplies verified credentials

@@ -111,6 +111,54 @@ export const trustedDevices = mysqlTable("trustedDevices", {
   userIndex: uniqueIndex("trusted_devices_user_expiry_unique").on(table.userId, table.expiresAt),
 }));
 
+/** Customer contacts owned by a Business workspace; consent is explicit per channel. */
+export const businessContacts = mysqlTable("businessContacts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  name: varchar("name", { length: 160 }),
+  email: varchar("email", { length: 320 }),
+  phone: varchar("phone", { length: 40 }),
+  source: varchar("source", { length: 120 }).notNull().default("manual"),
+  emailConsent: boolean("emailConsent").default(false).notNull(),
+  emailConsentAt: timestamp("emailConsentAt"),
+  whatsappConsent: boolean("whatsappConsent").default(false).notNull(),
+  whatsappConsentAt: timestamp("whatsappConsentAt"),
+  unsubscribedAt: timestamp("unsubscribedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  userEmailUnique: uniqueIndex("business_contacts_user_email_unique").on(table.userId, table.email),
+  userPhoneUnique: uniqueIndex("business_contacts_user_phone_unique").on(table.userId, table.phone),
+}));
+
+/** Immutable user-owned audit trail for explicit consent changes. */
+export const businessConsentEvents = mysqlTable("businessConsentEvents", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  contactId: int("contactId").notNull(),
+  channel: mysqlEnum("channel", ["email", "whatsapp"]).notNull(),
+  action: mysqlEnum("action", ["granted", "withdrawn"]).notNull(),
+  source: varchar("source", { length: 120 }).notNull().default("manual"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+/** Provider-facing WhatsApp Business state; credentials remain absent until official onboarding completes. */
+export const whatsappBusinessConnections = mysqlTable("whatsappBusinessConnections", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  status: mysqlEnum("status", ["not_configured", "ready_to_link", "linking", "connected", "needs_reconnect", "error"]).default("not_configured").notNull(),
+  wabaId: varchar("wabaId", { length: 255 }),
+  phoneNumberId: varchar("phoneNumberId", { length: 255 }),
+  displayPhoneNumber: varchar("displayPhoneNumber", { length: 40 }),
+  encryptedBusinessToken: text("encryptedBusinessToken"),
+  lastError: varchar("lastError", { length: 255 }),
+  connectedAt: timestamp("connectedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  userUnique: uniqueIndex("whatsapp_business_connections_user_unique").on(table.userId),
+}));
+
 /**
  * Professional profile fields are stored separately from the authentication
  * record. Profiles are private by default; only non-sensitive fields are
