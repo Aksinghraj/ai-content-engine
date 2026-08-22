@@ -1008,3 +1008,4 @@
 - [x] Validate the unsigned API 36 Android App Bundle and document the Play Console submission path
 - [x] Configure the permanent Android package name as in.lumae.app across mobile build and OAuth/App Link planning
 - [ ] Complete owner-controlled Play App Signing, App Link certificate association, and Play Console test release
+- [x] Create a field-by-field Google Play Console guide with Lumae-specific values and owner-only fields clearly separated
