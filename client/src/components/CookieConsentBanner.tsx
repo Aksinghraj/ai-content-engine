@@ -7,6 +7,7 @@ declare global {
   interface Window {
     dataLayer: any[];
     gtag: (...args: any[]) => void;
+    loadLumaeWebTracking?: () => void;
   }
 }
 
@@ -31,6 +32,7 @@ export default function CookieConsentBanner() {
     
     // Enable Google Analytics and AdSense cookies
     if (typeof window !== "undefined") {
+      window.loadLumaeWebTracking?.();
       window.dataLayer = window.dataLayer || [];
       if (window.gtag) {
         window.gtag("consent", "update", {

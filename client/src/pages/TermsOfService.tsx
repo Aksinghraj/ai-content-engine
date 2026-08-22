@@ -34,7 +34,7 @@ export default function TermsOfService() {
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground">1. Agreement to Terms</h2>
             <p className="text-muted-foreground leading-relaxed">
-              By accessing and using Lumae AI, operated by <strong className="text-foreground">Ankit Singh</strong> at <strong className="text-foreground">lumae.co.in</strong>, you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our service. We reserve the right to modify these terms at any time, and your continued use of the service constitutes acceptance of any changes.
+              By accessing and using Lumae AI, led by <strong className="text-foreground">Veer Rajput</strong> at <strong className="text-foreground">lumae.co.in</strong>, you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our service. We reserve the right to modify these terms at any time, and your continued use of the service constitutes acceptance of any changes.
             </p>
           </section>
 
@@ -135,7 +135,7 @@ export default function TermsOfService() {
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground">7. Intellectual Property</h2>
             <p className="text-muted-foreground leading-relaxed">
-              The Service and its original content, features, and functionality are the exclusive property of Ankit Singh and Lumae AI, protected by international copyright, trademark, and other intellectual property laws.
+              The Service and its original content, features, and functionality are the exclusive property of Lumae AI, protected by international copyright, trademark, and other intellectual property laws.
             </p>
             <p className="text-muted-foreground leading-relaxed mt-4">
               You retain ownership of any content you create using our platform. However, you grant us a limited, non-exclusive license to process, store, and display your content to provide the Service. You are responsible for ensuring that content you generate complies with all applicable laws and does not infringe on third-party rights.
@@ -174,7 +174,7 @@ export default function TermsOfService() {
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground">10. Limitation of Liability</h2>
             <p className="text-muted-foreground leading-relaxed">
-              TO THE MAXIMUM EXTENT PERMITTED BY LAW, LUMAE AI AND ANKIT SINGH SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS, DATA, OR USE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+              TO THE MAXIMUM EXTENT PERMITTED BY LAW, LUMAE AI SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS, DATA, OR USE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
             </p>
             <p className="text-muted-foreground leading-relaxed mt-4">
               OUR TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNT YOU PAID FOR THE SERVICE IN THE PAST 12 MONTHS.
@@ -185,7 +185,7 @@ export default function TermsOfService() {
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground">11. Indemnification</h2>
             <p className="text-muted-foreground leading-relaxed">
-              You agree to indemnify, defend, and hold harmless Lumae AI, Ankit Singh, and their officers, directors, employees, and agents from any claims, damages, losses, or expenses (including legal fees) arising from:
+              You agree to indemnify, defend, and hold harmless Lumae AI and its officers, directors, employees, and agents from any claims, damages, losses, or expenses (including legal fees) arising from:
             </p>
             <ul className="list-disc list-inside text-muted-foreground space-y-2 ml-4">
               <li>Your use of the Service</li>
@@ -269,7 +269,7 @@ export default function TermsOfService() {
                 <strong className="text-foreground">Company:</strong> Lumae AI
               </p>
               <p className="text-muted-foreground">
-                <strong className="text-foreground">Owner:</strong> Ankit Singh
+                <strong className="text-foreground">Founder:</strong> Veer Rajput
               </p>
             </div>
           </section>

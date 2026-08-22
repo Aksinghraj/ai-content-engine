@@ -1009,3 +1009,10 @@
 - [x] Configure the permanent Android package name as in.lumae.app across mobile build and OAuth/App Link planning
 - [ ] Complete owner-controlled Play App Signing, App Link certificate association, and Play Console test release
 - [x] Create a field-by-field Google Play Console guide with Lumae-specific values and owner-only fields clearly separated
+
+## Comprehensive Release-Readiness Audit (IN PROGRESS)
+- [x] Verify Android package, API 36 target, release mode, ABI support, manifest permissions, and signed-bundle prerequisites
+- [x] Verify account deletion availability in-app and through a public web route, and reconcile Data Safety declarations with actual behavior
+- [x] Review privacy, content, AI, ads, payment, authentication, and reviewer-access requirements against the final application behavior
+- [x] Run full web tests, Android build checks, dependency/security scans, and real-device test preparation checks
+- [x] Produce a verified readiness matrix with all fixed, blocked, and owner-controlled Google Play actions

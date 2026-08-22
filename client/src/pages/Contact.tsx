@@ -173,8 +173,8 @@ export default function Contact() {
             {/* Owner Card */}
             <Card className="bg-gradient-to-br from-purple-950/30 to-background border border-purple-900/50 p-6">
               <h3 className="font-semibold text-foreground mb-3">Owner & Founder</h3>
-              <p className="text-foreground font-bold text-lg mb-1">Ankit Singh</p>
-              <p className="text-muted-foreground text-sm mb-3">Founder & Owner, Lumae AI</p>
+              <p className="text-foreground font-bold text-lg mb-1">Veer Rajput</p>
+              <p className="text-muted-foreground text-sm mb-3">Founder / CEO, Lumae AI</p>
               <a
                 href="mailto:imankitsingh.in@gmail.com"
                 className="text-purple-600 hover:text-purple-700 underline transition-colors text-sm font-medium"

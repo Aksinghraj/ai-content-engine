@@ -67,6 +67,7 @@ import BusinessAutomation from "./pages/BusinessAutomation";
 import VerifyLocalEmail from "./pages/VerifyLocalEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import DeleteAccount from "./pages/DeleteAccount";
 
 function GroupedGenerator() {
   return <GroupedRouteShell><Generator /></GroupedRouteShell>;
@@ -124,6 +125,7 @@ function App() {
             <Route path="/verify-local-email" component={VerifyLocalEmail} />
             <Route path="/forgot-password" component={ForgotPassword} />
             <Route path="/reset-password" component={ResetPassword} />
+            <Route path="/delete-account" component={DeleteAccount} />
             <Route path="/two-factor" component={TwoFactorLogin} />
             <Route path="/blog" component={Blog} />
             <Route path="/blog/category/:category" component={BlogCategory} />

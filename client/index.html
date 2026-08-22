@@ -94,63 +94,56 @@
       ]
     }
     </script>
-    <!-- Google AdSense with Cookie Consent Support -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4177369465238531"
-         crossorigin="anonymous"
-         data-ad-client="ca-pub-4177369465238531"></script>
+    <!-- Ads and web analytics are never loaded inside the packaged Capacitor Android app. -->
     <script>
-      // Only load AdSense if user has accepted all cookies
-      const adConsentStatus = localStorage.getItem('cookie-consent');
-      if (adConsentStatus === 'accepted-all' || !adConsentStatus) {
-        // AdSense will load automatically
-      }
-    </script>
-    <!-- Google tag (gtag.js) with Cookie Consent Support -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XHDZ9K757E"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      
-      // Set default consent to 'denied' until user makes a choice
-      gtag('consent', 'default', {
-        'analytics_storage': 'denied',
-        'ad_storage': 'denied',
-        'ad_user_data': 'denied',
-        'ad_personalization': 'denied'
-      });
-      
-      // Check if user has already made a consent choice
-      const consentStatus = localStorage.getItem('cookie-consent');
-      if (consentStatus === 'accepted-all') {
-        gtag('consent', 'update', {
-          'analytics_storage': 'granted',
-          'ad_storage': 'granted',
-          'ad_user_data': 'granted',
-          'ad_personalization': 'granted'
+      window.__lumaeNativeContainer = Boolean(
+        window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()
+      );
+      window.loadLumaeWebTracking = function () {
+        if (window.__lumaeNativeContainer || localStorage.getItem('cookie-consent') !== 'accepted-all') return;
+        if (window.__lumaeWebTrackingLoaded) return;
+        window.__lumaeWebTrackingLoaded = true;
+
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){ window.dataLayer.push(arguments); };
+        window.gtag('consent', 'default', {
+          'analytics_storage': 'denied', 'ad_storage': 'denied', 'ad_user_data': 'denied', 'ad_personalization': 'denied'
         });
-      } else if (consentStatus === 'accepted-essential') {
-        gtag('consent', 'update', {
-          'analytics_storage': 'denied',
-          'ad_storage': 'denied',
-          'ad_user_data': 'denied',
-          'ad_personalization': 'denied'
+        window.gtag('consent', 'update', {
+          'analytics_storage': 'granted', 'ad_storage': 'granted', 'ad_user_data': 'granted', 'ad_personalization': 'granted'
         });
-      }
-      
-      gtag('js', new Date());
-      gtag('config', 'G-XHDZ9K757E', {
-        'anonymize_ip': true
-      });
+        window.gtag('js', new Date());
+        window.gtag('config', 'G-XHDZ9K757E', { 'anonymize_ip': true });
+
+        const analytics = document.createElement('script');
+        analytics.async = true;
+        analytics.src = 'https://www.googletagmanager.com/gtag/js?id=G-XHDZ9K757E';
+        document.head.appendChild(analytics);
+
+        const ads = document.createElement('script');
+        ads.async = true;
+        ads.crossOrigin = 'anonymous';
+        ads.dataset.adClient = 'ca-pub-4177369465238531';
+        ads.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4177369465238531';
+        document.head.appendChild(ads);
+
+        const umamiEndpoint = '%VITE_ANALYTICS_ENDPOINT%';
+        const umamiWebsiteId = '%VITE_ANALYTICS_WEBSITE_ID%';
+        if (umamiEndpoint && umamiWebsiteId && !umamiEndpoint.includes('%VITE_')) {
+          const umami = document.createElement('script');
+          umami.defer = true;
+          umami.src = umamiEndpoint + '/umami';
+          umami.dataset.websiteId = umamiWebsiteId;
+          document.head.appendChild(umami);
+        }
+      };
+      window.loadLumaeWebTracking();
     </script>
   </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script
-      defer
-      src="%VITE_ANALYTICS_ENDPOINT%/umami"
-      data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
   </body>
 
 </html>

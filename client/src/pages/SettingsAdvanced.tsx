@@ -37,6 +37,7 @@ import {
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { TwoFactorSecurityPanel } from "@/components/TwoFactorSecurityPanel";
+import { trpc } from "@/lib/trpc";
 
 interface NotificationSetting {
   id: string;
@@ -65,6 +66,13 @@ export default function SettingsAdvanced() {
   const [showPassword, setShowPassword] = useState(false);
   const [showApiKey, setShowApiKey] = useState<string | null>(null);
   const { theme, effectiveTheme, highContrast, setTheme, setHighContrast } = useTheme();
+  const deleteAccount = trpc.auth.account.deleteAccount.useMutation({
+    onSuccess: () => {
+      toast.success("Your Lumae account and associated data were deleted.");
+      window.location.assign("/login?accountDeleted=1");
+    },
+    onError: (error) => toast.error(error.message || "We could not delete your account. Please try again."),
+  });
 
   const [notifications, setNotifications] = useState<NotificationSetting[]>([
     {
@@ -182,8 +190,11 @@ export default function SettingsAdvanced() {
   };
 
   const handleDeleteAccount = () => {
-    if (window.confirm("Are you sure? This action cannot be undone.")) {
-      toast.error("Account deletion initiated");
+    const confirmation = window.prompt("This permanently deletes your Lumae account and associated data. Type DELETE to continue.");
+    if (confirmation === "DELETE") {
+      deleteAccount.mutate();
+    } else if (confirmation !== null) {
+      toast.error("Account deletion was cancelled because DELETE was not entered exactly.");
     }
   };
 
@@ -544,10 +555,11 @@ export default function SettingsAdvanced() {
                 </p>
                 <Button
                   onClick={handleDeleteAccount}
+                  disabled={deleteAccount.isPending}
                   className="w-full bg-red-600 hover:bg-red-700"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Account
+                  {deleteAccount.isPending ? "Deleting account…" : "Delete Account"}
                 </Button>
               </Card>
             </div>

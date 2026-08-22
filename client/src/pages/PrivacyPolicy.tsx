@@ -34,7 +34,7 @@ export default function PrivacyPolicy() {
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground">1. Introduction</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Welcome to Lumae AI ("we," "us," "our," or "Company"), owned and operated by <strong className="text-foreground">Ankit Singh</strong>. We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website <strong className="text-foreground">lumae.co.in</strong> and use our AI-powered content generation services.
+              Welcome to Lumae AI ("we," "us," "our," or "Company"), founded and led by <strong className="text-foreground">Veer Rajput</strong>. We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website <strong className="text-foreground">lumae.co.in</strong> and use our AI-powered content generation services.
             </p>
             <p className="text-muted-foreground leading-relaxed">
               If you have any questions or concerns about this policy, please contact us at{" "}
@@ -178,7 +178,11 @@ export default function PrivacyPolicy() {
               </div>
             </div>
             <p className="text-muted-foreground leading-relaxed mt-4">
-              To exercise any of these rights, please contact us at{" "}
+              To exercise any of these rights, visit our{" "}
+              <a href="/delete-account" className="text-purple-600 hover:text-purple-700 underline">
+                account deletion page
+              </a>{" "}
+              or contact us at{" "}
               <a href="mailto:imankitsingh.in@gmail.com" className="text-purple-600 hover:text-purple-700 underline">
                 imankitsingh.in@gmail.com
               </a>.
@@ -189,9 +193,9 @@ export default function PrivacyPolicy() {
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground">9. Data Retention</h2>
             <p className="text-muted-foreground leading-relaxed">
-              We retain your personal information for as long as necessary to provide our services and comply with legal obligations. You can request deletion of your account and associated data at any time by contacting us at{" "}
-              <a href="mailto:imankitsingh.in@gmail.com" className="text-purple-600 hover:text-purple-700 underline">
-                imankitsingh.in@gmail.com
+              We retain your personal information for as long as necessary to provide our services and comply with legal obligations. You can request deletion of your account and associated data at any time through our{" "}
+              <a href="/delete-account" className="text-purple-600 hover:text-purple-700 underline">
+                web account deletion page
               </a>.
             </p>
           </section>
@@ -237,7 +241,7 @@ export default function PrivacyPolicy() {
                 <strong className="text-foreground">Company:</strong> Lumae AI
               </p>
               <p className="text-muted-foreground">
-                <strong className="text-foreground">Owner:</strong> Ankit Singh
+                <strong className="text-foreground">Founder:</strong> Veer Rajput
               </p>
             </div>
           </section>
