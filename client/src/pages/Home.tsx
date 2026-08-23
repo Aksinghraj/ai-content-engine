@@ -111,7 +111,7 @@ export default function Home() {
                 <div className="lumae-map-line lumae-map-line--a" /><div className="lumae-map-line lumae-map-line--b" /><div className="lumae-map-line lumae-map-line--c" /><div className="lumae-map-line lumae-map-line--d" />
                 <p>Voice <b>→</b> Format <b>→</b> Flow</p>
               </div>
-              <div className="lumae-map-status" aria-live="polite"><span>{FEATURE_SEQUENCE[activeFeature].number}</span><div><strong>{FEATURE_SEQUENCE[activeFeature].title}</strong><small>{FEATURE_SEQUENCE[activeFeature].text}</small></div></div>
+              <div className="lumae-map-status" aria-live="polite"><span>{FEATURE_SEQUENCE[activeFeature].number}</span><div key={FEATURE_SEQUENCE[activeFeature].number} className="lumae-map-status__copy"><strong>{FEATURE_SEQUENCE[activeFeature].title}</strong><small>{FEATURE_SEQUENCE[activeFeature].text}</small></div></div>
             </div>
           </div>
         </div>

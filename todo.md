@@ -1052,3 +1052,8 @@
 - [x] Identify and correct feature-copy overlap with the channel nodes and connecting lines
 - [x] Preserve progressive channel motion and crystal shine without obscuring content
 - [x] Validate desktop/mobile layouts and regression stability before checkpointing
+
+## Animated Active Feature Panel (IN PROGRESS)
+- [x] Add a visible fade-and-slide transition as the active feature changes
+- [x] Preserve clear panel spacing, channel-map readability, and reduced-motion fallback
+- [x] Validate desktop/mobile motion and full regression stability before checkpointing
