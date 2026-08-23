@@ -1068,3 +1068,9 @@
 - [x] Intensify homepage-only crystal sheen, channel-node activity, and orbit illustration motion without obscuring content
 - [x] Shorten and strengthen progressive entrance timing for a more energetic marketing sequence
 - [x] Preserve mobile performance, reduced-motion behavior, and full regression stability before checkpointing
+
+## Pending Email Confirmation Repair (IN PROGRESS)
+- [x] Audit the pending-confirmation account state, local credential verification flow, and trusted OAuth email handling
+- [x] Ensure only secure email evidence or trusted provider identity can confirm an email address
+- [x] Add clear resend and confirmation guidance for affected accounts without blocking normal password or OAuth login unnecessarily
+- [x] Add verification regressions, validate the full suite, and document safe confirmation options

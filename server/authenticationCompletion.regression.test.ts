@@ -55,4 +55,18 @@ describe("authentication completion and recovery", () => {
     expect(router).toContain("if (!delivered) await revokeLocalPasswordResetToken");
     expect(router).toContain("original sign-in method instead of creating a second account");
   });
+
+  it("accepts trusted Google email evidence but never treats a password as email ownership proof", () => {
+    const oauth = read("server/_core/oauth.ts");
+    const database = read("server/db.ts");
+    const localRouter = read("server/routers/localAuth.ts");
+    const dashboard = read("client/src/pages/SimpleDashboard.tsx");
+
+    expect(oauth).toContain("profile.verified_email === true");
+    expect(oauth).toContain("emailVerified: true");
+    expect(database).toContain("if (user.emailVerified !== undefined)");
+    expect(localRouter).toContain("Confirm your email before signing in");
+    expect(dashboard).toContain("A password by itself cannot prove email ownership");
+    expect(dashboard).toContain("Continue with Google");
+  });
 });

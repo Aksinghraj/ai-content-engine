@@ -227,6 +227,7 @@ export function registerOAuthRoutes(app: Express) {
         email: string;
         name: string;
         picture?: string;
+        verified_email?: boolean;
       };
 
       if (!profile.id) {
@@ -239,21 +240,22 @@ export function registerOAuthRoutes(app: Express) {
       // Detect new user BEFORE upsert so isNewGoogleUser is accurate
       const existingGoogleUser = await db.getUserByOpenId(openId);
       const isNewGoogleUser = !existingGoogleUser;
+      // Google only attests email ownership when this claim is explicitly true.
+      // Never infer confirmation from a password or an unverified profile field.
+      const hasTrustedGoogleEmail = Boolean(profile.email && profile.verified_email === true);
 
       await db.upsertUser({
         openId,
         name: profile.name || null,
         email: profile.email || null,
         loginMethod: "google",
+        ...(hasTrustedGoogleEmail ? { emailVerified: true } : {}),
         lastSignedIn: new Date(),
       });
 
-      // Get the user to access their ID for email verification
-      const user = await db.getUserByOpenId(openId);
-      const isNewUser = !user; // User didn't exist before upsert
-      
-      if (isNewUser && profile.email) {
-        // Only send verification email to NEW users
+      if (isNewGoogleUser && profile.email && !hasTrustedGoogleEmail) {
+        // A provider profile without an explicit verified-email claim must use
+        // Lumae's separate email confirmation flow.
         const freshUser = await db.getUserByOpenId(openId);
         if (freshUser) {
           try {
@@ -265,7 +267,7 @@ export function registerOAuthRoutes(app: Express) {
               verificationToken,
               verificationUrl
             );
-            console.log("[Google OAuth] Verification email sent to new user: [REDACTED]");
+            console.log("[Google OAuth] Verification email sent for an unverified provider profile: [REDACTED]");
           } catch (emailErr) {
             console.warn("[Google OAuth] Failed to send verification email:", emailErr);
             // Don't block login if email fails
