@@ -5,8 +5,8 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-background border-t border-border mt-16">
-      <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+    <footer className="lumae-public-footer">
+      <div className="max-w-7xl mx-auto px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Company Info */}
           <div className="space-y-4">
@@ -20,12 +20,10 @@ export default function Footer() {
               />
               <div>
                 <h3 className="text-lg font-bold text-foreground leading-tight">Lumae AI</h3>
-                <p className="text-xs text-muted-foreground tracking-widest uppercase">Made to Scale</p>
+                <p className="text-xs text-muted-foreground tracking-widest uppercase">Signalfield for creators</p>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground">
-              AI-powered social media content generation and automation platform.
-            </p>
+            <p className="text-sm text-muted-foreground">A connected system for creator voice, channel-ready content, and publishing momentum.</p>
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Mail className="w-4 h-4" />
@@ -129,8 +127,7 @@ export default function Footer() {
         {/* Bottom Section */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground text-center md:text-left">
-            © {currentYear} Lumae AI. All rights reserved. | Owned & Operated by{" "}
-            <span className="font-semibold text-foreground">Ankit Singh</span>
+            © {currentYear} Lumae AI. All rights reserved. | Founded by <span className="font-semibold text-foreground">Veer Rajput</span>
           </p>
           <div className="flex gap-4 text-xs text-muted-foreground">
             <a href="https://www.instagram.com/lumaeai?igsi=ejdjZGxmbGw2ZHZz" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">

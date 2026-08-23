@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./signalfield.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -342,18 +343,18 @@
 
 @layer utilities {
   .lumae-gradient-cta {
-    background-image: linear-gradient(105deg, #6366f1 0%, #8b5cf6 52%, #06b6d4 100%);
-    color: #f5f5f7;
+    background-image: linear-gradient(105deg, #2dd4bf 0%, #78e2d0 52%, #ff6b5f 100%);
+    color: #0a1116;
     transition: transform 180ms ease, box-shadow 180ms ease, background-position 180ms ease;
   }
 
   .lumae-gradient-cta:hover {
-    box-shadow: 0 12px 28px rgb(99 102 241 / 22%);
+    box-shadow: 0 12px 28px rgb(45 212 191 / 22%);
     transform: translateY(-1px);
   }
 
   .lumae-gradient-cta:focus-visible {
-    outline: 2px solid #6366f1;
+    outline: 2px solid #2dd4bf;
     outline-offset: 2px;
   }
 
@@ -430,18 +431,18 @@
   [class*="border-purple"], [class*="border-pink"], [class*="border-fuchsia"] { border-color: var(--primary) !important; }
   [class*="ring-purple"], [class*="ring-pink"], [class*="ring-fuchsia"] { --tw-ring-color: var(--ring) !important; }
   [class*="bg-purple"], [class*="bg-pink"], [class*="bg-fuchsia"] { background-color: var(--card) !important; }
-  [class*="from-purple"], [class*="from-pink"], [class*="from-fuchsia"] { --tw-gradient-from: #6366f1 var(--tw-gradient-from-position) !important; --tw-gradient-to: rgb(99 102 241 / 0) var(--tw-gradient-to-position) !important; }
-  [class*="via-purple"], [class*="via-pink"], [class*="via-fuchsia"] { --tw-gradient-stops: var(--tw-gradient-from), #8b5cf6 var(--tw-gradient-via-position), var(--tw-gradient-to) !important; }
-  [class*="to-purple"], [class*="to-pink"], [class*="to-fuchsia"] { --tw-gradient-to: #06b6d4 var(--tw-gradient-to-position) !important; }
+  [class*="from-purple"], [class*="from-pink"], [class*="from-fuchsia"] { --tw-gradient-from: #2dd4bf var(--tw-gradient-from-position) !important; --tw-gradient-to: rgb(45 212 191 / 0) var(--tw-gradient-to-position) !important; }
+  [class*="via-purple"], [class*="via-pink"], [class*="via-fuchsia"] { --tw-gradient-stops: var(--tw-gradient-from), #78e2d0 var(--tw-gradient-via-position), var(--tw-gradient-to) !important; }
+  [class*="to-purple"], [class*="to-pink"], [class*="to-fuchsia"] { --tw-gradient-to: #ff6b5f var(--tw-gradient-to-position) !important; }
 
   /* Internal routes still contain legacy blue/slate utility classes. Normalize
      them inside the application shell while leaving homepage/blog treatments alone. */
   .app-static-motion [class*="text-blue"], .app-static-motion [class*="text-slate"] { color: var(--muted-foreground) !important; }
   .app-static-motion [class*="border-blue"], .app-static-motion [class*="border-slate"] { border-color: var(--border) !important; }
   .app-static-motion [class*="bg-blue"], .app-static-motion [class*="bg-slate"] { background-color: var(--card) !important; }
-  .app-static-motion [class*="from-blue"] { --tw-gradient-from: #6366f1 var(--tw-gradient-from-position) !important; --tw-gradient-to: rgb(99 102 241 / 0) var(--tw-gradient-to-position) !important; }
-  .app-static-motion [class*="via-blue"] { --tw-gradient-stops: var(--tw-gradient-from), #8b5cf6 var(--tw-gradient-via-position), var(--tw-gradient-to) !important; }
-  .app-static-motion [class*="to-blue"] { --tw-gradient-to: #06b6d4 var(--tw-gradient-to-position) !important; }
+  .app-static-motion [class*="from-blue"] { --tw-gradient-from: #2dd4bf var(--tw-gradient-from-position) !important; --tw-gradient-to: rgb(45 212 191 / 0) var(--tw-gradient-to-position) !important; }
+  .app-static-motion [class*="via-blue"] { --tw-gradient-stops: var(--tw-gradient-from), #78e2d0 var(--tw-gradient-via-position), var(--tw-gradient-to) !important; }
+  .app-static-motion [class*="to-blue"] { --tw-gradient-to: #ff6b5f var(--tw-gradient-to-position) !important; }
   .app-static-motion [class*="min-h-screen"][class*="bg-gradient-to-"] { background-image: none !important; background-color: var(--background) !important; }
   .app-static-motion [class*="bg-gradient-to-"][class*="slate"] { background-image: none !important; background-color: var(--card) !important; }
 

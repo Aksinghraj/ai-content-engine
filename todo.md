@@ -1009,6 +1009,7 @@
 - [x] Configure the permanent Android package name as in.lumae.app across mobile build and OAuth/App Link planning
 - [ ] Complete owner-controlled Play App Signing, App Link certificate association, and Play Console test release
 - [x] Create a field-by-field Google Play Console guide with Lumae-specific values and owner-only fields clearly separated
+- [ ] Guide the owner through the first Play Console internal-test release using the validated Lumae bundle
 
 ## Comprehensive Release-Readiness Audit (IN PROGRESS)
 - [x] Verify Android package, API 36 target, release mode, ABI support, manifest permissions, and signed-bundle prerequisites
@@ -1016,3 +1017,15 @@
 - [x] Review privacy, content, AI, ads, payment, authentication, and reviewer-access requirements against the final application behavior
 - [x] Run full web tests, Android build checks, dependency/security scans, and real-device test preparation checks
 - [x] Produce a verified readiness matrix with all fixed, blocked, and owner-controlled Google Play actions
+
+## Google Play Launch Presentation (IN PROGRESS)
+- [x] Gather current official Play requirements and approved Lumae release facts for the deck
+- [x] Write a concise Lumae-specific launch narrative, milestones, and action checklist
+- [x] Generate and deliver the Google Play Store launch presentation
+
+## Site-Wide Lumae Experience Redesign (IN PROGRESS)
+- [x] Audit the visual, motion, hierarchy, and interaction principles of the reference site without copying its identity or assets
+- [x] Define a distinct Lumae color system, typography, surface treatment, and motion language for public, login, and product surfaces
+- [x] Redesign the public landing page, login/authentication pages, dashboard shell, and core internal interface components
+- [x] Preserve all existing routes, features, accessibility settings, security flows, and responsive behavior
+- [x] Validate desktop/mobile visuals and full regressions, then checkpoint the redesigned platform

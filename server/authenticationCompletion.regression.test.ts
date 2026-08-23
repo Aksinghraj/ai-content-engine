@@ -44,7 +44,7 @@ describe("authentication completion and recovery", () => {
     const router = read("server/routers/localAuth.ts");
 
     expect(login).toContain("Forgot password?");
-    expect(login).toContain("GitHub sign-in coming soon");
+    expect(login).toContain("GitHub soon");
     expect(login).toContain("Phone OTP coming soon");
     expect(login).toContain("Remember me for 30 days");
     expect(forgot).toContain("single-use link that expires in 30 minutes");

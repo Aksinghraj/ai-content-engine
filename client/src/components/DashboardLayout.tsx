@@ -82,7 +82,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="app-static-motion">
+    <div className="app-static-motion lumae-product-shell">
       <SidebarProvider
         defaultOpen={true}
         style={
@@ -160,14 +160,14 @@ function DashboardLayoutContent({
       <div className="relative" ref={sidebarRef}>
         <Sidebar
           collapsible="icon"
-          className="border-r-0"
+          className="border-r border-border/70 bg-sidebar"
           disableTransition={isResizing}
         >
-          <SidebarHeader className="h-16 justify-center">
-            <div className="flex items-center gap-3 px-2 transition-all w-full">
+          <SidebarHeader className="h-20 justify-center border-b border-border/70">
+            <div className="flex items-center gap-3 px-3 transition-all w-full">
               <button
                 onClick={toggleSidebar}
-                className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0"
+                className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0"
                 aria-label="Toggle navigation"
               >
                 <PanelLeft className="h-4 w-4 text-muted-foreground" />
@@ -179,7 +179,7 @@ function DashboardLayoutContent({
                     alt="Lumae AI"
                     width={28}
                     height={28}
-                    className="w-7 h-7 rounded-md object-cover shrink-0"
+                    className="w-7 h-7 rounded-md object-cover shrink-0 ring-1 ring-primary/35"
                   />
                   <span className="font-semibold tracking-tight truncate text-sm">
                     Lumae AI
@@ -195,10 +195,10 @@ function DashboardLayoutContent({
             </div>
           </SidebarContent>
 
-          <SidebarFooter className="p-3">
+          <SidebarFooter className="p-3 border-t border-border/70">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-3 rounded-lg px-1 py-1 hover:bg-accent/50 transition-colors w-full text-left group-data-[collapsible=icon]:justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <button className="flex items-center gap-3 rounded-md px-2 py-2 hover:bg-accent/50 transition-colors w-full text-left group-data-[collapsible=icon]:justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <Avatar className="h-9 w-9 border shrink-0">
                     <AvatarFallback className="text-xs font-medium">
                       {user?.name?.charAt(0).toUpperCase()}
@@ -238,7 +238,7 @@ function DashboardLayoutContent({
 
       <SidebarInset>
         {!isMobile && (
-          <div className="sticky top-0 z-30 hidden items-center justify-between border-b border-border bg-background/95 px-4 py-2 backdrop-blur-xl md:flex">
+          <div className="sticky top-0 z-30 hidden items-center justify-between border-b border-border/70 bg-background/92 px-5 py-3 backdrop-blur-xl md:flex">
             <AppPrimaryNavigation compact />
             <Button variant="ghost" size="icon" onClick={toggleTheme} className="ml-3 shrink-0 text-muted-foreground hover:text-foreground" aria-label={`Switch to ${effectiveTheme === "dark" ? "bright" : "dark"} mode`} title={`Switch to ${effectiveTheme === "dark" ? "bright" : "dark"} mode`}>
               {effectiveTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -246,7 +246,7 @@ function DashboardLayoutContent({
           </div>
         )}
         {isMobile && (
-          <div className="flex border-b h-14 items-center justify-between bg-background/95 px-2 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40">
+          <div className="flex border-b border-border/70 h-14 items-center justify-between bg-background/92 px-2 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />
               <div className="flex items-center gap-3">
@@ -289,7 +289,7 @@ function DashboardLayoutContent({
             )}
           </div>
         )}
-        <main className="flex-1 overflow-x-hidden p-3 sm:p-4 md:p-6">
+        <main className="lumae-product-main flex-1 overflow-x-hidden p-4 sm:p-5 md:p-7">
           <GroupedPageTabs />
           {children}
         </main>

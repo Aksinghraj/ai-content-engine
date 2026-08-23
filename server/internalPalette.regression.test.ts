@@ -6,10 +6,11 @@ const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8"
 
 describe("Internal premium palette and motion boundary", () => {
   const css = read("client/src/index.css");
+  const signalfield = read("client/src/signalfield.css");
 
-  it("defines the requested premium surface, text, border, semantic, and chart tokens", () => {
-    for (const token of ["--background: #09090b", "--card: #141417", "--border: #26262b", "--foreground: #f5f5f7", "--muted-foreground: #9a9aa2", "--chart-1: #6366f1", "--chart-2: #8b5cf6", "--chart-3: #06b6d4", "--chart-4: #10b981", "--chart-5: #f59e0b"]) {
-      expect(css).toContain(token);
+  it("defines a distinct Signalfield surface, text, and semantic accent system", () => {
+    for (const token of ["--lumae-ink: #0a1116", "--lumae-panel: #111c22", "--lumae-line: #263940", "--lumae-copy: #f5f7f6", "--lumae-muted: #9aabb2", "--lumae-teal: #2dd4bf", "--lumae-sea: #78e2d0", "--lumae-coral: #ff6b5f", "--lumae-positive: #38c892"]) {
+      expect(signalfield).toContain(token);
     }
   });
 
@@ -24,6 +25,6 @@ describe("Internal premium palette and motion boundary", () => {
     expect(css).toContain(".app-static-motion .animate-gradient");
     expect(css).toContain("animation: none !important");
     expect(css).toContain("transition-duration: 180ms");
-    expect(read("client/src/components/DashboardLayout.tsx")).toContain('className="app-static-motion"');
+    expect(read("client/src/components/DashboardLayout.tsx")).toContain('className="app-static-motion lumae-product-shell"');
   });
 });
