@@ -7,6 +7,13 @@ import { getLoginUrl } from "@/const";
 
 const LOGO_URL = "/manus-storage/lumae-logo-icon_ccacaad9.jpg";
 
+const FEATURE_SEQUENCE = [
+  { number: "01", platform: "IG", title: "Start with one idea", text: "Tell Lumae what you want to say. It keeps your topic, audience, and goal together." },
+  { number: "02", platform: "IN", title: "Make it fit each channel", text: "Turn the same idea into posts, scripts, captions, and formats that feel right for each platform." },
+  { number: "03", platform: "X", title: "Keep your work connected", text: "Save, improve, and reuse your content without losing the original thought behind it." },
+  { number: "04", platform: "YT", title: "Publish when you are ready", text: "Plan your next move from one place, with your content and workflow in clear view." },
+] as const;
+
 function LumaeLogo() {
   return (
     <div className="lumae-brand-lockup">
@@ -22,6 +29,7 @@ export default function Home() {
   const signedIn = Boolean(isAuthenticated && user);
   const workflowRef = useRef<HTMLElement>(null);
   const [workflowVisible, setWorkflowVisible] = useState(false);
+  const [activeFeature, setActiveFeature] = useState(0);
 
   useEffect(() => {
     const node = workflowRef.current;
@@ -34,6 +42,12 @@ export default function Home() {
     }, { threshold: 0.18 });
     observer.observe(node);
     return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const interval = window.setInterval(() => setActiveFeature((current) => (current + 1) % FEATURE_SEQUENCE.length), 3200);
+    return () => window.clearInterval(interval);
   }, []);
 
   const startFree = () => {
@@ -78,40 +92,41 @@ export default function Home() {
           <div className="lumae-eyebrow"><span className="lumae-live-dot" /> SIGNALFIELD FOR CREATORS</div>
           <div className="lumae-hero-layout">
             <div className="lumae-hero-copy">
-              <h1>One clear signal.<br /><span>Every channel aligned.</span></h1>
-              <p>Build content that sounds like you, travels further, and stays organized from first thought to final post.</p>
+              <h1>Your idea.<br /><span>Ready for every channel.</span></h1>
+              <p>Write it once. Lumae helps you shape clear posts, scripts, and plans without starting from zero each time.</p>
               <div className="lumae-hero-actions">
                 <Button onClick={startFree} className="lumae-signal-button lumae-signal-button--large">{signedIn ? "Create in your workspace" : "Build your first signal"} <ArrowUpRight className="h-4 w-4" /></Button>
                 <button onClick={() => navigate("/pricing")} className="lumae-text-link">Explore the system <span>↗</span></button>
               </div>
-              <div className="lumae-trust-line"><CheckCircle2 className="h-4 w-4" /> Three free generations <span /> <CheckCircle2 className="h-4 w-4" /> No card required</div>
+              <div className="lumae-trust-line"><CheckCircle2 className="h-4 w-4" /> Three free generations <span /> <CheckCircle2 className="h-4 w-4" /> No card required <span /> <CheckCircle2 className="h-4 w-4" /> Keep control of your work</div>
             </div>
             <div className="lumae-signal-map" aria-label="Lumae content signal illustration">
               <div className="lumae-map-label lumae-map-label--source">YOUR IDEA</div>
-              <div className="lumae-map-core"><span>L</span></div>
-              <div className="lumae-map-orbit lumae-map-orbit--one"><span>IG</span></div>
-              <div className="lumae-map-orbit lumae-map-orbit--two"><span>IN</span></div>
-              <div className="lumae-map-orbit lumae-map-orbit--three"><span>X</span></div>
-              <div className="lumae-map-orbit lumae-map-orbit--four"><span>YT</span></div>
+              <div className="lumae-map-core"><span>L</span><i aria-hidden="true" /></div>
+              <div className={`lumae-map-orbit lumae-map-orbit--one ${FEATURE_SEQUENCE[activeFeature].platform === "IG" ? "is-live" : ""}`}><span>IG</span></div>
+              <div className={`lumae-map-orbit lumae-map-orbit--two ${FEATURE_SEQUENCE[activeFeature].platform === "IN" ? "is-live" : ""}`}><span>IN</span></div>
+              <div className={`lumae-map-orbit lumae-map-orbit--three ${FEATURE_SEQUENCE[activeFeature].platform === "X" ? "is-live" : ""}`}><span>X</span></div>
+              <div className={`lumae-map-orbit lumae-map-orbit--four ${FEATURE_SEQUENCE[activeFeature].platform === "YT" ? "is-live" : ""}`}><span>YT</span></div>
               <div className="lumae-map-line lumae-map-line--a" /><div className="lumae-map-line lumae-map-line--b" /><div className="lumae-map-line lumae-map-line--c" /><div className="lumae-map-line lumae-map-line--d" />
               <p>Voice <b>→</b> Format <b>→</b> Flow</p>
+              <div className="lumae-map-feature" aria-live="polite"><span>{FEATURE_SEQUENCE[activeFeature].number}</span><strong>{FEATURE_SEQUENCE[activeFeature].title}</strong><small>{FEATURE_SEQUENCE[activeFeature].text}</small></div>
             </div>
           </div>
         </div>
       </section>
 
       <section className="lumae-proof-rail" aria-label="Lumae product proof">
-        <div><strong>01</strong><span>Voice-aware creation</span></div><div><strong>02</strong><span>Channel-ready systems</span></div><div><strong>03</strong><span>Secure by design</span></div><div><strong>04</strong><span>Ready to publish</span></div>
+        {FEATURE_SEQUENCE.map((feature, index) => <article key={feature.number} className={index === activeFeature ? "is-active" : ""}><strong>{feature.number}</strong><div><span>{feature.title}</span><p>{feature.text}</p></div></article>)}
       </section>
 
       <section ref={workflowRef} className="lumae-workflow-section">
         <div className="lumae-section-heading"><p className="lumae-eyebrow">A clearer creative operating system</p><h2>From raw thought to<br />reliable momentum.</h2><p>Instead of starting over on every channel, Lumae turns the way you think into a repeatable content signal.</p></div>
         <div className={`lumae-workflow-stack ${workflowVisible ? "is-visible" : ""}`}>
           {[
-            { number: "01", icon: ScanLine, title: "Capture the signal", text: "Bring in the idea, audience, and intention behind every piece of content." },
-            { number: "02", icon: Workflow, title: "Shape the system", text: "Translate your voice into channel-ready formats without flattening what makes it yours." },
-            { number: "03", icon: Layers3, title: "Move with context", text: "Plan, review, and publish from one workspace that keeps the whole story connected." },
-          ].map(({ number, icon: Icon, title, text }) => <article key={number} className="lumae-workflow-card"><div className="lumae-workflow-number">{number}</div><Icon className="h-5 w-5" /><h3>{title}</h3><p>{text}</p></article>)}
+            { number: "01", icon: ScanLine, title: "Bring in the idea", text: "Add the topic, goal, and audience in simple words." },
+            { number: "02", icon: Workflow, title: "Choose what to make", text: "Pick a post, script, caption, or video plan that suits your channel." },
+            { number: "03", icon: Layers3, title: "Review and move forward", text: "Edit, save, schedule, or publish when the content feels right." },
+          ].map(({ number, icon: Icon, title, text }, index) => <article key={number} className={`lumae-workflow-card ${index === activeFeature % 3 ? "is-active" : ""}`}><div className="lumae-workflow-number">{number}</div><Icon className="h-5 w-5" /><h3>{title}</h3><p>{text}</p></article>)}
         </div>
       </section>
 

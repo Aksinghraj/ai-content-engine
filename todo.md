@@ -1040,3 +1040,10 @@
 - [x] Rebuild public content and onboarding routes with coherent Signalfield hierarchy, surfaces, and accessible interaction details
 - [x] Validate responsive public routes, accessibility settings, and full regression stability before checkpointing
 - [x] Defer owner-controlled Google Play Console setup until the owner is ready to resume it
+
+## Progressive Home Motion and Shared Backgrounds (IN PROGRESS)
+- [x] Enrich the home feature story with simple, informative sequential explanations and progressive reveal timing
+- [x] Animate the Signalfield feature map with restrained channel movement and a crystal-shine accent
+- [x] Add a shared low-distraction animated background layer to public and authenticated pages
+- [x] Respect reduced-motion preferences and preserve high-contrast mode, text clarity, and feature usability
+- [x] Validate mobile/desktop animation behavior and the full regression suite before checkpointing

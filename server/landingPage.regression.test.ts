@@ -23,7 +23,8 @@ describe("landing-page premium redesign", () => {
     expect(signalfield).toContain("--lumae-teal: #2dd4bf");
     expect(signalfield).toContain("--lumae-coral: #ff6b5f");
     expect(home).toContain("Build your first signal");
-    expect(home).toContain("One clear signal.");
+    expect(home).toContain("Your idea.");
+    expect(home).toContain("Ready for every channel.");
     expect(indexHtml).toContain('<meta name="theme-color" content="#09090b"');
   });
 
