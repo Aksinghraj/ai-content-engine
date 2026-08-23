@@ -66,7 +66,19 @@ describe("authentication completion and recovery", () => {
     expect(oauth).toContain("emailVerified: true");
     expect(database).toContain("if (user.emailVerified !== undefined)");
     expect(localRouter).toContain("Confirm your email before signing in");
-    expect(dashboard).toContain("A password by itself cannot prove email ownership");
-    expect(dashboard).toContain("Continue with Google");
+    expect(dashboard).toContain("Signing in cannot confirm email ownership by itself");
+    expect(dashboard).toContain("Send 6-digit code");
+  });
+
+  it("offers a rate-limited authenticated OTP fallback when provider confirmation remains pending", () => {
+    const router = read("server/routers.ts");
+    const dashboard = read("client/src/pages/SimpleDashboard.tsx");
+
+    expect(router).toContain("EMAIL_CONFIRMATION_RESEND_WINDOW_MS");
+    expect(router).toContain("emailConfirmationResendAt");
+    expect(router).toContain("retryAfterSeconds");
+    expect(dashboard).toContain("Send 6-digit code");
+    expect(dashboard).toContain('navigate("/verify-email")');
+    expect(dashboard).toContain("Signing in cannot confirm email ownership by itself");
   });
 });

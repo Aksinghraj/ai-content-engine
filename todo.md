@@ -1074,3 +1074,13 @@
 - [x] Ensure only secure email evidence or trusted provider identity can confirm an email address
 - [x] Add clear resend and confirmation guidance for affected accounts without blocking normal password or OAuth login unnecessarily
 - [x] Add verification regressions, validate the full suite, and document safe confirmation options
+
+## Google OAuth 403 Repair (IN PROGRESS)
+- [x] Trace the Google 403 source from the issued authorization URL through the Lumae callback
+- [x] Correct the Google login flow or fallback behavior so confirmation returns safely to Lumae
+- [x] Add regression coverage and validate the canonical Google OAuth flow before checkpointing
+
+## Stuck Pending-Email Confirmation Fallback (IN PROGRESS)
+- [x] Inspect the authenticated pending account state and current confirmation delivery status
+- [x] Add an authenticated, rate-limited fallback that renews a secure email confirmation route without bypassing ownership proof
+- [x] Add state-transition coverage and validate the resolved confirmation experience before checkpointing

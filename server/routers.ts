@@ -40,6 +40,9 @@ import { twoFactorRouter } from "./routers/twoFactor";
 import { businessMessagingRouter } from "./routers/businessMessaging";
 import { localAuthRouter } from "./routers/localAuth";
 
+const EMAIL_CONFIRMATION_RESEND_WINDOW_MS = 60_000;
+const emailConfirmationResendAt = new Map<number, number>();
+
 export const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -66,10 +69,23 @@ export const appRouter = router({
       }),
     resendOtp: protectedProcedure
       .mutation(async ({ ctx }) => {
+        if (ctx.user.emailVerified) return { success: true, alreadyVerified: true, throttled: false };
+        if (!ctx.user.email) return { success: false, alreadyVerified: false, throttled: false };
+        const now = Date.now();
+        const nextAllowedAt = emailConfirmationResendAt.get(ctx.user.id) ?? 0;
+        if (nextAllowedAt > now) {
+          return {
+            success: false,
+            alreadyVerified: false,
+            throttled: true,
+            retryAfterSeconds: Math.ceil((nextAllowedAt - now) / 1000),
+          };
+        }
         const { sendVerificationEmail } = await import("./_core/emailService");
         const otp = await db.generateEmailVerificationToken(ctx.user.id);
         const sent = await sendVerificationEmail(ctx.user.email ?? "", ctx.user.name ?? "", otp);
-        return { success: sent };
+        if (sent) emailConfirmationResendAt.set(ctx.user.id, now + EMAIL_CONFIRMATION_RESEND_WINDOW_MS);
+        return { success: sent, alreadyVerified: false, throttled: false };
       }),
   }),
 
