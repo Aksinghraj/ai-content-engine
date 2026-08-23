@@ -28,7 +28,9 @@ export default function Home() {
   const { user, isAuthenticated, logout } = useAuth();
   const signedIn = Boolean(isAuthenticated && user);
   const workflowRef = useRef<HTMLElement>(null);
+  const assuranceRef = useRef<HTMLElement>(null);
   const [workflowVisible, setWorkflowVisible] = useState(false);
+  const [assuranceVisible, setAssuranceVisible] = useState(false);
   const [activeFeature, setActiveFeature] = useState(0);
 
   useEffect(() => {
@@ -48,6 +50,19 @@ export default function Home() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const interval = window.setInterval(() => setActiveFeature((current) => (current + 1) % FEATURE_SEQUENCE.length), 3200);
     return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const node = assuranceRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setAssuranceVisible(true);
+        observer.disconnect();
+      }
+    }, { threshold: 0.18 });
+    observer.observe(node);
+    return () => observer.disconnect();
   }, []);
 
   const startFree = () => {
@@ -86,13 +101,13 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="lumae-signal-hero">
+      <section className="lumae-signal-hero is-visible">
         <div className="lumae-signal-hero__grid" aria-hidden="true" />
         <div className="lumae-signal-hero__inner">
           <div className="lumae-eyebrow"><span className="lumae-live-dot" /> SIGNALFIELD FOR CREATORS</div>
           <div className="lumae-hero-layout">
             <div className="lumae-hero-copy">
-              <h1>Your idea.<br /><span>Ready for every channel.</span></h1>
+              <h1><span className="lumae-hero-line">Your idea.</span><span className="lumae-hero-line lumae-hero-line--accent">Ready for every channel.</span></h1>
               <p>Write it once. Lumae helps you shape clear posts, scripts, and plans without starting from zero each time.</p>
               <div className="lumae-hero-actions">
                 <Button onClick={startFree} className="lumae-signal-button lumae-signal-button--large">{signedIn ? "Create in your workspace" : "Build your first signal"} <ArrowUpRight className="h-4 w-4" /></Button>
@@ -117,7 +132,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="lumae-proof-rail" aria-label="Lumae product proof">
+      <section className="lumae-proof-rail is-visible" aria-label="Lumae product proof">
         {FEATURE_SEQUENCE.map((feature, index) => <article key={feature.number} className={index === activeFeature ? "is-active" : ""}><strong>{feature.number}</strong><div><span>{feature.title}</span><p>{feature.text}</p></div></article>)}
       </section>
 
@@ -132,9 +147,9 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="lumae-public-assurance">
-        <div className="lumae-assurance-copy"><p className="lumae-eyebrow">Your signal stays yours</p><h2>Creative speed without losing control.</h2><p>Secure sign-in, privacy controls, and export-ready workflows keep your work in your hands while Lumae handles the connective tissue.</p><div className="lumae-assurance-list"><span><ShieldCheck className="h-5 w-5" /> Account security built in</span><span><Orbit className="h-5 w-5" /> Every channel, one source</span><span><Sparkles className="h-5 w-5" /> AI that stays in context</span></div></div>
-        <div className="lumae-assurance-art"><div className="lumae-assurance-ring" /><div className="lumae-assurance-ring lumae-assurance-ring--two" /><div className="lumae-assurance-mark">L</div></div>
+      <section ref={assuranceRef} className={`lumae-public-assurance ${assuranceVisible ? "is-visible" : ""}`}>
+        <div className="lumae-assurance-copy"><p className="lumae-eyebrow"><span className="lumae-live-dot" /> Your signal stays yours</p><h2>Creative speed without losing control.</h2><p>Secure sign-in, privacy controls, and export-ready workflows keep your work in your hands while Lumae keeps every useful detail connected.</p><div className="lumae-assurance-list"><div><span className="lumae-assurance-badge"><ShieldCheck className="h-5 w-5" /></span><p><strong>Account security built in</strong><small>Passkeys, two-factor controls, and privacy choices stay close to your work.</small></p></div><div><span className="lumae-assurance-badge"><Orbit className="h-5 w-5" /></span><p><strong>Every channel, one source</strong><small>Keep the idea, voice, and plan connected as content moves across platforms.</small></p></div><div><span className="lumae-assurance-badge"><Sparkles className="h-5 w-5" /></span><p><strong>AI that stays in context</strong><small>Move faster with assistance that follows your goal instead of starting from scratch.</small></p></div></div></div>
+        <div className="lumae-assurance-art" aria-hidden="true"><div className="lumae-assurance-ring" /><div className="lumae-assurance-ring lumae-assurance-ring--two" /><div className="lumae-assurance-ring lumae-assurance-ring--three" /><div className="lumae-assurance-satellite lumae-assurance-satellite--shield"><ShieldCheck className="h-4 w-4" /></div><div className="lumae-assurance-satellite lumae-assurance-satellite--orbit"><Orbit className="h-4 w-4" /></div><div className="lumae-assurance-satellite lumae-assurance-satellite--spark"><Sparkles className="h-4 w-4" /></div><div className="lumae-assurance-mark">L</div></div>
       </section>
 
       <section className="lumae-public-close"><p className="lumae-eyebrow">START WITH THE SIGNAL</p><h2>Make the next post feel<br />like it belongs to you.</h2><Button onClick={startFree} className="lumae-signal-button lumae-signal-button--large">{signedIn ? "Open your workspace" : "Start with Lumae"} <ArrowUpRight className="h-4 w-4" /></Button></section>

@@ -1057,3 +1057,9 @@
 - [x] Add a visible fade-and-slide transition as the active feature changes
 - [x] Preserve clear panel spacing, channel-map readability, and reduced-motion fallback
 - [x] Validate desktop/mobile motion and full regression stability before checkpointing
+
+## Unified Marketing Sections and Motion (IN PROGRESS)
+- [x] Rebuild the Signal ownership section with a dark cohesive surface, richer illustration, and informative feature rows
+- [x] Add one-time, staggered scroll reveals for Signal ownership content and accent icon badges
+- [x] Add headline, node, CTA, and numbered-step entrance motion to the channel-readiness section without altering its composition
+- [x] Preserve homepage-only animation scope, reduced-motion fallback, mobile readability, and regression stability
