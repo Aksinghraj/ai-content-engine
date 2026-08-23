@@ -100,16 +100,18 @@ export default function Home() {
               </div>
               <div className="lumae-trust-line"><CheckCircle2 className="h-4 w-4" /> Three free generations <span /> <CheckCircle2 className="h-4 w-4" /> No card required <span /> <CheckCircle2 className="h-4 w-4" /> Keep control of your work</div>
             </div>
-            <div className="lumae-signal-map" aria-label="Lumae content signal illustration">
-              <div className="lumae-map-label lumae-map-label--source">YOUR IDEA</div>
-              <div className="lumae-map-core"><span>L</span><i aria-hidden="true" /></div>
-              <div className={`lumae-map-orbit lumae-map-orbit--one ${FEATURE_SEQUENCE[activeFeature].platform === "IG" ? "is-live" : ""}`}><span>IG</span></div>
-              <div className={`lumae-map-orbit lumae-map-orbit--two ${FEATURE_SEQUENCE[activeFeature].platform === "IN" ? "is-live" : ""}`}><span>IN</span></div>
-              <div className={`lumae-map-orbit lumae-map-orbit--three ${FEATURE_SEQUENCE[activeFeature].platform === "X" ? "is-live" : ""}`}><span>X</span></div>
-              <div className={`lumae-map-orbit lumae-map-orbit--four ${FEATURE_SEQUENCE[activeFeature].platform === "YT" ? "is-live" : ""}`}><span>YT</span></div>
-              <div className="lumae-map-line lumae-map-line--a" /><div className="lumae-map-line lumae-map-line--b" /><div className="lumae-map-line lumae-map-line--c" /><div className="lumae-map-line lumae-map-line--d" />
-              <p>Voice <b>→</b> Format <b>→</b> Flow</p>
-              <div className="lumae-map-feature" aria-live="polite"><span>{FEATURE_SEQUENCE[activeFeature].number}</span><strong>{FEATURE_SEQUENCE[activeFeature].title}</strong><small>{FEATURE_SEQUENCE[activeFeature].text}</small></div>
+            <div className="lumae-signal-stage">
+              <div className="lumae-signal-map" aria-label="Lumae content signal illustration">
+                <div className="lumae-map-label lumae-map-label--source">YOUR IDEA</div>
+                <div className="lumae-map-core"><span>L</span><i aria-hidden="true" /></div>
+                <div className={`lumae-map-orbit lumae-map-orbit--one ${FEATURE_SEQUENCE[activeFeature].platform === "IG" ? "is-live" : ""}`}><span>IG</span></div>
+                <div className={`lumae-map-orbit lumae-map-orbit--two ${FEATURE_SEQUENCE[activeFeature].platform === "IN" ? "is-live" : ""}`}><span>IN</span></div>
+                <div className={`lumae-map-orbit lumae-map-orbit--three ${FEATURE_SEQUENCE[activeFeature].platform === "X" ? "is-live" : ""}`}><span>X</span></div>
+                <div className={`lumae-map-orbit lumae-map-orbit--four ${FEATURE_SEQUENCE[activeFeature].platform === "YT" ? "is-live" : ""}`}><span>YT</span></div>
+                <div className="lumae-map-line lumae-map-line--a" /><div className="lumae-map-line lumae-map-line--b" /><div className="lumae-map-line lumae-map-line--c" /><div className="lumae-map-line lumae-map-line--d" />
+                <p>Voice <b>→</b> Format <b>→</b> Flow</p>
+              </div>
+              <div className="lumae-map-status" aria-live="polite"><span>{FEATURE_SEQUENCE[activeFeature].number}</span><div><strong>{FEATURE_SEQUENCE[activeFeature].title}</strong><small>{FEATURE_SEQUENCE[activeFeature].text}</small></div></div>
             </div>
           </div>
         </div>

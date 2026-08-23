@@ -1047,3 +1047,8 @@
 - [x] Add a shared low-distraction animated background layer to public and authenticated pages
 - [x] Respect reduced-motion preferences and preserve high-contrast mode, text clarity, and feature usability
 - [x] Validate mobile/desktop animation behavior and the full regression suite before checkpointing
+
+## Animated Home Feature-Map Overlap Fix (IN PROGRESS)
+- [x] Identify and correct feature-copy overlap with the channel nodes and connecting lines
+- [x] Preserve progressive channel motion and crystal shine without obscuring content
+- [x] Validate desktop/mobile layouts and regression stability before checkpointing
