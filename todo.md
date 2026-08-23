@@ -1034,3 +1034,9 @@
 - [x] Inventory remaining content, scheduling, automation, analytics, account, billing, and business pages for legacy visual treatment
 - [x] Apply the shared Signalfield surface, accent, typography, and control language across remaining product pages
 - [x] Validate desktop/mobile coverage, high-contrast mode, and full regression stability before checkpointing
+
+## Signalfield Public Website and Onboarding Rebuild (IN PROGRESS)
+- [x] Inventory public legal, blog, profile-sharing, recovery, and onboarding routes for pre-Signalfield presentation
+- [x] Rebuild public content and onboarding routes with coherent Signalfield hierarchy, surfaces, and accessible interaction details
+- [x] Validate responsive public routes, accessibility settings, and full regression stability before checkpointing
+- [x] Defer owner-controlled Google Play Console setup until the owner is ready to resume it

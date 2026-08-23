@@ -7,7 +7,7 @@ export default function AboutUs() {
   const [, navigate] = useLocation();
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-200">
+    <div className="lumae-public-signal min-h-screen bg-slate-900 text-slate-200">
       {/* Header */}
       <div className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-700">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center gap-3">
@@ -43,14 +43,14 @@ export default function AboutUs() {
             <div className="flex flex-col sm:flex-row items-center gap-6">
               <div className="flex-shrink-0">
                 <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center text-white text-3xl font-bold">
-                  AS
+                  VR
                 </div>
               </div>
               <div className="text-center sm:text-left">
-                <h3 className="text-2xl font-bold text-white mb-1">Ankit Singh</h3>
-                <p className="text-purple-400 font-medium mb-3">Founder & Owner, Lumae AI</p>
+                <h3 className="text-2xl font-bold text-white mb-1">Veer Rajput</h3>
+                <p className="text-purple-400 font-medium mb-3">Founder & CEO, Lumae AI</p>
                 <p className="text-slate-300 leading-relaxed mb-4">
-                  Ankit Singh is the founder and owner of Lumae AI. Passionate about artificial intelligence and social media technology, Ankit built Lumae AI to help content creators and businesses automate their social media presence and generate viral content effortlessly using the power of AI.
+                  Veer Rajput founded Lumae AI to help creators and teams turn their distinct voice into thoughtful, channel-ready content systems—without losing the judgment behind the work.
                 </p>
                 <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
                   <a
@@ -124,10 +124,10 @@ export default function AboutUs() {
           <h2 className="text-2xl font-bold text-white mb-6">Our Story</h2>
           <div className="space-y-4 text-slate-300 leading-relaxed">
             <p>
-              Lumae AI was founded by Ankit Singh with a simple observation: content creators and businesses spend enormous amounts of time creating social media content, yet most of it fails to reach the right audience. The process of brainstorming ideas, writing captions, researching hashtags, and scheduling posts was taking hours every day.
+              Lumae AI began with a simple observation: content creators and businesses spend enormous amounts of time creating social media content, yet much of it fails to reach the right audience. The process of shaping ideas, writing captions, researching hashtags, and scheduling posts was taking hours every day.
             </p>
             <p>
-              Ankit set out to build a solution that would use the latest advances in artificial intelligence to automate this entire workflow. The result is Lumae AI — a platform that can generate platform-optimized, viral-ready content in seconds, schedule it automatically, and provide deep analytics to help creators understand what works.
+              Veer set out to build a calmer system: one that uses AI to connect the creative workflow without flattening the creator’s voice. The result is Lumae AI—a platform for shaping platform-aware content, organizing distribution, and learning from what works.
             </p>
             <p>
               Today, Lumae AI serves creators and businesses across India and internationally, helping them grow their social media presence with less effort and more impact. We are continuously improving our AI models and adding new features based on user feedback.
@@ -162,7 +162,7 @@ export default function AboutUs() {
       {/* Footer */}
       <footer className="border-t border-slate-700 py-6 mt-12">
         <div className="max-w-5xl mx-auto px-4 text-center text-slate-400 text-sm">
-          <p>© 2026 Lumae AI. All rights reserved. Founded and owned by Ankit Singh.</p>
+          <p>© 2026 Lumae AI. All rights reserved. Founded by Veer Rajput.</p>
           <div className="flex justify-center gap-4 mt-2 flex-wrap">
             <button onClick={() => navigate("/privacy-policy")} className="hover:text-white transition-colors">Privacy Policy</button>
             <button onClick={() => navigate("/terms")} className="hover:text-white transition-colors">Terms & Conditions</button>
