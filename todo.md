@@ -1063,3 +1063,8 @@
 - [x] Add one-time, staggered scroll reveals for Signal ownership content and accent icon badges
 - [x] Add headline, node, CTA, and numbered-step entrance motion to the channel-readiness section without altering its composition
 - [x] Preserve homepage-only animation scope, reduced-motion fallback, mobile readability, and regression stability
+
+## Higher-Energy Homepage Motion (IN PROGRESS)
+- [x] Intensify homepage-only crystal sheen, channel-node activity, and orbit illustration motion without obscuring content
+- [x] Shorten and strengthen progressive entrance timing for a more energetic marketing sequence
+- [x] Preserve mobile performance, reduced-motion behavior, and full regression stability before checkpointing
