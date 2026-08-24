@@ -991,7 +991,7 @@
 - [x] Preserve the existing bounded Remember Me implementation and verify it remains available on the login form
 - [x] Harden provider-neutral password-reset email delivery with no sending before verified email configuration
 - [x] Leave phone OTP disabled pending a future provider decision
-- [ ] Configure a verified email sender/domain and delivery credentials after owner setup
+- [x] Configure a verified email sender/domain and delivery credentials after owner setup
 - [x] Add delivery and abuse-protection regression coverage, validate the full suite, and document activation status
 
 ## Resend Password Reset Delivery (IN PROGRESS)
@@ -1107,9 +1107,10 @@
 - [x] Add state-transition coverage and validate the resolved confirmation experience before checkpointing
 
 ## Confirmation and Mobile Visual Verification (IN PROGRESS)
-- [ ] Verify the email-confirmation flow state transition using available authenticated evidence without handling user credentials
+- [x] Verify the email-confirmation flow state transition using available authenticated evidence without handling user credentials
 - [x] Inspect mobile dashboard and confirmation layouts for overlap, clipping, and usable actions
 - [x] Capture the updated dashboard crystal-shine presentation and document verification results
+- [x] Assert valid local verification consumes its token and marks the account verified while invalid tokens are rejected
 
 ## Registration and Email Delivery Trust Repair (IN PROGRESS)
 - [x] Trace the Create Account submission path and reproduce why it leaves users on the same screen
