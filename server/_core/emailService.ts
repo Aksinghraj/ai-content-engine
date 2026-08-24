@@ -6,8 +6,12 @@ export type EmailPayload = {
   htmlContent: string;
 };
 
+export function normalizeTransactionalSender(sender: string | undefined): string {
+  return sender?.replace(/\\u003c/g, "<").replace(/\\u003e/g, ">") ?? "";
+}
+
 export function isTransactionalEmailConfigured(): boolean {
-  return Boolean(ENV.resendApiKey && ENV.resendFromEmail);
+  return Boolean(ENV.resendApiKey && normalizeTransactionalSender(ENV.resendFromEmail));
 }
 
 const buildEmailEndpointUrl = (baseUrl: string): string => {
@@ -44,7 +48,7 @@ export async function sendEmail(payload: EmailPayload): Promise<boolean> {
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          from: ENV.resendFromEmail,
+          from: normalizeTransactionalSender(ENV.resendFromEmail),
           to: [payload.to],
           subject: payload.subject,
           html: payload.htmlContent,

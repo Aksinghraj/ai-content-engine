@@ -1110,12 +1110,17 @@
 - [x] Capture the updated dashboard crystal-shine presentation and document verification results
 
 ## Registration and Email Delivery Trust Repair (IN PROGRESS)
-- [ ] Trace the Create Account submission path and reproduce why it leaves users on the same screen
-- [ ] Make registration display explicit success, validation, duplicate-account, and delivery-unavailable outcomes
-- [ ] Prevent verification status or OTP delivery success from being shown unless a configured provider actually accepted the message
-- [ ] Add end-to-end regression coverage for registration and confirmation delivery outcomes
+- [x] Trace the Create Account submission path and reproduce why it leaves users on the same screen
+- [x] Make registration display explicit success, validation, duplicate-account, and delivery-unavailable outcomes
+- [x] Prevent verification status or OTP delivery success from being shown unless a configured provider actually accepted the message
+- [x] Add end-to-end regression coverage for registration and confirmation delivery outcomes
+- [x] Execute an isolated registration delivery test now that Resend inbox delivery is confirmed
+- [x] Re-run the controlled registration test with the exact `delivered@resend.dev` address after new approval; prior plus-address variants were rejected with 422
+- [x] Normalize escaped `\u003c` and `\u003e` sender characters before Resend delivery; direct tests used the normalized sender while registration did not
+- [x] Remove every temporary registration-test account after each controlled test
 
 ## GoDaddy Airo Widget Removal (IN PROGRESS)
-- [ ] Identify the unintended GoDaddy Airo public website widget source
+- [x] Identify the unintended GoDaddy Airo public website widget source as the GoDaddy parking/website route, not Lumae source code
 - [ ] Disable the public widget in the GoDaddy website configuration without changing Lumae functionality
-- [ ] Verify that the widget no longer appears on public Lumae pages
+- [x] Verify that the widget no longer appears on the direct public Lumae response
+- [x] Inspect the restored direct Lumae response for GoDaddy parking or Airo assets
