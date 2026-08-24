@@ -83,13 +83,14 @@ export const localAuthRouter = router({
   }),
 
   resendVerification: publicProcedure.input(z.object({ email: emailInput })).mutation(async ({ input }) => {
-    const emailDeliveryAvailable = isTransactionalEmailConfigured();
+    const emailDeliveryConfigured = isTransactionalEmailConfigured();
     const user = await getUserByNormalizedEmail(input.email);
-    if (emailDeliveryAvailable && user && !user.emailVerified && user.loginMethod === "email") {
+    let emailDeliveryAvailable = false;
+    if (emailDeliveryConfigured && user && !user.emailVerified && user.loginMethod === "email") {
       const token = await createLocalVerificationToken(user.id);
-      await sendLocalVerificationEmail(input.email, token);
+      emailDeliveryAvailable = await sendLocalVerificationEmail(input.email, token);
     }
-    return { accepted: true, emailDeliveryAvailable };
+    return { accepted: emailDeliveryAvailable, emailDeliveryAvailable, emailDeliveryConfigured };
   }),
 
   requestPasswordReset: publicProcedure.input(z.object({ email: emailInput })).mutation(async ({ input }) => {

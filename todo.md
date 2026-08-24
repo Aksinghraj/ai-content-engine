@@ -1135,3 +1135,8 @@
 - [x] Trace why the Sign in and Create secure account buttons appear not to complete on mobile
 - [x] Fix validation, mutation, and visible feedback for mobile local sign-in and registration
 - [x] Test successful, invalid, duplicate, and delivery-unavailable outcomes with mobile-focused validation contracts and the full regression suite
+
+## Real-user Email Delivery Incident (IN PROGRESS)
+- [x] Determine why the recent confirmation and password-reset requests did not reach the reported Gmail inbox
+- [x] Ensure local registration and reset UI report the provider-backed delivery outcome for every request
+- [x] Verify repaired delivery with safe controlled tests and document safe user recovery steps
