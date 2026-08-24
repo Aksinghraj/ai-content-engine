@@ -995,14 +995,16 @@
 - [x] Add delivery and abuse-protection regression coverage, validate the full suite, and document activation status
 
 ## Resend Password Reset Delivery (IN PROGRESS)
-- [ ] Add Resend delivery support with safe fallback to the existing delivery service
-- [ ] Require a verified sender address and keep reset emails disabled if configuration is incomplete
-- [ ] Add the Resend API key and verified sender address through secure project configuration
-- [ ] Add provider-selection and delivery-safety regressions, validate the full suite, and confirm activation
+- [x] Add Resend delivery support with safe fallback to the existing delivery service
+- [x] Require a verified sender address and keep reset emails disabled if configuration is incomplete
+- [x] Add the Resend API key and verified sender address through secure project configuration
+- [x] Add provider-selection and delivery-safety regressions, validate the full suite, and confirm activation
+- [x] Execute one approval-gated, self-cleaning safe password-reset delivery test
+- [x] Gate password-reset token creation on the active Resend configuration rather than the generic fallback channel
 
 ## Resend Owner Onboarding (IN PROGRESS)
-- [ ] Provide simple Resend signup, verified-sender, DNS, and API-key creation steps for the Lumae owner
-- [ ] Guide secure entry of the Resend API key and verified sender only after domain verification succeeds
+- [x] Provide simple Resend signup, verified-sender, DNS, and API-key creation steps for the Lumae owner
+- [x] Guide secure entry of the Resend API key and verified sender only after domain verification succeeds
 
 ## Verified Resend Activation (IN PROGRESS)
 - [x] Securely collect the created Resend API key and verified `mail.lumae.co.in` sender address

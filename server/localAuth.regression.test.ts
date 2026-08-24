@@ -76,4 +76,11 @@ describe("local email/password authentication", () => {
     expect(email).toContain("isTransactionalEmailConfigured");
     expect(email).toContain("https://api.resend.com/emails");
   });
+
+  it("does not issue a local password-reset token when the configured Resend sender is unavailable", () => {
+    const router = read("server/routers/localAuth.ts");
+
+    expect(router).toContain('if (!isTransactionalEmailConfigured()) return { status: "delivery_unavailable" as const };');
+    expect(router).toContain("const result = await createLocalPasswordResetToken(input.email);");
+  });
 });

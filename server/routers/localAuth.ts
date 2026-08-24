@@ -93,6 +93,7 @@ export const localAuthRouter = router({
   }),
 
   requestPasswordReset: publicProcedure.input(z.object({ email: emailInput })).mutation(async ({ input }) => {
+    if (!isTransactionalEmailConfigured()) return { status: "delivery_unavailable" as const };
     const result = await createLocalPasswordResetToken(input.email);
     if (result.kind === "local") {
       const delivered = await sendPasswordResetEmail(result.user.email!, result.token);
