@@ -1140,3 +1140,8 @@
 - [x] Determine why the recent confirmation and password-reset requests did not reach the reported Gmail inbox
 - [x] Ensure local registration and reset UI report the provider-backed delivery outcome for every request
 - [x] Verify repaired delivery with safe controlled tests and document safe user recovery steps
+
+## Lumae Marketing Plan (IN PROGRESS)
+- [x] Review current Lumae positioning, audience cues, and product proof points
+- [x] Research relevant creator and small-business acquisition channels
+- [x] Produce a measurable 90-day marketing plan with content, conversion, and retention actions
