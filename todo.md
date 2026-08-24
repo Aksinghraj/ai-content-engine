@@ -1011,7 +1011,7 @@
 - [x] Replace the previously rejected credential with a new restricted Sending key and validate configuration safely
 - [x] Obtain owner approval and send one controlled transactional delivery test
 - [x] Replace the incompatible domains-endpoint credential probe with a Sending-access-safe validation contract
-- [ ] Confirm the owner inbox receives the controlled Resend delivery before declaring end-to-end inbox delivery complete
+- [x] Confirm the owner inbox received the controlled Resend delivery before declaring end-to-end inbox delivery complete
 
 ## lumae.co.in DNS Recovery (IN PROGRESS)
 - [x] Identify the GoDaddy `Parked` apex record causing public `DNS_PROBE_FINISHED_NXDOMAIN`
