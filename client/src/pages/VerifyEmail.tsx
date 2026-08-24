@@ -36,6 +36,8 @@ export default function VerifyEmail() {
       if (data.success) {
         toast.success("New OTP sent to your email!");
         setCountdown(60);
+      } else if (data.deliveryUnavailable) {
+        toast.error("Email delivery is not configured, so no code was sent.");
       } else {
         toast.error("Failed to send OTP. Please try again.");
       }
@@ -126,7 +128,7 @@ export default function VerifyEmail() {
                 </div>
                 <h1 className="text-2xl font-bold text-white mb-2">Verify Your Email</h1>
                 <p className="text-slate-400 text-sm">
-                  We sent a 6-digit OTP to{" "}
+                  Enter the 6-digit OTP for{" "}
                   <span className="text-purple-400 font-medium">{user?.email}</span>
                 </p>
                 <p className="text-slate-500 text-xs mt-1">Check your inbox and spam folder</p>

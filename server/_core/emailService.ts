@@ -6,6 +6,10 @@ export type EmailPayload = {
   htmlContent: string;
 };
 
+export function isTransactionalEmailConfigured(): boolean {
+  return Boolean(ENV.resendApiKey && ENV.resendFromEmail);
+}
+
 const buildEmailEndpointUrl = (baseUrl: string): string => {
   const normalizedBase = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
   return new URL("webdevtoken.v1.WebDevService/SendEmail", normalizedBase).toString();
@@ -21,14 +25,41 @@ export async function sendEmail(payload: EmailPayload): Promise<boolean> {
     return false;
   }
 
-  if (!ENV.forgeApiUrl) {
+  if (!ENV.forgeApiUrl && !isTransactionalEmailConfigured()) {
     console.error("[Email] Email service URL is not configured");
     return false;
   }
 
-  if (!ENV.forgeApiKey) {
+  if (!ENV.forgeApiKey && !isTransactionalEmailConfigured()) {
     console.error("[Email] Email service API key is not configured");
     return false;
+  }
+
+  if (isTransactionalEmailConfigured()) {
+    try {
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${ENV.resendApiKey}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          from: ENV.resendFromEmail,
+          to: [payload.to],
+          subject: payload.subject,
+          html: payload.htmlContent,
+        }),
+      });
+      if (!response.ok) {
+        console.warn(`[Email] Resend rejected email delivery (${response.status} ${response.statusText})`);
+        return false;
+      }
+      console.log("[Email] Resend accepted transactional email delivery");
+      return true;
+    } catch (error) {
+      console.error("[Email] Resend delivery error:", error);
+      return false;
+    }
   }
 
   const endpoint = buildEmailEndpointUrl(ENV.forgeApiUrl);
@@ -76,6 +107,10 @@ export async function sendVerificationEmail(
   otp: string,
   _verificationUrl?: string  // kept for backward compat, not used
 ): Promise<boolean> {
+  if (!isTransactionalEmailConfigured()) {
+    console.warn("[Email] Verification delivery is unavailable until Resend is configured");
+    return false;
+  }
   const htmlContent = `
     <!DOCTYPE html>
     <html>

@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createLocalAccount, createLocalPasswordResetToken, createLocalVerificationToken, getLocalAccountByEmail, getLocalSessionVersion, getUserByNormalizedEmail, hashPassword, resetLocalPassword, revokeLocalPasswordResetToken, verifyLocalAccountEmail, verifyPassword } from "../db/localAuth";
 import { isTwoFactorEnabled } from "../db/twoFactor";
-import { sendEmail } from "../_core/emailService";
+import { isTransactionalEmailConfigured, sendEmail } from "../_core/emailService";
 import { getSessionCookieOptions } from "../_core/cookies";
 import { sdk, TWO_FACTOR_CHALLENGE_COOKIE } from "../_core/sdk";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
@@ -60,8 +60,9 @@ export const localAuthRouter = router({
   register: publicProcedure.input(z.object({ name: z.string().trim().min(1).max(120), email: emailInput, password: passwordInput })).mutation(async ({ input }) => {
     const account = await createLocalAccount({ name: input.name, email: input.email, passwordHash: await hashPassword(input.password) });
     if (!account) throw new TRPCError({ code: "CONFLICT", message: "This email is already registered. Sign in using its original sign-in method instead of creating a second account." });
-    const delivered = await sendLocalVerificationEmail(account.email, account.verificationToken);
-    return { verificationRequired: true, emailDeliveryAvailable: delivered, expiresInMs: VERIFY_TTL_MS };
+    const emailDeliveryConfigured = isTransactionalEmailConfigured();
+    const delivered = emailDeliveryConfigured && await sendLocalVerificationEmail(account.email, account.verificationToken);
+    return { verificationRequired: true, emailDeliveryAvailable: delivered, emailDeliveryConfigured, expiresInMs: VERIFY_TTL_MS };
   }),
 
   login: publicProcedure.input(z.object({ email: emailInput, password: z.string().min(1).max(128), rememberMe: z.boolean().default(false) })).mutation(async ({ ctx, input }) => {
@@ -82,12 +83,13 @@ export const localAuthRouter = router({
   }),
 
   resendVerification: publicProcedure.input(z.object({ email: emailInput })).mutation(async ({ input }) => {
+    const emailDeliveryAvailable = isTransactionalEmailConfigured();
     const user = await getUserByNormalizedEmail(input.email);
-    if (user && !user.emailVerified && user.loginMethod === "email") {
+    if (emailDeliveryAvailable && user && !user.emailVerified && user.loginMethod === "email") {
       const token = await createLocalVerificationToken(user.id);
       await sendLocalVerificationEmail(input.email, token);
     }
-    return { accepted: true };
+    return { accepted: true, emailDeliveryAvailable };
   }),
 
   requestPasswordReset: publicProcedure.input(z.object({ email: emailInput })).mutation(async ({ input }) => {

@@ -63,4 +63,17 @@ describe("local email/password authentication", () => {
     expect(page).toContain('aria-live="polite"');
     expect(page).toContain("Add a password");
   });
+
+  it("does not claim account-verification delivery when transactional email is unavailable", () => {
+    const router = read("server/routers/localAuth.ts");
+    const page = read("client/src/pages/LoginEnhanced.tsx");
+    const email = read("server/_core/emailService.ts");
+
+    expect(router).toContain("emailDeliveryConfigured");
+    expect(router).toContain("emailDeliveryAvailable");
+    expect(page).toContain("Account created — email delivery unavailable");
+    expect(page).toContain("we did not send a verification email");
+    expect(email).toContain("isTransactionalEmailConfigured");
+    expect(email).toContain("https://api.resend.com/emails");
+  });
 });

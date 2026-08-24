@@ -1000,6 +1000,25 @@
 - [ ] Add the Resend API key and verified sender address through secure project configuration
 - [ ] Add provider-selection and delivery-safety regressions, validate the full suite, and confirm activation
 
+## Resend Owner Onboarding (IN PROGRESS)
+- [ ] Provide simple Resend signup, verified-sender, DNS, and API-key creation steps for the Lumae owner
+- [ ] Guide secure entry of the Resend API key and verified sender only after domain verification succeeds
+
+## Verified Resend Activation (IN PROGRESS)
+- [x] Securely collect the created Resend API key and verified `mail.lumae.co.in` sender address
+- [x] Validate Resend accepts Lumae transactional messages before describing any email as sent
+- [x] Run delivery regression coverage and confirm the truthful email-delivery behavior remains protected
+- [x] Replace the previously rejected credential with a new restricted Sending key and validate configuration safely
+- [x] Obtain owner approval and send one controlled transactional delivery test
+- [x] Replace the incompatible domains-endpoint credential probe with a Sending-access-safe validation contract
+- [ ] Confirm the owner inbox receives the controlled Resend delivery before declaring end-to-end inbox delivery complete
+
+## lumae.co.in DNS Recovery (IN PROGRESS)
+- [x] Identify the GoDaddy `Parked` apex record causing public `DNS_PROBE_FINISHED_NXDOMAIN`
+- [x] Restore the Lumae apex web-hosting records without deleting verified `mail.lumae.co.in` Resend records
+- [x] Confirm the active Manus custom-domain bindings and both approved Lumae edge addresses
+- [x] Verify public DNS, HTTPS, apex content, and the safe www-to-apex redirect
+
 ## Google Play Launch Preparation (IN PROGRESS)
 - [x] Assess the current web app, Android packaging options, and Google Play account/policy requirements
 - [x] Create a step-by-step owner guide covering Play Console, testing, Data safety, and release actions
@@ -1084,3 +1103,19 @@
 - [x] Inspect the authenticated pending account state and current confirmation delivery status
 - [x] Add an authenticated, rate-limited fallback that renews a secure email confirmation route without bypassing ownership proof
 - [x] Add state-transition coverage and validate the resolved confirmation experience before checkpointing
+
+## Confirmation and Mobile Visual Verification (IN PROGRESS)
+- [ ] Verify the email-confirmation flow state transition using available authenticated evidence without handling user credentials
+- [x] Inspect mobile dashboard and confirmation layouts for overlap, clipping, and usable actions
+- [x] Capture the updated dashboard crystal-shine presentation and document verification results
+
+## Registration and Email Delivery Trust Repair (IN PROGRESS)
+- [ ] Trace the Create Account submission path and reproduce why it leaves users on the same screen
+- [ ] Make registration display explicit success, validation, duplicate-account, and delivery-unavailable outcomes
+- [ ] Prevent verification status or OTP delivery success from being shown unless a configured provider actually accepted the message
+- [ ] Add end-to-end regression coverage for registration and confirmation delivery outcomes
+
+## GoDaddy Airo Widget Removal (IN PROGRESS)
+- [ ] Identify the unintended GoDaddy Airo public website widget source
+- [ ] Disable the public widget in the GoDaddy website configuration without changing Lumae functionality
+- [ ] Verify that the widget no longer appears on public Lumae pages

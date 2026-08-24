@@ -81,7 +81,10 @@ export const appRouter = router({
             retryAfterSeconds: Math.ceil((nextAllowedAt - now) / 1000),
           };
         }
-        const { sendVerificationEmail } = await import("./_core/emailService");
+        const { isTransactionalEmailConfigured, sendVerificationEmail } = await import("./_core/emailService");
+        if (!isTransactionalEmailConfigured()) {
+          return { success: false, alreadyVerified: false, throttled: false, deliveryUnavailable: true };
+        }
         const otp = await db.generateEmailVerificationToken(ctx.user.id);
         const sent = await sendVerificationEmail(ctx.user.email ?? "", ctx.user.name ?? "", otp);
         if (sent) emailConfirmationResendAt.set(ctx.user.id, now + EMAIL_CONFIRMATION_RESEND_WINDOW_MS);
