@@ -59,9 +59,21 @@ describe("local email/password authentication", () => {
     const page = read("client/src/pages/LoginEnhanced.tsx");
 
     expect(page).toContain("function passwordStrength");
+    expect(page).toContain("function registrationPasswordError");
+    expect(page).toContain("Add one symbol, such as !, @, #, or $ to your password.");
     expect(page).toContain("Password strength");
     expect(page).toContain('aria-live="polite"');
     expect(page).toContain("Add a password");
+  });
+
+  it("keeps mobile sign-in and registration errors visibly actionable instead of toast-only", () => {
+    const page = read("client/src/pages/LoginEnhanced.tsx");
+
+    expect(page).toContain("const [formError, setFormError]");
+    expect(page).toContain('role="alert"');
+    expect(page).toContain("noValidate onSubmit={submit}");
+    expect(page).toContain("Enter a valid email address before continuing.");
+    expect(page).toContain("aria-busy={busy}");
   });
 
   it("does not claim account-verification delivery when transactional email is unavailable", () => {

@@ -8,17 +8,180 @@ import { trpc } from "@/lib/trpc";
 
 type Mode = "signin" | "register";
 
-function GoogleMark() { return <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>; }
-function passwordStrength(password: string) { const checks = [password.length >= 12, /[a-z]/.test(password), /[A-Z]/.test(password), /\d/.test(password), /[^A-Za-z0-9]/.test(password)]; const score = checks.filter(Boolean).length; return { score, label: ["", "Weak", "Fair", "Good", "Strong", "Strong"][score], color: ["", "bg-[#ff6b5f]", "bg-[#f5a524]", "bg-[#2dd4bf]", "bg-[#38c892]", "bg-[#38c892]"][score] }; }
+function GoogleMark() {
+  return <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>;
+}
+
+export function passwordStrength(password: string) {
+  const checks = [password.length >= 12, /[a-z]/.test(password), /[A-Z]/.test(password), /\d/.test(password), /[^A-Za-z0-9]/.test(password)];
+  const score = checks.filter(Boolean).length;
+  const label = ["", "Weak", "Fair", "Good", "Almost there", "Strong"][score];
+  const color = ["", "bg-[#ff6b5f]", "bg-[#f5a524]", "bg-[#2dd4bf]", "bg-[#2dd4bf]", "bg-[#38c892]"][score];
+  return { score, label, color };
+}
+
+export function registrationPasswordError(password: string): string | null {
+  if (password.length < 12) return "Use at least 12 characters in your password.";
+  if (!/[a-z]/.test(password) || !/[A-Z]/.test(password)) return "Add both uppercase and lowercase letters to your password.";
+  if (!/\d/.test(password)) return "Add at least one number to your password.";
+  if (!/[^A-Za-z0-9]/.test(password)) return "Add one symbol, such as !, @, #, or $ to your password.";
+  return null;
+}
+
+export function validEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
 
 export default function LoginEnhanced() {
-  const { isAuthenticated, loading } = useAuth(); const [, navigate] = useLocation(); const [mode, setMode] = useState<Mode>("signin"); const [name, setName] = useState(""); const [email, setEmail] = useState(""); const [password, setPassword] = useState(""); const [rememberMe, setRememberMe] = useState(false); const [showPassword, setShowPassword] = useState(false); const [registrationPending, setRegistrationPending] = useState(false); const [registrationDeliveryAvailable, setRegistrationDeliveryAvailable] = useState(false);
+  const { isAuthenticated, loading } = useAuth();
+  const [, navigate] = useLocation();
+  const [mode, setMode] = useState<Mode>("signin");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [registrationPending, setRegistrationPending] = useState(false);
+  const [registrationDeliveryAvailable, setRegistrationDeliveryAvailable] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [formNotice, setFormNotice] = useState<string | null>(null);
   const googleLoginUrl = "/api/oauth/google/login";
-  const register = trpc.localAuth.register.useMutation({ onSuccess: (result) => { setRegistrationPending(true); setRegistrationDeliveryAvailable(result.emailDeliveryAvailable); toast[result.emailDeliveryAvailable ? "success" : "error"](result.emailDeliveryAvailable ? "Account created. Check your inbox for the verification link." : "Account created, but we could not send a verification email. Email delivery is not configured yet."); }, onError: (error) => toast.error(error.message) });
-  const login = trpc.localAuth.login.useMutation({ onSuccess: ({ returnPath }) => window.location.assign(returnPath), onError: (error) => toast.error(error.message) });
-  const resend = trpc.localAuth.resendVerification.useMutation({ onSuccess: (result) => { setRegistrationDeliveryAvailable(result.emailDeliveryAvailable); toast[result.emailDeliveryAvailable ? "success" : "error"](result.emailDeliveryAvailable ? "A new verification email has been requested." : "Email delivery is not configured, so no verification email was sent."); } });
-  useEffect(() => { if (!loading && isAuthenticated) navigate("/dashboard"); }, [isAuthenticated, loading, navigate]);
-  const submit = (event: React.FormEvent) => { event.preventDefault(); if (mode === "register") register.mutate({ name, email, password }); else login.mutate({ email, password, rememberMe }); };
-  const busy = register.isPending || login.isPending; const strength = passwordStrength(password); const strengthColor = strength.score >= 4 ? "text-[#38c892]" : strength.score >= 3 ? "text-[#2dd4bf]" : strength.score >= 2 ? "text-[#f5a524]" : "text-[#ff6b5f]";
-  return <main className="lumae-auth-shell"><div className="lumae-auth-field" aria-hidden="true"><div className="lumae-auth-field__grid" /><div className="lumae-auth-field__orbit lumae-auth-field__orbit--one" /><div className="lumae-auth-field__orbit lumae-auth-field__orbit--two" /><div className="lumae-auth-field__signal">L</div><div className="lumae-auth-field__copy"><p className="lumae-eyebrow"><span className="lumae-live-dot" /> SECURE CREATIVE SYSTEM</p><h1>Your work has a<br /><span>home signal.</span></h1><p>Build a calm, connected system for every idea, channel, and publishing decision.</p><div className="lumae-auth-proof"><span><ShieldCheck className="h-4 w-4" /> Passkeys & 2FA ready</span><span><CheckCircle2 className="h-4 w-4" /> Privacy controls built in</span></div></div></div><button onClick={() => navigate("/")} className="lumae-auth-back"><ArrowLeft className="h-4 w-4" /> Back to home</button><section className="lumae-auth-panel"><div className="lumae-auth-panel__brand"><div className="lumae-auth-panel__mark"><Sparkles className="h-4 w-4" /></div><div><p className="lumae-eyebrow">LUMAE ACCESS</p><h2>{mode === "signin" ? "Welcome back." : "Start with your signal."}</h2></div></div><div className="lumae-auth-tabs"><button onClick={() => { setMode("signin"); setRegistrationPending(false); }} className={mode === "signin" ? "is-active" : ""}>Sign in</button><button onClick={() => { setMode("register"); setRegistrationPending(false); }} className={mode === "register" ? "is-active" : ""}>Create account</button></div>{registrationPending ? <div className="lumae-auth-confirm"><CheckCircle2 className="h-10 w-10" /><h3>{registrationDeliveryAvailable ? "Confirm your email" : "Account created — email delivery unavailable"}</h3><p>{registrationDeliveryAvailable ? <>We sent a 30-minute verification link to <b>{email}</b>. Verify it before using email/password sign-in.</> : <>Your account was created, but we did not send a verification email because transactional email is not configured. You can return later and retry after delivery is enabled.</>}</p><Button variant="outline" disabled={resend.isPending} onClick={() => resend.mutate({ email })}>{resend.isPending ? "Checking delivery…" : registrationDeliveryAvailable ? "Resend verification" : "Try verification delivery again"}</Button><Button variant="ghost" onClick={() => { setMode("signin"); setRegistrationPending(false); }} className="mt-2">Return to sign in</Button></div> : <form className="lumae-auth-form" onSubmit={submit}>{mode === "register" && <label>Name<input value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" required maxLength={120} placeholder="Your name" /></label>}<label>Email<div className="lumae-auth-input"><Mail className="h-4 w-4" /><input value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="email" required placeholder="you@example.com" /></div></label><label>Password<div className="lumae-auth-input"><LockKeyhole className="h-4 w-4" /><input value={password} onChange={(event) => setPassword(event.target.value)} type={showPassword ? "text" : "password"} autoComplete={mode === "register" ? "new-password" : "current-password"} required placeholder={mode === "register" ? "12+ characters" : "Your password"}/><button type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</button></div>{mode === "register" && <div className="lumae-password-strength" aria-live="polite"><div><span>Password strength</span><b className={strengthColor}>{password ? strength.label : "Add a password"}</b></div><p>{Array.from({ length: 5 }, (_, index) => <i key={index} className={index < strength.score ? strength.color : ""} />)}</p><small>Use 12+ characters with upper- and lowercase letters, a number, and a symbol.</small></div>}</label>{mode === "signin" && <div className="lumae-auth-options"><label className="lumae-remember"><input checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} type="checkbox"/> <span>Remember me for 30 days<small>Leave unchecked on shared devices.</small></span></label><button type="button" onClick={() => navigate("/forgot-password")}>Forgot password?</button></div>}<Button type="submit" disabled={busy} className="lumae-signal-button lumae-auth-submit">{busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{mode === "register" ? "Create secure account" : "Continue with email"}<ArrowUpRight className="h-4 w-4" /></Button></form>}<div className="lumae-auth-divider">or continue with</div><Button variant="outline" type="button" className="lumae-google-button" onClick={() => window.location.assign(googleLoginUrl)}><GoogleMark />Continue with Google</Button><div className="lumae-auth-disabled"><Button variant="outline" type="button" disabled><Github className="h-4 w-4"/>GitHub soon</Button><Button variant="outline" type="button" disabled><Phone className="h-4 w-4"/>Phone OTP coming soon</Button></div><p className="mt-2 text-center text-xs text-[#789097]">Phone OTP will activate after an SMS provider is configured.</p><div className="lumae-auth-security"><ShieldCheck className="h-4 w-4"/><p>Email/password sign-in uses strong hashing and email confirmation. Existing accounts can continue with Google.</p></div><p className="lumae-auth-legal">By continuing, you agree to Lumae’s Terms and Privacy Policy.</p></section></main>;
+
+  const register = trpc.localAuth.register.useMutation({
+    onSuccess: (result) => {
+      setRegistrationPending(true);
+      setRegistrationDeliveryAvailable(result.emailDeliveryAvailable);
+      const message = result.emailDeliveryAvailable
+        ? "Account created. Check your inbox for the verification link."
+        : "Account created, but we could not send a verification email. Use the retry button after email delivery is available.";
+      setFormNotice(message);
+      toast[result.emailDeliveryAvailable ? "success" : "error"](message);
+    },
+    onError: (error) => {
+      setFormError(error.message);
+      toast.error(error.message);
+    },
+  });
+  const login = trpc.localAuth.login.useMutation({
+    onSuccess: ({ returnPath }) => window.location.assign(returnPath),
+    onError: (error) => {
+      setFormError(error.message);
+      toast.error(error.message);
+    },
+  });
+  const resend = trpc.localAuth.resendVerification.useMutation({
+    onSuccess: (result) => {
+      setRegistrationDeliveryAvailable(result.emailDeliveryAvailable);
+      const message = result.emailDeliveryAvailable
+        ? "A new verification email has been requested."
+        : "Email delivery is unavailable, so no verification email was sent.";
+      setFormNotice(message);
+      toast[result.emailDeliveryAvailable ? "success" : "error"](message);
+    },
+    onError: (error) => {
+      setFormError(error.message);
+      toast.error(error.message);
+    },
+  });
+
+  useEffect(() => {
+    if (!loading && isAuthenticated) navigate("/dashboard");
+  }, [isAuthenticated, loading, navigate]);
+
+  const clearFeedback = () => {
+    if (formError) setFormError(null);
+    if (formNotice) setFormNotice(null);
+  };
+
+  const selectMode = (nextMode: Mode) => {
+    setMode(nextMode);
+    setRegistrationPending(false);
+    setFormError(null);
+    setFormNotice(null);
+  };
+
+  const submit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (register.isPending || login.isPending) return;
+    setFormError(null);
+    setFormNotice(null);
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!validEmail(normalizedEmail)) {
+      setFormError("Enter a valid email address before continuing.");
+      return;
+    }
+    if (!password) {
+      setFormError("Enter your password before continuing.");
+      return;
+    }
+
+    if (mode === "register") {
+      if (!name.trim()) {
+        setFormError("Enter your name to create an account.");
+        return;
+      }
+      const passwordError = registrationPasswordError(password);
+      if (passwordError) {
+        setFormError(passwordError);
+        return;
+      }
+      register.mutate({ name: name.trim(), email: normalizedEmail, password });
+      return;
+    }
+
+    login.mutate({ email: normalizedEmail, password, rememberMe });
+  };
+
+  const busy = register.isPending || login.isPending;
+  const strength = passwordStrength(password);
+  const strengthColor = strength.score === 5 ? "text-[#38c892]" : strength.score >= 3 ? "text-[#2dd4bf]" : strength.score >= 2 ? "text-[#f5a524]" : "text-[#ff6b5f]";
+
+  return <main className="lumae-auth-shell">
+    <div className="lumae-auth-field" aria-hidden="true">
+      <div className="lumae-auth-field__grid" />
+      <div className="lumae-auth-field__orbit lumae-auth-field__orbit--one" />
+      <div className="lumae-auth-field__orbit lumae-auth-field__orbit--two" />
+      <div className="lumae-auth-field__signal">L</div>
+      <div className="lumae-auth-field__copy">
+        <p className="lumae-eyebrow"><span className="lumae-live-dot" /> SECURE CREATIVE SYSTEM</p>
+        <h1>Your work has a<br /><span>home signal.</span></h1>
+        <p>Build a calm, connected system for every idea, channel, and publishing decision.</p>
+        <div className="lumae-auth-proof"><span><ShieldCheck className="h-4 w-4" /> Passkeys &amp; 2FA ready</span><span><CheckCircle2 className="h-4 w-4" /> Privacy controls built in</span></div>
+      </div>
+    </div>
+    <button type="button" onClick={() => navigate("/")} className="lumae-auth-back"><ArrowLeft className="h-4 w-4" /> Back to home</button>
+    <section className="lumae-auth-panel">
+      <div className="lumae-auth-panel__brand"><div className="lumae-auth-panel__mark"><Sparkles className="h-4 w-4" /></div><div><p className="lumae-eyebrow">LUMAE ACCESS</p><h2>{mode === "signin" ? "Welcome back." : "Start with your signal."}</h2></div></div>
+      <div className="lumae-auth-tabs">
+        <button type="button" onClick={() => selectMode("signin")} className={mode === "signin" ? "is-active" : ""}>Sign in</button>
+        <button type="button" onClick={() => selectMode("register")} className={mode === "register" ? "is-active" : ""}>Create account</button>
+      </div>
+      {registrationPending ? <div className="lumae-auth-confirm">
+        <CheckCircle2 className="h-10 w-10" />
+        <h3>{registrationDeliveryAvailable ? "Confirm your email" : "Account created — email delivery unavailable"}</h3>
+        <p>{registrationDeliveryAvailable ? <>We sent a 30-minute verification link to <b>{email}</b>. Verify it before using email/password sign-in.</> : <>Your account was created, but we did not send a verification email. You can retry when delivery becomes available.</>}</p>
+        {formNotice && <p className="rounded-md border border-[#2dd4bf]/40 bg-[#2dd4bf]/10 px-3 py-2 text-sm text-[#c5fff7]" role="status">{formNotice}</p>}
+        {formError && <p className="rounded-md border border-[#ff6b5f]/60 bg-[#ff6b5f]/10 px-3 py-2 text-sm text-[#ffd0cc]" role="alert">{formError}</p>}
+        <Button variant="outline" disabled={resend.isPending} onClick={() => { setFormError(null); setFormNotice(null); resend.mutate({ email: email.trim().toLowerCase() }); }}>{resend.isPending ? "Checking delivery…" : registrationDeliveryAvailable ? "Resend verification" : "Try verification delivery again"}</Button>
+        <Button variant="ghost" onClick={() => selectMode("signin")} className="mt-2">Return to sign in</Button>
+      </div> : <form className="lumae-auth-form" noValidate onSubmit={submit}>
+        {mode === "register" && <label>Name<input value={name} onChange={(event) => { clearFeedback(); setName(event.target.value); }} autoComplete="name" maxLength={120} placeholder="Your name" /></label>}
+        <label>Email<div className="lumae-auth-input"><Mail className="h-4 w-4" /><input value={email} onChange={(event) => { clearFeedback(); setEmail(event.target.value); }} type="email" autoComplete="email" placeholder="you@example.com" aria-invalid={Boolean(formError)} /></div></label>
+        <label>Password<div className="lumae-auth-input"><LockKeyhole className="h-4 w-4" /><input value={password} onChange={(event) => { clearFeedback(); setPassword(event.target.value); }} type={showPassword ? "text" : "password"} autoComplete={mode === "register" ? "new-password" : "current-password"} placeholder={mode === "register" ? "12+ characters" : "Your password"} aria-invalid={Boolean(formError)} /><button type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</button></div>
+          {mode === "register" && <div className="lumae-password-strength" aria-live="polite"><div><span>Password strength</span><b className={strengthColor}>{password ? strength.label : "Add a password"}</b></div><p>{Array.from({ length: 5 }, (_, index) => <i key={index} className={index < strength.score ? strength.color : ""} />)}</p><small>Use 12+ characters with upper- and lowercase letters, a number, and a symbol.</small></div>}
+        </label>
+        {mode === "signin" && <div className="lumae-auth-options"><label className="lumae-remember"><input checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} type="checkbox"/> <span>Remember me for 30 days<small>Leave unchecked on shared devices.</small></span></label><button type="button" onClick={() => navigate("/forgot-password")}>Forgot password?</button></div>}
+        {formError && <p className="rounded-md border border-[#ff6b5f]/60 bg-[#ff6b5f]/10 px-3 py-2 text-sm text-[#ffd0cc]" role="alert">{formError}</p>}
+        {formNotice && <p className="rounded-md border border-[#2dd4bf]/40 bg-[#2dd4bf]/10 px-3 py-2 text-sm text-[#c5fff7]" role="status">{formNotice}</p>}
+        <Button type="submit" disabled={busy} aria-busy={busy} className="lumae-signal-button lumae-auth-submit">{busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{mode === "register" ? "Create secure account" : "Continue with email"}<ArrowUpRight className="h-4 w-4" /></Button>
+      </form>}
+      <div className="lumae-auth-divider">or continue with</div>
+      <Button variant="outline" type="button" className="lumae-google-button" onClick={() => window.location.assign(googleLoginUrl)}><GoogleMark />Continue with Google</Button>
+      <div className="lumae-auth-disabled"><Button variant="outline" type="button" disabled><Github className="h-4 w-4"/>GitHub soon</Button><Button variant="outline" type="button" disabled><Phone className="h-4 w-4"/>Phone OTP coming soon</Button></div>
+      <p className="mt-2 text-center text-xs text-[#789097]">Phone OTP will activate after an SMS provider is configured.</p>
+      <div className="lumae-auth-security"><ShieldCheck className="h-4 w-4"/><p>Email/password sign-in uses strong hashing and email confirmation. Existing accounts can continue with Google.</p></div>
+      <p className="lumae-auth-legal">By continuing, you agree to Lumae’s Terms and Privacy Policy.</p>
+    </section>
+  </main>;
 }

@@ -1127,3 +1127,11 @@
 - [ ] Disable the public widget in the GoDaddy website configuration without changing Lumae functionality
 - [x] Verify that the widget no longer appears on the direct public Lumae response
 - [x] Inspect the restored direct Lumae response for GoDaddy parking or Airo assets
+
+## Remaining Owner-Controlled Actions (IN PROGRESS)
+- [ ] Select whether to resume Google Play Console release work or close the unused GoDaddy Airo website setting
+
+## Mobile Local Authentication Submit Repair (IN PROGRESS)
+- [x] Trace why the Sign in and Create secure account buttons appear not to complete on mobile
+- [x] Fix validation, mutation, and visible feedback for mobile local sign-in and registration
+- [x] Test successful, invalid, duplicate, and delivery-unavailable outcomes with mobile-focused validation contracts and the full regression suite
