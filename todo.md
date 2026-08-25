@@ -1171,3 +1171,8 @@
 - [x] Make all Content Studio features visible and directly selectable on one responsive workspace page
 - [x] Remove mobile and desktop horizontal tab hiding while preserving every existing deep link
 - [x] Validate all Content Studio selections at mobile, PC, and desktop widths
+
+## Content Studio Discovery Enhancements (IN PROGRESS)
+- [x] Add recognizable icons and concise descriptions for every Content Studio tool
+- [x] Add a searchable command palette for fast Content Studio switching on keyboard and touch devices
+- [x] Validate accessible command palette navigation and responsive tool-card layout
