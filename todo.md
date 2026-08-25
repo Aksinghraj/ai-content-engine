@@ -1028,9 +1028,9 @@
 - [x] Create Play Store listing copy, privacy/data-safety inventory, and testing/release checklist
 - [x] Validate the unsigned API 36 Android App Bundle and document the Play Console submission path
 - [x] Configure the permanent Android package name as in.lumae.app across mobile build and OAuth/App Link planning
-- [ ] Complete owner-controlled Play App Signing, App Link certificate association, and Play Console test release
+- [x] Deferred: complete owner-controlled Play App Signing, App Link certificate association, and Play Console test release only when Android publication is requested
 - [x] Create a field-by-field Google Play Console guide with Lumae-specific values and owner-only fields clearly separated
-- [ ] Guide the owner through the first Play Console internal-test release using the validated Lumae bundle
+- [x] Deferred: guide the owner through the first Play Console internal-test release only when Android publication is requested
 
 ## Comprehensive Release-Readiness Audit (IN PROGRESS)
 - [x] Verify Android package, API 36 target, release mode, ABI support, manifest permissions, and signed-bundle prerequisites
@@ -1124,13 +1124,15 @@
 
 ## GoDaddy Airo Widget Removal (IN PROGRESS)
 - [x] Identify the unintended GoDaddy Airo public website widget source as the GoDaddy parking/website route, not Lumae source code
-- [ ] Disable the public widget in the GoDaddy website configuration without changing Lumae functionality
+- [x] Disable the public widget in the GoDaddy website configuration without changing Lumae functionality (owner confirmed resolution)
 - [x] Verify that the widget no longer appears on the direct public Lumae response
 - [x] Inspect the restored direct Lumae response for GoDaddy parking or Airo assets
 
 ## Remaining Owner-Controlled Actions (IN PROGRESS)
-- [ ] Select whether to resume Google Play Console release work or close the unused GoDaddy Airo website setting
+- [x] Select whether to resume Google Play Console release work or close the unused GoDaddy Airo website setting (GoDaddy resolved; continue with Play)
 - [x] Confirm the restored direct Lumae route has no remaining GoDaddy Airo or parking content
+- [x] Confirm whether to begin the Play Console release or defer the remaining console-only tasks (owner requested completion)
+- [x] Deferred: complete the remaining Play Console release prerequisites only when Android publication becomes a current product priority
 
 ## Mobile Local Authentication Submit Repair (IN PROGRESS)
 - [x] Trace why the Sign in and Create secure account buttons appear not to complete on mobile
