@@ -48,6 +48,47 @@
   background: var(--lumae-teal) !important;
 }
 
+.lumae-group-tabs--complete {
+  margin-bottom: 28px;
+}
+
+.lumae-group-tabs--complete .lumae-group-tabs__title p {
+  margin-top: 6px;
+  color: var(--muted-foreground);
+  font-size: 14px;
+}
+
+.lumae-group-tabs__rail--complete {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  overflow: visible;
+}
+
+.lumae-group-tabs__rail--complete .lumae-group-tab {
+  min-height: 52px;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  white-space: normal;
+}
+
+.lumae-group-tabs__rail--complete .lumae-group-tab span {
+  line-height: 1.2;
+}
+
+.lumae-group-tabs__rail--complete .lumae-group-tab.is-active {
+  border-color: rgba(45, 212, 191, 0.58);
+  background: #17343a;
+}
+
+@media (max-width: 1050px) {
+  .lumae-group-tabs__rail--complete {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 560px) {
   .lumae-dashboard-hero h1 {
     font-size: 34px;
@@ -61,5 +102,16 @@
   .lumae-section-row__action {
     width: 100%;
     justify-content: center;
+  }
+
+  .lumae-group-tabs__rail--complete {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .lumae-group-tabs__rail--complete .lumae-group-tab {
+    min-height: 58px;
+    padding: 9px;
+    font-size: 12px;
   }
 }
