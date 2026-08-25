@@ -11,6 +11,8 @@ describe("secure social profile redesign", () => {
   const router = read("server/routers/professionalProfile.ts");
   const profilePage = read("client/src/pages/ProfileAdvanced.tsx");
   const publicPage = read("client/src/pages/PublicProfile.tsx");
+  const appearance = read("client/src/lib/profileAppearance.ts");
+  const profileCss = read("client/src/dashboardUsability.css");
 
   it("persists the new social-profile identity and privacy fields", () => {
     expect(schema).toContain('username: varchar("username", { length: 80 })');
@@ -42,5 +44,35 @@ describe("secure social profile redesign", () => {
     expect(profilePage).toContain("Edit profile");
     expect(profilePage).toContain("Make profile public");
     expect(profilePage).toContain("Open to collaborate");
+  });
+
+  it("defines a curated, typed appearance catalog and validates every persisted choice on the server", () => {
+    for (const theme of ["signal", "violet", "sunset", "mono"]) expect(appearance).toContain(`id: "${theme}"`);
+    for (const preset of ["aurora", "violet-grid", "sunrise", "ocean", "paper", "midnight"]) expect(appearance).toContain(`id: "${preset}"`);
+    expect(appearance).toContain("export type ProfileThemeId");
+    expect(appearance).toContain("export type CoverPresetId");
+    expect(appearance).toContain("getCoverPreset");
+    expect(router).toContain('profileTheme: z.enum(["signal", "violet", "sunset", "mono"]).default("signal")');
+    expect(router).toContain('coverPreset: z.enum(["aurora", "violet-grid", "sunrise", "ocean", "paper", "midnight"]).default("aurora")');
+  });
+
+  it("persists appearance safely, gives uploaded covers precedence, and keeps the locked response minimal", () => {
+    expect(schema).toContain('profileTheme: varchar("profileTheme", { length: 32 }).default("signal").notNull()');
+    expect(schema).toContain('coverPreset: varchar("coverPreset", { length: 32 }).default("aurora").notNull()');
+    expect(db).toContain("profileTheme: profile.profileTheme");
+    expect(db).toContain("coverPreset: profile.coverPreset");
+    expect(profilePage).toContain("coverUrl ? <img src={coverUrl}");
+    expect(publicPage).toContain("profile.coverUrl ? <img src={profile.coverUrl}");
+    expect(publicPage).toContain("getCoverPreset(profile.coverPreset)");
+    const lockedReturn = db.slice(db.indexOf('visibility: "locked"'), db.indexOf('visibility: "public"'));
+    expect(lockedReturn).not.toContain("profileTheme");
+    expect(lockedReturn).not.toContain("coverPreset");
+  });
+
+  it("scopes theme styling to profile surfaces without mutating the overall Lumae theme", () => {
+    expect(profilePage).toContain("data-profile-theme={profile.profileTheme}");
+    expect(publicPage).toContain('data-profile-theme={profile.profileTheme || "signal"}');
+    expect(profileCss).toContain('[data-profile-theme="violet"]');
+    expect(profileCss).toContain('[data-profile-theme] .profile-identity-accent');
   });
 });

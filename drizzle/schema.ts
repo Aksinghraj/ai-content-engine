@@ -238,6 +238,8 @@ export const professionalProfiles = mysqlTable("professionalProfiles", {
   username: varchar("username", { length: 80 }),
   profileStatus: varchar("profileStatus", { length: 100 }),
   collaborationOpen: boolean("collaborationOpen").default(false).notNull(),
+  profileTheme: varchar("profileTheme", { length: 32 }).default("signal").notNull(),
+  coverPreset: varchar("coverPreset", { length: 32 }).default("aurora").notNull(),
   publicSlug: varchar("publicSlug", { length: 100 }),
   isPublic: boolean("isPublic").default(false).notNull(),
   shareSocialLinks: boolean("shareSocialLinks").default(false).notNull(),

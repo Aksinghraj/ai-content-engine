@@ -1215,3 +1215,9 @@
 - [x] Add a comprehensive profile edit flow and privacy setting with locked public-profile states
 - [x] Exclude credits, private activity, and linked-account detail from public profile responses
 - [x] Add privacy, ownership, route, data, and responsive regression coverage
+
+## Profile Themes and Cover Presets (IN PROGRESS)
+- [x] Add persisted profile theme and cover preset selections with secure default values
+- [x] Add previewable theme and cover preset cards to the profile edit flow
+- [x] Preserve private-by-default public sharing and existing custom avatar/cover uploads
+- [x] Add profile customization and responsive regression coverage

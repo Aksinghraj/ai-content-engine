@@ -191,6 +191,13 @@
 .feedback-category-option small { font-size: 0.74rem; line-height: 1.25; }
 .feedback-category-option:hover, .feedback-category-option.is-selected { border-color: var(--lumae-teal); background: rgba(45, 212, 191, 0.09); }
 
+/* Theme selection changes only the profile identity surfaces, never the global app theme. */
+[data-profile-theme="signal"] { --profile-identity-accent: #14b8a6; }
+[data-profile-theme="violet"] { --profile-identity-accent: #8b5cf6; }
+[data-profile-theme="sunset"] { --profile-identity-accent: #f97316; }
+[data-profile-theme="mono"] { --profile-identity-accent: #64748b; }
+[data-profile-theme] .profile-identity-accent { color: var(--profile-identity-accent); }
+
 @media (max-width: 1050px) {
   .lumae-group-tabs__rail--complete {
     grid-template-columns: repeat(3, minmax(0, 1fr));

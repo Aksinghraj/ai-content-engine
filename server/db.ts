@@ -792,6 +792,8 @@ export type ProfessionalProfileInput = {
   username?: string | null;
   profileStatus?: string | null;
   collaborationOpen: boolean;
+  profileTheme: string;
+  coverPreset: string;
   publicSlug?: string | null;
   isPublic: boolean;
   shareSocialLinks: boolean;
@@ -824,6 +826,8 @@ export async function saveProfessionalProfile(userId: number, profile: Professio
       username: profile.username ?? null,
       profileStatus: profile.profileStatus ?? null,
       collaborationOpen: profile.collaborationOpen,
+      profileTheme: profile.profileTheme,
+      coverPreset: profile.coverPreset,
       publicSlug: profile.publicSlug ?? null,
       isPublic: profile.isPublic,
       shareSocialLinks: profile.shareSocialLinks,
@@ -850,6 +854,8 @@ export async function getPublicProfessionalProfileBySlug(publicSlug: string) {
     username: professionalProfiles.username,
     profileStatus: professionalProfiles.profileStatus,
     collaborationOpen: professionalProfiles.collaborationOpen,
+    profileTheme: professionalProfiles.profileTheme,
+    coverPreset: professionalProfiles.coverPreset,
     publicSlug: professionalProfiles.publicSlug,
     isPublic: professionalProfiles.isPublic,
     shareSocialLinks: professionalProfiles.shareSocialLinks,

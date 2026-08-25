@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { COVER_PRESETS, getCoverPreset, PROFILE_THEMES, type CoverPresetId, type ProfileThemeId } from "@/lib/profileAppearance";
 import { toast } from "sonner";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -25,6 +26,8 @@ type ProfileForm = {
   availability: string;
   profileStatus: string;
   collaborationOpen: boolean;
+  profileTheme: ProfileThemeId;
+  coverPreset: CoverPresetId;
   location: string;
   website: string;
   publicSlug: string;
@@ -41,6 +44,8 @@ const blankProfile: ProfileForm = {
   availability: "Open to collaborations",
   profileStatus: "Building with Lumae",
   collaborationOpen: false,
+  profileTheme: "signal",
+  coverPreset: "aurora",
   location: "",
   website: "",
   publicSlug: "",
@@ -84,6 +89,8 @@ export default function ProfileAdvanced() {
       availability: stored.availability || blankProfile.availability,
       profileStatus: stored.profileStatus || blankProfile.profileStatus,
       collaborationOpen: stored.collaborationOpen || false,
+      profileTheme: (stored.profileTheme as ProfileThemeId) || blankProfile.profileTheme,
+      coverPreset: (stored.coverPreset as CoverPresetId) || blankProfile.coverPreset,
       location: stored.location || "",
       website: stored.website || "",
       publicSlug: stored.publicSlug || "",
@@ -98,6 +105,7 @@ export default function ProfileAdvanced() {
   const publicUrl = profile.publicSlug ? `${window.location.origin}/u/${profile.publicSlug}` : "";
   const expertise = useMemo(() => profile.expertise.split(",").map((item) => item.trim()).filter(Boolean), [profile.expertise]);
   const avatarFallback = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(profile.name || "Lumae creator")}`;
+  const coverPreset = getCoverPreset(profile.coverPreset);
 
   const uploadImage = async (kind: "avatar" | "cover", file?: File) => {
     if (!file) return;
@@ -134,6 +142,8 @@ export default function ProfileAdvanced() {
         availability: profile.availability.trim() || null,
         profileStatus: profile.profileStatus.trim() || null,
         collaborationOpen: profile.collaborationOpen,
+        profileTheme: profile.profileTheme,
+        coverPreset: profile.coverPreset,
         phone: null,
         location: profile.location.trim() || null,
         website: profile.website.trim() || null,
@@ -163,13 +173,13 @@ export default function ProfileAdvanced() {
 
   return (
     <DashboardLayout>
-      <main className="mx-auto w-full max-w-6xl space-y-5 pb-10">
+      <main data-profile-theme={profile.profileTheme} className="mx-auto w-full max-w-6xl space-y-5 pb-10">
         <input ref={avatarInputRef} className="hidden" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => uploadImage("avatar", event.target.files?.[0])} />
         <input ref={coverInputRef} className="hidden" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => uploadImage("cover", event.target.files?.[0])} />
 
         <section className="overflow-hidden rounded-[28px] border border-border bg-card">
           <div className="relative h-44 sm:h-56">
-            {coverUrl ? <img src={coverUrl} alt="Profile cover" className="h-full w-full object-cover" /> : <div className="h-full w-full bg-[radial-gradient(circle_at_12%_22%,rgb(20_184_166_/_42%),transparent_30%),radial-gradient(circle_at_82%_16%,rgb(99_102_241_/_36%),transparent_28%),linear-gradient(115deg,#0f1720,#111827)]" />}
+            {coverUrl ? <img src={coverUrl} alt="Profile cover" className="h-full w-full object-cover" /> : <div className={`h-full w-full ${coverPreset.className}`} />}
             <div className="absolute inset-0 bg-gradient-to-t from-card via-card/15 to-transparent" />
             <Badge className="absolute left-5 top-5 border-white/15 bg-black/25 px-3 py-1.5 text-white backdrop-blur"><LockKeyhole className="mr-1.5 h-3.5 w-3.5" />Private by default</Badge>
             <Button size="sm" variant="outline" className="absolute right-5 top-5 border-white/20 bg-black/30 text-white hover:bg-black/50" onClick={() => coverInputRef.current?.click()}><ImagePlus className="mr-2 h-4 w-4" />Cover</Button>
@@ -184,7 +194,7 @@ export default function ProfileAdvanced() {
                 <div className="min-w-0 pb-1">
                   <div className="flex flex-wrap items-center gap-2"><h1 className="truncate text-2xl font-semibold tracking-tight text-card-foreground sm:text-3xl">{profile.name}</h1><BadgeCheck className="h-5 w-5 text-primary" aria-label="Verified Lumae account" /></div>
                   <p className="mt-1 truncate text-sm text-muted-foreground">{profile.username ? `@${profile.username}` : "Choose your creator handle"}</p>
-                  <p className="mt-1 text-sm font-medium text-primary">{profile.professionalTitle}</p>
+                  <p className="profile-identity-accent mt-1 text-sm font-medium">{profile.professionalTitle}</p>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={copyLink}><Copy className="mr-2 h-4 w-4" />Copy profile</Button><Button className="lumae-gradient-cta" onClick={() => { setEditing(true); setActiveTab("settings"); }}><PenLine className="mr-2 h-4 w-4" />Edit profile</Button></div>
@@ -192,8 +202,8 @@ export default function ProfileAdvanced() {
             <p className="mt-5 max-w-3xl text-sm leading-relaxed text-muted-foreground">{profile.bio || "Add a short introduction so your Lumae profile feels like yours."}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               <Badge className="border border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"><CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />{user?.emailVerified ? "Email confirmed" : "Email confirmation pending"}</Badge>
-              <Badge className="border border-border bg-muted text-card-foreground"><Radio className="mr-1.5 h-3.5 w-3.5 text-primary" />{profile.profileStatus}</Badge>
-              <Badge className="border border-border bg-muted text-card-foreground"><UsersRound className="mr-1.5 h-3.5 w-3.5 text-primary" />{profile.collaborationOpen ? "Open to collaborate" : "Collaboration private"}</Badge>
+              <Badge className="border border-border bg-muted text-card-foreground"><Radio className="profile-identity-accent mr-1.5 h-3.5 w-3.5" />{profile.profileStatus}</Badge>
+              <Badge className="border border-border bg-muted text-card-foreground"><UsersRound className="profile-identity-accent mr-1.5 h-3.5 w-3.5" />{profile.collaborationOpen ? "Open to collaborate" : "Collaboration private"}</Badge>
             </div>
           </div>
         </section>
@@ -228,7 +238,7 @@ export default function ProfileAdvanced() {
               {[["Display name", "name", "Your name"], ["Username", "username", "creator.handle"], ["Professional title", "professionalTitle", "Content strategist"], ["Profile status", "profileStatus", "Building with Lumae"], ["Location", "location", "City, country"], ["Website", "website", "https://example.com"], ["Public link", "publicSlug", "your-name"]].map(([label, key, placeholder]) => <label key={key} className="grid gap-1.5 text-sm font-medium text-card-foreground"><span>{label}</span><input value={profile[key as keyof ProfileForm] as string} placeholder={placeholder} onChange={(event) => setProfile((current) => ({ ...current, [key]: key === "username" ? event.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, "") : key === "publicSlug" ? event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") : event.target.value }))} className="rounded-lg border border-input bg-background px-3 py-2 text-foreground outline-none ring-primary focus:ring-2" /></label>)}
               <label className="grid gap-1.5 text-sm font-medium text-card-foreground md:col-span-2"><span>Bio</span><textarea value={profile.bio} rows={4} onChange={(event) => setProfile((current) => ({ ...current, bio: event.target.value }))} className="rounded-lg border border-input bg-background px-3 py-2 text-foreground outline-none ring-primary focus:ring-2" /></label>
               <label className="grid gap-1.5 text-sm font-medium text-card-foreground md:col-span-2"><span>Focus areas</span><input value={profile.expertise} placeholder="Content strategy, video, creator education" onChange={(event) => setProfile((current) => ({ ...current, expertise: event.target.value }))} className="rounded-lg border border-input bg-background px-3 py-2 text-foreground outline-none ring-primary focus:ring-2" /></label>
-            </div><div className="mt-5 grid gap-3 rounded-xl border border-border bg-muted/30 p-4"><label className="flex items-center justify-between gap-4 text-sm text-card-foreground"><span><strong>Open to collaborate</strong><small className="mt-1 block text-muted-foreground">Shows a collaboration pill on your public profile.</small></span><input type="checkbox" checked={profile.collaborationOpen} onChange={(event) => setProfile((current) => ({ ...current, collaborationOpen: event.target.checked }))} className="h-4 w-4 accent-primary" /></label><label className="flex items-center justify-between gap-4 text-sm text-card-foreground"><span><strong>Make profile public</strong><small className="mt-1 block text-muted-foreground">Requires a public link. Only intentional profile details are shared.</small></span><input type="checkbox" checked={profile.isPublic} onChange={(event) => setProfile((current) => ({ ...current, isPublic: event.target.checked }))} className="h-4 w-4 accent-primary" /></label></div><div className="mt-5 flex flex-wrap gap-2"><Button className="lumae-gradient-cta" onClick={persist} disabled={saveProfile.isPending}><Save className="mr-2 h-4 w-4" />Save profile</Button><Button variant="outline" onClick={() => setEditing(false)}>Cancel</Button></div></Card> : <Card className="p-5"><h2 className="text-lg font-semibold text-card-foreground">Profile settings</h2><p className="mt-1 text-sm text-muted-foreground">Update your identity, public sharing, and collaboration preferences.</p><Button className="mt-5" onClick={() => setEditing(true)}><Settings2 className="mr-2 h-4 w-4" />Edit settings</Button></Card>}
+            </div><div className="mt-5 grid gap-4 rounded-xl border border-border bg-muted/30 p-4"><div><p className="text-sm font-semibold text-card-foreground">Profile theme</p><p className="mt-1 text-xs text-muted-foreground">Applies to your private editor and public profile when shared.</p><div className="mt-3 grid gap-2 sm:grid-cols-2">{PROFILE_THEMES.map((theme) => <button key={theme.id} type="button" onClick={() => setProfile((current) => ({ ...current, profileTheme: theme.id }))} className={`flex items-center gap-3 rounded-lg border p-3 text-left ${profile.profileTheme === theme.id ? "border-primary bg-primary/10" : "border-border bg-background"}`}><span className={`h-4 w-4 rounded-full ${theme.dotClass}`} /><span><span className="block text-sm font-medium text-card-foreground">{theme.label}</span><span className="block text-xs text-muted-foreground">{theme.description}</span></span></button>)}</div></div><div><p className="text-sm font-semibold text-card-foreground">Cover preset</p><p className="mt-1 text-xs text-muted-foreground">Choose a visual background or keep your uploaded cover image.</p><div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">{COVER_PRESETS.map((preset) => <button key={preset.id} type="button" onClick={() => setProfile((current) => ({ ...current, coverPreset: preset.id }))} className={`overflow-hidden rounded-lg border text-left ${profile.coverPreset === preset.id ? "border-primary ring-2 ring-primary/30" : "border-border"}`}><span className={`block h-12 ${preset.className}`} /><span className="block px-2 py-1.5 text-xs font-medium text-card-foreground">{preset.label}</span></button>)}</div></div></div><div className="mt-5 grid gap-3 rounded-xl border border-border bg-muted/30 p-4"><label className="flex items-center justify-between gap-4 text-sm text-card-foreground"><span><strong>Open to collaborate</strong><small className="mt-1 block text-muted-foreground">Shows a collaboration pill on your public profile.</small></span><input type="checkbox" checked={profile.collaborationOpen} onChange={(event) => setProfile((current) => ({ ...current, collaborationOpen: event.target.checked }))} className="h-4 w-4 accent-primary" /></label><label className="flex items-center justify-between gap-4 text-sm text-card-foreground"><span><strong>Make profile public</strong><small className="mt-1 block text-muted-foreground">Requires a public link. Only intentional profile details are shared.</small></span><input type="checkbox" checked={profile.isPublic} onChange={(event) => setProfile((current) => ({ ...current, isPublic: event.target.checked }))} className="h-4 w-4 accent-primary" /></label></div><div className="mt-5 flex flex-wrap gap-2"><Button className="lumae-gradient-cta" onClick={persist} disabled={saveProfile.isPending}><Save className="mr-2 h-4 w-4" />Save profile</Button><Button variant="outline" onClick={() => setEditing(false)}>Cancel</Button></div></Card> : <Card className="p-5"><h2 className="text-lg font-semibold text-card-foreground">Profile settings</h2><p className="mt-1 text-sm text-muted-foreground">Update your identity, public sharing, and collaboration preferences.</p><Button className="mt-5" onClick={() => setEditing(true)}><Settings2 className="mr-2 h-4 w-4" />Edit settings</Button></Card>}
           </TabsContent>
         </Tabs>
       </main>

@@ -3,6 +3,7 @@ import { Link, useRoute } from "wouter";
 import { Download, Globe, Instagram, Linkedin, LockKeyhole, MapPin, QrCode, Twitter, UserRound, UsersRound } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { trpc } from "@/lib/trpc";
+import { getCoverPreset } from "@/lib/profileAppearance";
 
 const socialIcons: Record<string, typeof Linkedin> = {
   linkedin: Linkedin,
@@ -90,11 +91,11 @@ export default function PublicProfile() {
   const links = (profile.socialLinks || {}) as Record<string, string>;
 
   return (
-    <main className="min-h-screen bg-background pb-16">
+    <main data-profile-theme={profile.profileTheme || "signal"} className="min-h-screen bg-background pb-16">
       <section className="mx-auto max-w-4xl px-5 pt-12 sm:pt-20">
         <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-xl shadow-black/5">
           <div className="relative h-44 sm:h-56">
-            {profile.coverUrl ? <img src={profile.coverUrl} alt="Profile cover" className="h-full w-full object-cover" /> : <div className="h-full w-full bg-[radial-gradient(circle_at_16%_20%,rgb(99_102_241_/_35%),transparent_34%),radial-gradient(circle_at_84%_18%,rgb(6_182_212_/_22%),transparent_30%),linear-gradient(115deg,#18181b,#141417)]" />}
+            {profile.coverUrl ? <img src={profile.coverUrl} alt="Profile cover" className="h-full w-full object-cover" /> : <div className={`h-full w-full ${getCoverPreset(profile.coverPreset).className}`} />}
           </div>
           <div className="relative px-6 pb-8 sm:px-10">
             <div className="-mt-14 flex flex-col gap-5 sm:-mt-16 sm:flex-row sm:items-end sm:justify-between">
@@ -102,7 +103,7 @@ export default function PublicProfile() {
                 {profile.avatarUrl ? <img src={profile.avatarUrl} alt={profile.displayName} className="h-28 w-28 rounded-2xl border-4 border-card object-cover shadow-lg sm:h-32 sm:w-32" /> : <div className="flex h-28 w-28 items-center justify-center rounded-2xl border-4 border-card bg-primary text-3xl font-semibold text-primary-foreground shadow-lg sm:h-32 sm:w-32">{profile.displayName.slice(0, 1).toUpperCase()}</div>}
                 <div className="pb-1">
                   <h1 className="text-2xl font-semibold text-card-foreground sm:text-3xl">{profile.displayName}</h1>
-                  <p className="mt-1 text-sm font-medium text-primary">{profile.professionalTitle}</p>
+                  <p className="profile-identity-accent mt-1 text-sm font-medium">{profile.professionalTitle}</p>
                 </div>
               </div>
               <span className="mb-1 inline-flex w-fit items-center rounded-full border border-border bg-muted px-3 py-1 text-xs text-muted-foreground">Lumae AI profile</span>

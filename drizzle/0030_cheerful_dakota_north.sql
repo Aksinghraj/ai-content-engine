@@ -1,0 +1,2 @@
+ALTER TABLE `professionalProfiles` ADD `profileTheme` varchar(32) DEFAULT 'signal' NOT NULL;--> statement-breakpoint
+ALTER TABLE `professionalProfiles` ADD `coverPreset` varchar(32) DEFAULT 'aurora' NOT NULL;
