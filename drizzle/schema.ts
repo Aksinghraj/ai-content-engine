@@ -235,6 +235,9 @@ export const professionalProfiles = mysqlTable("professionalProfiles", {
   avatarUrl: text("avatarUrl"),
   coverUrl: text("coverUrl"),
   socialLinks: json("socialLinks"),
+  username: varchar("username", { length: 80 }),
+  profileStatus: varchar("profileStatus", { length: 100 }),
+  collaborationOpen: boolean("collaborationOpen").default(false).notNull(),
   publicSlug: varchar("publicSlug", { length: 100 }),
   isPublic: boolean("isPublic").default(false).notNull(),
   shareSocialLinks: boolean("shareSocialLinks").default(false).notNull(),
@@ -242,6 +245,7 @@ export const professionalProfiles = mysqlTable("professionalProfiles", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (table) => ({
   userUnique: uniqueIndex("professional_profiles_user_unique").on(table.userId),
+  usernameUnique: uniqueIndex("professional_profiles_username_unique").on(table.username),
   publicSlugUnique: uniqueIndex("professional_profiles_public_slug_unique").on(table.publicSlug),
 }));
 

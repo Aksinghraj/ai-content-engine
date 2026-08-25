@@ -1208,3 +1208,10 @@
 - [x] Add owner dashboard controls for advanced filters and sort order
 - [x] Send a secure user email notification when feedback transitions to resolved
 - [x] Add regression coverage for filtering, sorting, notification behavior, and responsive controls
+
+## Secure Social Profile Redesign (IN PROGRESS)
+- [x] Add private-by-default profile data for username, bio, cover, status pills, collaboration preference, and public visibility
+- [x] Build social-style identity, stats, highlights, activity, and connected-account profile areas with truthful metrics
+- [x] Add a comprehensive profile edit flow and privacy setting with locked public-profile states
+- [x] Exclude credits, private activity, and linked-account detail from public profile responses
+- [x] Add privacy, ownership, route, data, and responsive regression coverage

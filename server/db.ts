@@ -1,6 +1,6 @@
 
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, contentHistory, InsertContentHistory, tokenUsage, automationSchedules, automationExecutionLogs, contentAnalytics, userCredits, creditTransactions, creditPackages, passwordResetTokens, generatorLengthPreferences, professionalProfiles, professionalProfileViews, lumaePulseIntroDismissals } from "../drizzle/schema";
+import { InsertUser, users, contentHistory, InsertContentHistory, tokenUsage, automationSchedules, automationExecutionLogs, contentAnalytics, userCredits, creditTransactions, creditPackages, passwordResetTokens, generatorLengthPreferences, professionalProfiles, professionalProfileViews, lumaePulseIntroDismissals, scheduledPosts, socialConnections } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { eq, desc, and, gte, sql } from "drizzle-orm";
 
@@ -789,6 +789,9 @@ export type ProfessionalProfileInput = {
   avatarUrl?: string | null;
   coverUrl?: string | null;
   socialLinks?: Record<string, string>;
+  username?: string | null;
+  profileStatus?: string | null;
+  collaborationOpen: boolean;
   publicSlug?: string | null;
   isPublic: boolean;
   shareSocialLinks: boolean;
@@ -818,6 +821,9 @@ export async function saveProfessionalProfile(userId: number, profile: Professio
       avatarUrl: profile.avatarUrl ?? null,
       coverUrl: profile.coverUrl ?? null,
       socialLinks: profile.socialLinks ?? {},
+      username: profile.username ?? null,
+      profileStatus: profile.profileStatus ?? null,
+      collaborationOpen: profile.collaborationOpen,
       publicSlug: profile.publicSlug ?? null,
       isPublic: profile.isPublic,
       shareSocialLinks: profile.shareSocialLinks,
@@ -841,12 +847,29 @@ export async function getPublicProfessionalProfileBySlug(publicSlug: string) {
     avatarUrl: professionalProfiles.avatarUrl,
     coverUrl: professionalProfiles.coverUrl,
     socialLinks: professionalProfiles.socialLinks,
+    username: professionalProfiles.username,
+    profileStatus: professionalProfiles.profileStatus,
+    collaborationOpen: professionalProfiles.collaborationOpen,
     publicSlug: professionalProfiles.publicSlug,
+    isPublic: professionalProfiles.isPublic,
     shareSocialLinks: professionalProfiles.shareSocialLinks,
-  }).from(professionalProfiles).where(and(eq(professionalProfiles.publicSlug, publicSlug), eq(professionalProfiles.isPublic, true))).limit(1);
+  }).from(professionalProfiles).where(eq(professionalProfiles.publicSlug, publicSlug)).limit(1);
   const profile = rows[0];
   if (!profile) return null;
-  return { ...profile, socialLinks: profile.shareSocialLinks ? profile.socialLinks : {} };
+  if (!profile.isPublic) {
+    return {
+      visibility: "locked" as const,
+      ownerId: profile.ownerId,
+      displayName: profile.displayName,
+      avatarUrl: profile.avatarUrl,
+      publicSlug: profile.publicSlug,
+    };
+  }
+  return {
+    visibility: "public" as const,
+    ...profile,
+    socialLinks: profile.shareSocialLinks ? profile.socialLinks : {},
+  };
 }
 
 export async function recordProfessionalProfileView(userId: number) {
@@ -867,6 +890,28 @@ export async function getProfessionalProfileViewSummary(userId: number) {
   return {
     totalViews: rows.reduce((total, row) => total + row.views, 0),
     viewsLast30Days: rows.filter((row) => row.viewDate >= threshold).reduce((total, row) => total + row.views, 0),
+  };
+}
+
+/** Returns only the requesting user's factual Lumae activity for their private profile. */
+export async function getProfessionalProfileActivity(userId: number) {
+  const db = await getDb();
+  if (!db) return { generatedContent: 0, scheduledPosts: 0, connectedAccounts: 0, recentActivity: [] as Array<{ id: number; niche: string; platform: string; goal: string; createdAt: Date }> };
+  const [contentRows, scheduleRows, connectionRows, recentActivity] = await Promise.all([
+    db.select({ total: sql<number>`COUNT(*)` }).from(contentHistory).where(eq(contentHistory.userId, userId)),
+    db.select({ total: sql<number>`COUNT(*)` }).from(scheduledPosts).where(eq(scheduledPosts.userId, userId)),
+    db.select({ total: sql<number>`COUNT(*)` }).from(socialConnections).where(and(eq(socialConnections.userId, userId), eq(socialConnections.isConnected, true))),
+    db.select({ id: contentHistory.id, niche: contentHistory.niche, platform: contentHistory.platform, goal: contentHistory.goal, createdAt: contentHistory.createdAt })
+      .from(contentHistory)
+      .where(eq(contentHistory.userId, userId))
+      .orderBy(desc(contentHistory.createdAt))
+      .limit(4),
+  ]);
+  return {
+    generatedContent: Number(contentRows[0]?.total ?? 0),
+    scheduledPosts: Number(scheduleRows[0]?.total ?? 0),
+    connectedAccounts: Number(connectionRows[0]?.total ?? 0),
+    recentActivity,
   };
 }
 

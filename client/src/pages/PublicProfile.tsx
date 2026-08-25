@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link, useRoute } from "wouter";
-import { Download, Globe, Instagram, Linkedin, MapPin, QrCode, Twitter, UserRound } from "lucide-react";
+import { Download, Globe, Instagram, Linkedin, LockKeyhole, MapPin, QrCode, Twitter, UserRound, UsersRound } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { trpc } from "@/lib/trpc";
 
@@ -18,7 +18,7 @@ export default function PublicProfile() {
   const profile = profileQuery.data;
 
   useEffect(() => {
-    if (!profile || !slug) return;
+    if (!profile || !slug || profile.visibility !== "public") return;
     const key = `lumae-public-profile-view:${slug}`;
     if (!sessionStorage.getItem(key)) {
       sessionStorage.setItem(key, "recorded");
@@ -72,6 +72,20 @@ export default function PublicProfile() {
     );
   }
 
+  if (profile.visibility === "locked") {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-background px-5">
+        <section className="max-w-md rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
+          {profile.avatarUrl ? <img src={profile.avatarUrl} alt="" className="mx-auto h-20 w-20 rounded-2xl object-cover" /> : <UserRound className="mx-auto h-8 w-8 text-primary" />}
+          <LockKeyhole className="mx-auto mt-5 h-5 w-5 text-primary" />
+          <h1 className="mt-3 text-xl font-semibold text-card-foreground">{profile.displayName}'s profile is private</h1>
+          <p className="mt-2 text-sm text-muted-foreground">This creator has not enabled public sharing. No private activity, account, or contact details are shown.</p>
+          <Link href="/" className="mt-6 inline-flex text-sm font-medium text-primary hover:underline">Visit Lumae AI</Link>
+        </section>
+      </main>
+    );
+  }
+
   const expertise = (profile.expertise || "").split(",").map((item) => item.trim()).filter(Boolean);
   const links = (profile.socialLinks || {}) as Record<string, string>;
 
@@ -94,11 +108,13 @@ export default function PublicProfile() {
               <span className="mb-1 inline-flex w-fit items-center rounded-full border border-border bg-muted px-3 py-1 text-xs text-muted-foreground">Lumae AI profile</span>
             </div>
 
+            {profile.username && <p className="mt-2 text-sm text-muted-foreground">@{profile.username}</p>}
             {profile.biography && <p className="mt-7 max-w-2xl leading-relaxed text-muted-foreground">{profile.biography}</p>}
             {expertise.length > 0 && <div className="mt-6 flex flex-wrap gap-2">{expertise.map((item) => <span key={item} className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-sm text-primary">{item}</span>)}</div>}
             <div className="mt-7 flex flex-wrap gap-4 text-sm text-muted-foreground">
               {profile.location && <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4 text-primary" />{profile.location}</span>}
               {profile.availability && <span>{profile.availability}</span>}
+              {profile.collaborationOpen && <span className="inline-flex items-center gap-1.5 text-primary"><UsersRound className="h-4 w-4" />Open to collaborate</span>}
               {profile.website && <a href={profile.website} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-primary hover:underline"><Globe className="h-4 w-4" />Website</a>}
             </div>
             {Object.entries(links).length > 0 && <div className="mt-6 flex flex-wrap gap-3">{Object.entries(links).map(([name, href]) => { const Icon = socialIcons[name] || Globe; return <a key={name} href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-card-foreground transition-colors hover:bg-accent"><Icon className="h-4 w-4 text-primary" />{name}</a>; })}</div>}

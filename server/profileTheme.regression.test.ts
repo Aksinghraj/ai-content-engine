@@ -5,13 +5,14 @@ import { describe, expect, it } from "vitest";
 const read = (relativePath: string) => readFileSync(resolve(process.cwd(), relativePath), "utf8");
 
 describe("professional profile and theme modes", () => {
-  it("renders a professional introduction with editable professional identity fields", () => {
+  it("renders a secure social profile with editable identity and privacy fields", () => {
     const profile = read("client/src/pages/ProfileAdvanced.tsx");
-    expect(profile).toContain("Professional introduction");
-    expect(profile).toContain("Professional title");
-    expect(profile).toContain("Areas of expertise");
-    expect(profile).toContain("Availability");
-    expect(profile).toContain("Profile complete");
+    expect(profile).toContain("Private by default");
+    expect(profile).toContain("Creator profile");
+    expect(profile).toContain("Private Lumae activity");
+    expect(profile).toContain("Edit profile");
+    expect(profile).toContain("Make profile public");
+    expect(profile).toContain("Open to collaborate");
   });
 
   it("persists bright, dark, and system theme choices while updating the root theme class", () => {
