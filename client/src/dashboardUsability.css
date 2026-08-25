@@ -1,0 +1,65 @@
+/* Focused authenticated-dashboard usability refinements. */
+.lumae-eyebrow {
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: none;
+}
+
+.lumae-group-tabs__title span,
+.lumae-section-row p,
+.lumae-dashboard-status p {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: none;
+}
+
+.lumae-dashboard-hero h1 {
+  font-size: 40px;
+  letter-spacing: -1.4px;
+}
+
+.lumae-balance strong {
+  margin: 5px 0;
+  font-size: 34px;
+  font-weight: 650;
+  letter-spacing: -1px;
+}
+
+.lumae-section-row {
+  align-items: center;
+  gap: 16px;
+}
+
+.lumae-section-row h2 {
+  color: var(--foreground);
+}
+
+.lumae-section-row__action {
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid rgba(120, 226, 208, 0.36) !important;
+  background: var(--lumae-sea) !important;
+  color: var(--lumae-ink) !important;
+  box-shadow: inset 0 0 0 1px rgba(45, 212, 191, 0.05);
+}
+
+.lumae-section-row__action:hover {
+  background: var(--lumae-teal) !important;
+}
+
+@media (max-width: 560px) {
+  .lumae-dashboard-hero h1 {
+    font-size: 34px;
+  }
+
+  .lumae-section-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .lumae-section-row__action {
+    width: 100%;
+    justify-content: center;
+  }
+}

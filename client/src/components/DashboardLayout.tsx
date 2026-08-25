@@ -189,7 +189,7 @@ function DashboardLayoutContent({
             </div>
           </SidebarHeader>
 
-          <SidebarContent className="gap-0">
+          <SidebarContent className="min-h-0 gap-0 overflow-y-auto overscroll-contain">
             <div className="px-2 py-2 group-data-[collapsible=icon]:px-1">
               <AppPrimaryNavigation />
             </div>
@@ -238,9 +238,8 @@ function DashboardLayoutContent({
 
       <SidebarInset>
         {!isMobile && (
-          <div className="sticky top-0 z-30 hidden items-center justify-between border-b border-border/70 bg-background/92 px-5 py-3 backdrop-blur-xl md:flex">
-            <AppPrimaryNavigation compact />
-            <Button variant="ghost" size="icon" onClick={toggleTheme} className="ml-3 shrink-0 text-muted-foreground hover:text-foreground" aria-label={`Switch to ${effectiveTheme === "dark" ? "bright" : "dark"} mode`} title={`Switch to ${effectiveTheme === "dark" ? "bright" : "dark"} mode`}>
+          <div className="sticky top-0 z-30 hidden h-14 items-center justify-end border-b border-border/70 bg-background/92 px-5 backdrop-blur-xl md:flex">
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="shrink-0 text-muted-foreground hover:text-foreground" aria-label={`Switch to ${effectiveTheme === "dark" ? "bright" : "dark"} mode`} title={`Switch to ${effectiveTheme === "dark" ? "bright" : "dark"} mode`}>
               {effectiveTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
           </div>

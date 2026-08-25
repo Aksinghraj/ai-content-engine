@@ -1130,6 +1130,7 @@
 
 ## Remaining Owner-Controlled Actions (IN PROGRESS)
 - [ ] Select whether to resume Google Play Console release work or close the unused GoDaddy Airo website setting
+- [x] Confirm the restored direct Lumae route has no remaining GoDaddy Airo or parking content
 
 ## Mobile Local Authentication Submit Repair (IN PROGRESS)
 - [x] Trace why the Sign in and Create secure account buttons appear not to complete on mobile
@@ -1156,3 +1157,10 @@
 - [x] Show YouTube Auto-DM as unavailable with a clear explanation rather than offering an impossible action
 - [x] Add provider-policy safeguards and tests for connection health, expired tokens, and platform capability limits
 - [x] Release the selected safe launch with manual-review-first actions and X execution locked pending an approved budget
+
+## Authenticated Dashboard Usability Repair (IN PROGRESS)
+- [x] Reduce dashboard typography variation and replace the long all-caps eyebrow with readable sentence case
+- [x] Consolidate redundant desktop navigation and ensure every primary destination remains reachable in the side navigation
+- [x] Align header controls on one center line and prevent vertical navigation truncation on smaller desktop heights
+- [x] Rebalance the dashboard credit metric and make the Content Studio entry action more prominent
+- [x] Add regression coverage and validate responsive authenticated views against the supplied seven-point audit
