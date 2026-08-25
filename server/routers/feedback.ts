@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { notifyOwner } from "../_core/notification";
+import { sendFeedbackResolvedEmail } from "../_core/emailService";
 import { adminProcedure, protectedProcedure, router } from "../_core/trpc";
 import { createUserFeedback, getFeedbackForOwner, getLatestFeedbackForUser, getRecentFeedbackForUser, updateFeedbackStatus } from "../db/feedback";
 import { storageGetSignedUrl, storagePut } from "../storage";
@@ -79,15 +80,28 @@ export const feedbackRouter = router({
     });
     return { id: created.id, ownerNotified, hasScreenshot: Boolean(attachment) };
   }),
-  review: adminProcedure.input(z.object({ status: z.enum(["new", "reviewed", "resolved"]).optional() }).optional()).query(async ({ input }) => {
-    const feedback = await getFeedbackForOwner(input?.status);
+  review: adminProcedure.input(z.object({
+    status: z.enum(["new", "reviewed", "resolved"]).optional(),
+    category: z.enum(["glitch", "problem", "suggestion", "feature_request", "other"]).optional(),
+    rating: z.number().int().min(1).max(5).optional(),
+    from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    sortBy: z.enum(["createdAt", "rating"]).optional(),
+    sortDirection: z.enum(["asc", "desc"]).optional(),
+  }).optional()).query(async ({ input }) => {
+    const feedback = await getFeedbackForOwner(input ?? {});
     return Promise.all(feedback.map(async (item) => ({
       ...item,
       attachmentUrl: item.attachmentKey ? await storageGetSignedUrl(item.attachmentKey) : null,
     })));
   }),
   updateStatus: adminProcedure.input(z.object({ id: z.number().int().positive(), status: z.enum(["new", "reviewed", "resolved"]) })).mutation(async ({ input }) => {
-    await updateFeedbackStatus(input.id, input.status);
-    return { success: true };
+    const previous = await updateFeedbackStatus(input.id, input.status);
+    if (!previous) throw new TRPCError({ code: "NOT_FOUND", message: "Feedback report not found." });
+    const emailNotificationAttempted = input.status === "resolved" && previous.status !== "resolved" && Boolean(previous.userEmail);
+    const emailAccepted = emailNotificationAttempted && previous.userEmail
+      ? await sendFeedbackResolvedEmail({ to: previous.userEmail, userName: previous.userName, category: previous.category })
+      : false;
+    return { success: true, emailNotificationAttempted, emailAccepted };
   }),
 });

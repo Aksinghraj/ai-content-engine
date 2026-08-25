@@ -1202,3 +1202,9 @@
 - [x] Create an owner-only feedback review dashboard with report filtering and resolution status updates
 - [x] Restrict attachment access and status changes to authorized users with regression coverage
 - [x] Validate screenshot upload and owner review workflows on desktop and mobile
+
+## Advanced Feedback Operations (IN PROGRESS)
+- [x] Add server-side filtering and sorting by date, rating, category, status, and report page
+- [x] Add owner dashboard controls for advanced filters and sort order
+- [x] Send a secure user email notification when feedback transitions to resolved
+- [x] Add regression coverage for filtering, sorting, notification behavior, and responsive controls

@@ -102,6 +102,20 @@ export async function sendEmail(payload: EmailPayload): Promise<boolean> {
   }
 }
 
+function escapeEmailHtml(value: string): string {
+  return value.replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character] ?? character);
+}
+
+export async function sendFeedbackResolvedEmail(input: { to: string; userName?: string | null; category: string }): Promise<boolean> {
+  const name = escapeEmailHtml(input.userName?.trim() || "there");
+  const category = escapeEmailHtml(input.category.replace("_", " "));
+  return sendEmail({
+    to: input.to,
+    subject: "Your Lumae feedback report has been resolved",
+    htmlContent: `<!doctype html><html><body style="margin:0;background:#f4f7f7;font-family:Arial,sans-serif;color:#172124"><main style="max-width:600px;margin:0 auto;padding:28px"><section style="background:#ffffff;border-radius:14px;padding:32px"><p style="margin:0;color:#178980;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase">Lumae feedback update</p><h1 style="font-size:25px;margin:16px 0 12px">Your report is marked resolved</h1><p>Hi ${name},</p><p>Thanks for helping improve Lumae. Your <strong>${category}</strong> report has been reviewed and marked resolved by the Lumae team.</p><p style="margin-top:24px"><a href="https://lumae.co.in/feedback" style="background:#178980;color:#ffffff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:700">View feedback</a></p><p style="margin:26px 0 0;color:#64748b;font-size:13px">This is an update about a report you submitted. It does not include the contents of your private report.</p></section></main></body></html>`,
+  });
+}
+
 /**
  * Sends an OTP verification email to a new user
  */

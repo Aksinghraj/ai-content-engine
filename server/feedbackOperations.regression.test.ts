@@ -8,6 +8,8 @@ const feedbackPage = readFileSync(`${root}/client/src/pages/Feedback.tsx`, "utf8
 const reviewPage = readFileSync(`${root}/client/src/pages/FeedbackReview.tsx`, "utf8");
 const app = readFileSync(`${root}/client/src/App.tsx`, "utf8");
 const shell = readFileSync(`${root}/client/src/components/DashboardLayout.tsx`, "utf8");
+const feedbackDb = readFileSync(`${root}/server/db/feedback.ts`, "utf8");
+const emailService = readFileSync(`${root}/server/_core/emailService.ts`, "utf8");
 
 describe("feedback screenshot attachments and owner review", () => {
   it("stores only secure attachment references and indexes feedback review status", () => {
@@ -40,5 +42,25 @@ describe("feedback screenshot attachments and owner review", () => {
     expect(feedbackPage).toContain("Screenshots must be 5 MB or smaller.");
     expect(app).toContain('Route path="/admin/feedback" component={FeedbackReview}');
     expect(reviewPage).toContain("Mark resolved");
+  });
+
+  it("supports owner-side feedback filters and date or rating sort orders", () => {
+    expect(feedbackDb).toContain("OwnerFeedbackFilters");
+    expect(feedbackDb).toContain("filters.category");
+    expect(feedbackDb).toContain("filters.rating");
+    expect(feedbackDb).toContain("filters.from");
+    expect(feedbackDb).toContain("filters.to");
+    expect(feedbackDb).toContain('filters.sortBy === "rating"');
+    expect(reviewPage).toContain("All categories");
+    expect(reviewPage).toContain("All ratings");
+    expect(reviewPage).toContain("Newest first");
+    expect(reviewPage).toContain("Highest rating");
+  });
+
+  it("notifies the original reporter only when a feedback report newly transitions to resolved", () => {
+    expect(router).toContain('input.status === "resolved" && previous.status !== "resolved"');
+    expect(router).toContain("sendFeedbackResolvedEmail");
+    expect(emailService).toContain("sendFeedbackResolvedEmail");
+    expect(emailService).toContain("It does not include the contents of your private report.");
   });
 });
