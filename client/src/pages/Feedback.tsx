@@ -1,7 +1,7 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
-import { CheckCircle2, Lightbulb, MessageCircle, Send, ShieldCheck, Sparkles, Star, Wrench } from "lucide-react";
+import { CheckCircle2, ImagePlus, Lightbulb, MessageCircle, Send, ShieldCheck, Sparkles, Star, Wrench, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocation } from "wouter";
 
@@ -13,6 +13,7 @@ const feedbackCategories = [
 ] as const;
 
 type FeedbackCategory = (typeof feedbackCategories)[number]["value"] | "other";
+type ScreenshotDraft = { dataUrl: string; mimeType: "image/png" | "image/jpeg" | "image/webp"; name: string };
 
 function FeedbackPageContent() {
   const [location] = useLocation();
@@ -21,12 +22,15 @@ function FeedbackPageContent() {
   const [category, setCategory] = useState<FeedbackCategory>("glitch");
   const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [screenshot, setScreenshot] = useState<ScreenshotDraft | null>(null);
+  const [screenshotError, setScreenshotError] = useState("");
   const feedbackHistory = trpc.feedback.mine.useQuery();
   const submitFeedback = trpc.feedback.submit.useMutation({
     onSuccess: async () => {
       setSubmitted(true);
       setMessage("");
       setRating(0);
+      setScreenshot(null);
       await utils.feedback.mine.invalidate();
     },
   });
@@ -40,7 +44,24 @@ function FeedbackPageContent() {
     event.preventDefault();
     setSubmitted(false);
     if (!rating || message.trim().length < 10 || submitFeedback.isPending) return;
-    submitFeedback.mutate({ rating, category, message: message.trim(), pagePath: location });
+    submitFeedback.mutate({ rating, category, message: message.trim(), pagePath: location, ...(screenshot ? { screenshot } : {}) });
+  };
+
+  const handleScreenshot = (file?: File) => {
+    setScreenshotError("");
+    if (!file) return;
+    if (!(["image/png", "image/jpeg", "image/webp"] as const).includes(file.type as ScreenshotDraft["mimeType"])) {
+      setScreenshotError("Use a PNG, JPEG, or WebP screenshot.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setScreenshotError("Screenshots must be 5 MB or smaller.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setScreenshot({ dataUrl: String(reader.result), mimeType: file.type as ScreenshotDraft["mimeType"], name: file.name });
+    reader.onerror = () => setScreenshotError("We could not read that screenshot. Please try another image.");
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -82,7 +103,7 @@ function FeedbackPageContent() {
                 <button
                   key={value}
                   type="button"
-                  onClick={() => setCategory(value)}
+                  onClick={() => { setCategory(value); if (!["glitch", "problem"].includes(value)) setScreenshot(null); }}
                   className={`feedback-category-option ${category === value ? "is-selected" : ""}`}
                   aria-pressed={category === value}
                 >
@@ -113,6 +134,23 @@ function FeedbackPageContent() {
               <span id="feedback-length">{message.length}/2000</span>
             </div>
           </div>
+
+          {["glitch", "problem"].includes(category) && (
+            <div className="mt-6 rounded-lg border border-dashed border-border bg-muted/20 p-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Attach a screenshot <span className="font-normal text-muted-foreground">(optional)</span></p>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">PNG, JPEG, or WebP up to 5 MB. Please hide any private information before uploading.</p>
+                </div>
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-muted">
+                  <ImagePlus className="h-4 w-4" /> Choose image
+                  <input className="sr-only" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => handleScreenshot(event.target.files?.[0])} />
+                </label>
+              </div>
+              {screenshotError && <p className="mt-3 text-sm text-destructive" role="alert">{screenshotError}</p>}
+              {screenshot && <div className="mt-4 flex items-start gap-3 rounded-md border border-border bg-background p-3"><img src={screenshot.dataUrl} alt="Selected feedback screenshot preview" className="h-20 w-28 rounded object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium text-foreground">{screenshot.name}</p><p className="mt-1 text-xs text-muted-foreground">Ready to attach to this private report.</p></div><button type="button" onClick={() => setScreenshot(null)} className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Remove selected screenshot"><X className="h-4 w-4" /></button></div>}
+            </div>
+          )}
 
           {submitFeedback.error && <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">{submitFeedback.error.message}</p>}
           {submitted && <p className="mt-4 flex items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300" role="status"><CheckCircle2 className="h-4 w-4" />Thanks — your feedback has been submitted.</p>}

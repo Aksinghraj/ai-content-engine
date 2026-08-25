@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, Calendar, Settings, Bot, TrendingUp, Repeat, Sparkles, BarChart3, Zap, Wand2, DollarSign, Youtube, AlertTriangle, Image, ChevronDown, MessageCircle, CreditCard, Crown, Wallet, Send, Moon, Sun, Keyboard } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, Calendar, Settings, Bot, TrendingUp, Repeat, Sparkles, BarChart3, Zap, Wand2, DollarSign, Youtube, AlertTriangle, Image, ChevronDown, MessageCircle, CreditCard, Crown, Wallet, Send, Moon, Sun, Keyboard, ClipboardList } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -281,6 +281,10 @@ function DashboardLayoutContent({
                   <MessageCircle className="mr-2 h-4 w-4" />
                   <span>Send feedback</span>
                 </DropdownMenuItem>
+                {user?.role === "admin" && <DropdownMenuItem onClick={() => setLocation("/admin/feedback")} className="cursor-pointer">
+                  <ClipboardList className="mr-2 h-4 w-4" />
+                  <span>Review feedback</span>
+                </DropdownMenuItem>}
                 <DropdownMenuItem
                   onClick={async () => { await logout(); window.location.assign("/login"); }}
                   className="cursor-pointer text-destructive focus:text-destructive"
@@ -357,6 +361,10 @@ function DashboardLayoutContent({
                     <MessageCircle className="mr-2 h-4 w-4" />
                     <span>Send feedback</span>
                   </DropdownMenuItem>
+                  {user?.role === "admin" && <DropdownMenuItem onClick={() => setLocation("/admin/feedback")} className="cursor-pointer">
+                    <ClipboardList className="mr-2 h-4 w-4" />
+                    <span>Review feedback</span>
+                  </DropdownMenuItem>}
                   <DropdownMenuItem
                     onClick={async () => { await logout(); window.location.assign("/login"); }}
                     className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950"

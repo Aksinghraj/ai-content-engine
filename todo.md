@@ -1196,3 +1196,9 @@
 - [x] Add a Google-style accessible feedback page and clear authenticated navigation entry
 - [x] Notify the owner safely about new reports without exposing private content broadly
 - [x] Add submission validation, rate limiting, regression coverage, and responsive verification
+
+## Feedback Attachments and Owner Review (IN PROGRESS)
+- [x] Allow validated screenshot attachments for glitch and problem reports using secure storage references
+- [x] Create an owner-only feedback review dashboard with report filtering and resolution status updates
+- [x] Restrict attachment access and status changes to authorized users with regression coverage
+- [x] Validate screenshot upload and owner review workflows on desktop and mobile

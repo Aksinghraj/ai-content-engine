@@ -203,11 +203,15 @@ export const userFeedback = mysqlTable("userFeedback", {
   category: mysqlEnum("category", ["glitch", "problem", "suggestion", "feature_request", "other"]).notNull(),
   message: text("message").notNull(),
   pagePath: varchar("pagePath", { length: 512 }),
+  attachmentKey: varchar("attachmentKey", { length: 1024 }),
+  attachmentMimeType: varchar("attachmentMimeType", { length: 64 }),
+  attachmentName: varchar("attachmentName", { length: 255 }),
   status: mysqlEnum("status", ["new", "reviewed", "resolved"]).default("new").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (table) => ({
   userCreatedIndex: index("user_feedback_user_created_index").on(table.userId, table.createdAt),
+  statusCreatedIndex: index("user_feedback_status_created_index").on(table.status, table.createdAt),
 }));
 
 export type UserFeedback = typeof userFeedback.$inferSelect;
