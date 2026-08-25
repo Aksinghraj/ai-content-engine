@@ -45,7 +45,9 @@ export default function DashboardLayout({
     const saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
     return saved ? parseInt(saved, 10) : DEFAULT_WIDTH;
   });
+  const [location] = useLocation();
   const { loading, user } = useAuth();
+  const showLightPulseIntroduction = location === "/dashboard";
 
   useEffect(() => {
     localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
@@ -94,7 +96,7 @@ export default function DashboardLayout({
         <DashboardLayoutContent setSidebarWidth={setSidebarWidth}>
           {children}
         </DashboardLayoutContent>
-        <LumaeLightPulseIntroModal />
+        {showLightPulseIntroduction && <LumaeLightPulseIntroModal />}
       </SidebarProvider>
     </div>
   );

@@ -41,4 +41,15 @@ describe("complete Content Studio navigation", () => {
     expect(styles).toContain(".lumae-command-palette");
     expect(styles).toContain(".lumae-group-tabs__rail--complete .lumae-group-tab small");
   });
+
+  it("persists favorites and recents while offering a dismissible first-time discovery hint", () => {
+    expect(navigation).toContain('RECENT_TOOLS_KEY = "lumae.content-studio.recent-tools"');
+    expect(navigation).toContain('FAVORITE_TOOLS_KEY = "lumae.content-studio.favorite-tools"');
+    expect(navigation).toContain('DISCOVERY_HINT_KEY = "lumae.content-studio.discovery-hint-dismissed"');
+    expect(navigation).toContain('heading="Recently used"');
+    expect(navigation).toContain('heading="Favorites"');
+    expect(navigation).toContain("lumae-tool-pin");
+    expect(navigation).toContain("What’s new");
+    expect(styles).toContain(".lumae-discovery-hint");
+  });
 });

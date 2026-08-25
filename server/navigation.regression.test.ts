@@ -4,6 +4,8 @@ import { resolve } from "node:path";
 import { appNavigation, getNavigationArea } from "../client/src/lib/appNavigation";
 
 const appSource = readFileSync(resolve(__dirname, "../client/src/App.tsx"), "utf8");
+const footerSource = readFileSync(resolve(__dirname, "../client/src/components/Footer.tsx"), "utf8");
+const dashboardLayoutSource = readFileSync(resolve(__dirname, "../client/src/components/DashboardLayout.tsx"), "utf8");
 
 describe("application navigation", () => {
   it("defines Business directly after Automation with canonical defaults", () => {
@@ -51,5 +53,25 @@ describe("application navigation", () => {
     expect(appSource).toContain('component={GroupedAutomation}');
     expect(appSource).toContain('component={BusinessEmailAutomation}');
     expect(appSource).toContain('component={BusinessWhatsAppAutomation}');
+  });
+
+  it("keeps every primary navigation destination backed by a registered application route", () => {
+    const primaryPaths = [...new Set(appNavigation.flatMap((area) => [area.path, ...(area.tabs?.map((tab) => tab.path) ?? [])]))];
+    expect(primaryPaths.length).toBeGreaterThan(20);
+    for (const path of primaryPaths) expect(appSource).toContain(`path="${path}"`);
+  });
+
+  it("keeps public footer destinations and discovered legacy navigation paths valid", () => {
+    for (const path of ["/", "/pricing", "/about", "/blog", "/contact", "/privacy-policy", "/terms", "/cookie-policy"]) {
+      expect(footerSource).toContain(`href="${path}"`);
+    }
+    expect(appSource).toContain('<Route path="/generate-content"><Redirect to="/content-studio/ai-generator" /></Route>');
+    expect(appSource).toContain('<Route path="/social-automation"><Redirect to="/automation/social-automation" /></Route>');
+    expect(appSource).toContain('<Route path="/payments"><Redirect to="/billing/buy-credits" /></Route>');
+  });
+
+  it("keeps first-time motion education from blocking every authenticated destination", () => {
+    expect(dashboardLayoutSource).toContain('const showLightPulseIntroduction = location === "/dashboard"');
+    expect(dashboardLayoutSource).toContain('{showLightPulseIntroduction && <LumaeLightPulseIntroModal />}');
   });
 });

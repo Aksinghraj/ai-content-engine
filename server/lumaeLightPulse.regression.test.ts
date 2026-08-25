@@ -52,7 +52,8 @@ describe("Lumae Light Pulse motion system", () => {
     expect(modal).toContain('state={prefersReducedMotion ? "idle" : "working"}');
     expect(modal).toContain("<Dialog open={open} onOpenChange={handleOpenChange}>");
     expect(modal).toContain("Got it");
-    expect(layout).toContain("<LumaeLightPulseIntroModal />");
+    expect(layout).toContain('const showLightPulseIntroduction = location === "/dashboard"');
+    expect(layout).toContain('{showLightPulseIntroduction && <LumaeLightPulseIntroModal />}');
   });
 
   it("records introduction dismissals only as privacy-safe daily aggregates", () => {

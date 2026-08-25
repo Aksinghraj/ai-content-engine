@@ -170,6 +170,7 @@ function App() {
 
             {/* Legacy URLs retained as redirects to the canonical grouped routes */}
             <Route path="/generator"><Redirect to="/content-studio/ai-generator" /></Route>
+            <Route path="/generate-content"><Redirect to="/content-studio/ai-generator" /></Route>
             <Route path="/media-generation"><Redirect to="/content-studio/media-generation" /></Route>
             <Route path="/content-rewriter"><Redirect to="/content-studio/content-rewriter" /></Route>
             <Route path="/rewriter"><Redirect to="/content-studio/content-rewriter" /></Route>
