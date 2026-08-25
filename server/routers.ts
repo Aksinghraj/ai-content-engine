@@ -39,6 +39,7 @@ import { professionalProfileRouter } from "./routers/professionalProfile";
 import { twoFactorRouter } from "./routers/twoFactor";
 import { businessMessagingRouter } from "./routers/businessMessaging";
 import { localAuthRouter } from "./routers/localAuth";
+import { feedbackRouter } from "./routers/feedback";
 
 const EMAIL_CONFIRMATION_RESEND_WINDOW_MS = 60_000;
 const emailConfirmationResendAt = new Map<number, number>();
@@ -118,6 +119,7 @@ export const appRouter = router({
   twoFactor: twoFactorRouter,
   businessMessaging: businessMessagingRouter,
   localAuth: localAuthRouter,
+  feedback: feedbackRouter,
   lightPulseIntro: router({
     recordDismissal: protectedProcedure.mutation(async () => ({
       recorded: await db.recordLumaePulseIntroDismissal(),

@@ -195,6 +195,23 @@ export const localAuthSessionVersions = mysqlTable("localAuthSessionVersions", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+/** Authenticated product feedback. Stores only the reporting user, their rating, and the details they chose to submit. */
+export const userFeedback = mysqlTable("userFeedback", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  rating: int("rating").notNull(),
+  category: mysqlEnum("category", ["glitch", "problem", "suggestion", "feature_request", "other"]).notNull(),
+  message: text("message").notNull(),
+  pagePath: varchar("pagePath", { length: 512 }),
+  status: mysqlEnum("status", ["new", "reviewed", "resolved"]).default("new").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  userCreatedIndex: index("user_feedback_user_created_index").on(table.userId, table.createdAt),
+}));
+
+export type UserFeedback = typeof userFeedback.$inferSelect;
+
 /**
  * Professional profile fields are stored separately from the authentication
  * record. Profiles are private by default; only non-sensitive fields are

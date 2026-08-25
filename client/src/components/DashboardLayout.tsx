@@ -276,7 +276,11 @@ function DashboardLayoutContent({
                   </div>
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => setLocation("/feedback")} className="cursor-pointer">
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  <span>Send feedback</span>
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={async () => { await logout(); window.location.assign("/login"); }}
                   className="cursor-pointer text-destructive focus:text-destructive"
@@ -348,6 +352,10 @@ function DashboardLayoutContent({
                   >
                     <Keyboard className="mr-2 h-4 w-4" />
                     <span>Keyboard shortcuts</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLocation("/feedback")} className="cursor-pointer">
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    <span>Send feedback</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={async () => { await logout(); window.location.assign("/login"); }}

@@ -68,6 +68,7 @@ import VerifyLocalEmail from "./pages/VerifyLocalEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import DeleteAccount from "./pages/DeleteAccount";
+import Feedback from "./pages/Feedback";
 
 function GroupedGenerator() {
   return <GroupedRouteShell><Generator /></GroupedRouteShell>;
@@ -100,7 +101,7 @@ function BusinessWhatsAppAutomation() {
 function App() {
   const [location] = useLocation();
   const applicationPrefixes = [
-    "/dashboard", "/content-studio", "/scheduling", "/automation", "/business", "/analytics", "/account", "/billing",
+    "/dashboard", "/content-studio", "/scheduling", "/automation", "/business", "/analytics", "/account", "/billing", "/feedback",
     "/ai-assistant", "/personal-ai", "/brand-voice", "/calendar", "/content-calendar", "/demo-videos", "/publishing-test-dashboard",
   ];
   const showPublicFooter = !applicationPrefixes.some((prefix) => location === prefix || location.startsWith(`${prefix}/`));
@@ -134,6 +135,7 @@ function App() {
 
             {/* Canonical seven-area application routes */}
             <Route path="/dashboard" component={SimpleDashboard} />
+            <Route path="/feedback" component={Feedback} />
 
             <Route path="/content-studio/ai-generator" component={GroupedGenerator} />
             <Route path="/content-studio/basic-script" component={BasicScriptGeneration} />

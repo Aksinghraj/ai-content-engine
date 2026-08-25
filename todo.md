@@ -1190,3 +1190,9 @@
 - [x] Provide a discoverable shortcut reference without affecting mobile or touch workflows
 - [x] Prevent shortcuts from triggering inside form fields, content editors, or open dialogs
 - [x] Add regression coverage and responsive verification for the shortcut system
+
+## User Feedback and Rating System (IN PROGRESS)
+- [x] Create secure persisted feedback submissions with rating, category, problem details, and suggestion support
+- [x] Add a Google-style accessible feedback page and clear authenticated navigation entry
+- [x] Notify the owner safely about new reports without exposing private content broadly
+- [x] Add submission validation, rate limiting, regression coverage, and responsive verification
