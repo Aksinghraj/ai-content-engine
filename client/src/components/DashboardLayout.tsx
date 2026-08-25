@@ -21,15 +21,17 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, Calendar, Settings, Bot, TrendingUp, Repeat, Sparkles, BarChart3, Zap, Wand2, DollarSign, Youtube, AlertTriangle, Image, ChevronDown, MessageCircle, CreditCard, Crown, Wallet, Send, Moon, Sun } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, Calendar, Settings, Bot, TrendingUp, Repeat, Sparkles, BarChart3, Zap, Wand2, DollarSign, Youtube, AlertTriangle, Image, ChevronDown, MessageCircle, CreditCard, Crown, Wallet, Send, Moon, Sun, Keyboard } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 import { AppPrimaryNavigation, GroupedPageTabs } from "./AppNavigation";
 import { getNavigationArea } from "@/lib/appNavigation";
+import { getWorkspaceShortcut, shouldIgnoreWorkspaceShortcut, workspaceShortcuts } from "@/lib/workspaceShortcuts";
 import { useTheme } from "@/contexts/ThemeContext";
 import { LumaeLightPulseIntroModal } from "@/components/LumaeLightPulseIntroModal";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
 const DEFAULT_WIDTH = 280;
@@ -107,12 +109,41 @@ type DashboardLayoutContentProps = {
   setSidebarWidth: (width: number) => void;
 };
 
+function WorkspaceShortcutReference({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Workspace shortcuts</DialogTitle>
+          <DialogDescription>
+            Use these shortcuts from anywhere in the workspace. They pause while you are typing or using a dialog.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-2 pt-1" aria-label="Primary workspace keyboard shortcuts">
+          {workspaceShortcuts.map((shortcut) => (
+            <div key={shortcut.path} className="flex items-center justify-between rounded-md border border-border/70 px-3 py-2 text-sm">
+              <span className="font-medium text-foreground">{shortcut.label}</span>
+              <kbd className="rounded border border-border bg-muted px-2 py-1 font-mono text-xs text-muted-foreground">{shortcut.shortcutLabel}</kbd>
+            </div>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function DashboardLayoutContent({
   children,
   setSidebarWidth,
 }: DashboardLayoutContentProps) {
   const { user, logout } = useAuth();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
@@ -120,6 +151,8 @@ function DashboardLayoutContent({
   const activeMenuItem = getNavigationArea(location);
   const isMobile = useIsMobile();
   const { effectiveTheme, toggleTheme } = useTheme();
+  const [shortcutReferenceOpen, setShortcutReferenceOpen] = useState(false);
+  const [shortcutAnnouncement, setShortcutAnnouncement] = useState("");
 
   useEffect(() => {
     if (isCollapsed) {
@@ -156,6 +189,33 @@ function DashboardLayoutContent({
       document.body.style.userSelect = "";
     };
   }, [isResizing, setSidebarWidth]);
+
+  useEffect(() => {
+    const handleWorkspaceShortcut = (event: KeyboardEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.isComposing ||
+        !event.altKey ||
+        !event.shiftKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        shouldIgnoreWorkspaceShortcut(event.target) ||
+        document.querySelector("[role='dialog'][data-state='open']")
+      ) {
+        return;
+      }
+
+      const shortcut = getWorkspaceShortcut(event.key);
+      if (!shortcut) return;
+
+      event.preventDefault();
+      setLocation(shortcut.path);
+      setShortcutAnnouncement(`Opened ${shortcut.label}`);
+    };
+
+    window.addEventListener("keydown", handleWorkspaceShortcut);
+    return () => window.removeEventListener("keydown", handleWorkspaceShortcut);
+  }, [setLocation]);
 
   return (
     <>
@@ -241,6 +301,10 @@ function DashboardLayoutContent({
       <SidebarInset>
         {!isMobile && (
           <div className="sticky top-0 z-30 hidden h-14 items-center justify-end border-b border-border/70 bg-background/92 px-5 backdrop-blur-xl md:flex">
+            <Button variant="ghost" size="sm" onClick={() => setShortcutReferenceOpen(true)} className="mr-1 gap-2 text-muted-foreground hover:text-foreground" aria-label="Open workspace keyboard shortcuts" title="Keyboard shortcuts">
+              <Keyboard className="h-4 w-4" />
+              <span className="hidden lg:inline">Shortcuts</span>
+            </Button>
             <Button variant="ghost" size="icon" onClick={toggleTheme} className="shrink-0 text-muted-foreground hover:text-foreground" aria-label={`Switch to ${effectiveTheme === "dark" ? "bright" : "dark"} mode`} title={`Switch to ${effectiveTheme === "dark" ? "bright" : "dark"} mode`}>
               {effectiveTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
@@ -279,6 +343,13 @@ function DashboardLayoutContent({
                     <p className="text-xs text-muted-foreground">{user.email}</p>
                   </div>
                   <DropdownMenuItem
+                    onClick={() => setShortcutReferenceOpen(true)}
+                    className="cursor-pointer"
+                  >
+                    <Keyboard className="mr-2 h-4 w-4" />
+                    <span>Keyboard shortcuts</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
                     onClick={async () => { await logout(); window.location.assign("/login"); }}
                     className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950"
                   >
@@ -291,9 +362,11 @@ function DashboardLayoutContent({
           </div>
         )}
         <main className="lumae-product-main flex-1 overflow-x-hidden p-4 sm:p-5 md:p-7">
+          <div className="sr-only" aria-live="polite">{shortcutAnnouncement}</div>
           <GroupedPageTabs />
           {children}
         </main>
+        <WorkspaceShortcutReference open={shortcutReferenceOpen} onOpenChange={setShortcutReferenceOpen} />
       </SidebarInset>
     </>
   );

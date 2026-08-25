@@ -23,3 +23,7 @@ After limiting the introduction to the dashboard entry route, the mobile Content
 ## Content Studio discovery verification
 
 The final desktop and mobile captures show all eight Content Studio cards without overlap or horizontal hiding. Each card presents an icon, tool title, concise description, and a dedicated favorite control. The mobile layout keeps the same complete two-column selector and a full-width Search tools entry, while the desktop layout uses four readable columns.
+
+## Primary workspace shortcut verification
+
+Desktop verification confirms a visible Shortcuts trigger in the authenticated header. Mobile verification confirms the touch-first workspace remains unobstructed; shortcut help is available through the account menu rather than consuming mobile workspace space. The implementation ignores Alt+Shift shortcuts while focus is inside inputs, text areas, selects, editable areas, or open dialogs.

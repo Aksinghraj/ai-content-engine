@@ -1184,3 +1184,9 @@
 - [x] Add a dismissible first-time “What’s new” discovery hint for Content Studio
 - [x] Repair every discovered route, visibility, overflow, focus, and responsive navigation issue
 - [x] Run full navigation regression coverage and desktop/mobile visual verification
+
+## Primary Workspace Keyboard Shortcuts (IN PROGRESS)
+- [x] Add guarded keyboard shortcuts for Dashboard, Content Studio, Scheduling, Automation, Business, Analytics, Account, and Billing
+- [x] Provide a discoverable shortcut reference without affecting mobile or touch workflows
+- [x] Prevent shortcuts from triggering inside form fields, content editors, or open dialogs
+- [x] Add regression coverage and responsive verification for the shortcut system
