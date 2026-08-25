@@ -1145,3 +1145,14 @@
 - [x] Review current Lumae positioning, audience cues, and product proof points
 - [x] Research relevant creator and small-business acquisition channels
 - [x] Produce a measurable 90-day marketing plan with content, conversion, and retention actions
+
+## Free Image and Video API Options (IN PROGRESS)
+- [x] Verify official image and video generation API sign-up links plus current free-tier or trial-credit limitations
+
+## Per-Platform Automation Workspaces (IN PROGRESS)
+- [x] Audit existing automation and connected-account components for reusable platform-scoped logic
+- [x] Build always-visible Instagram, YouTube, X, and Facebook workspace tabs with honest locked and reconnect states
+- [x] Scope Auto-DM, comment reply, scheduling, and analytics to the selected platform without cross-platform mixing
+- [x] Show YouTube Auto-DM as unavailable with a clear explanation rather than offering an impossible action
+- [x] Add provider-policy safeguards and tests for connection health, expired tokens, and platform capability limits
+- [x] Release the selected safe launch with manual-review-first actions and X execution locked pending an approved budget

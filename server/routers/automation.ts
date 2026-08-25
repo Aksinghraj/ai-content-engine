@@ -44,11 +44,29 @@ function getUserSession(cookieHeader: string | undefined) {
 }
 
 async function assertAutomationReadiness(userId: number, platform: string) {
+  if (platform === "twitter") {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Twitter/X execution is locked until an owner-approved API usage budget is configured.",
+    });
+  }
   const connection = await getSocialConnectionByPlatform(userId, platform);
   if (!connection?.isConnected) {
     throw new TRPCError({
       code: "BAD_REQUEST",
       message: `Connect your ${platform} account before creating an automation.`,
+    });
+  }
+  if (!connection.isValidated) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: `Reconnect your ${platform} account before creating an automation.`,
+    });
+  }
+  if (connection.tokenExpiresAt && connection.tokenExpiresAt.getTime() <= Date.now()) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: `Your ${platform} access token has expired. Reconnect the account before creating an automation.`,
     });
   }
   if (!connection.autoPost) {

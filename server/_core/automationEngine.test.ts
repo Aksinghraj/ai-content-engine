@@ -16,10 +16,10 @@ vi.mock("./socialMediaPosting", () => ({ postToMultiplePlatforms: vi.fn() }));
 const schedule = {
   id: 5,
   userId: 7,
-  name: "Daily X post",
+  name: "Daily Instagram post",
   niche: "Technology",
   targetAudience: "Founders",
-  platform: "twitter",
+  platform: "instagram",
   goal: "Engagement",
   contentStyle: "Professional",
   cronExpression: "0 0 9 * * *",
@@ -40,7 +40,7 @@ describe("scheduled social automation execution", () => {
   });
 
   it("refuses to publish when Auto-Post is disabled", async () => {
-    vi.mocked(socialDb.getSocialConnectionByPlatform).mockResolvedValue({ isConnected: true, autoPost: false } as any);
+    vi.mocked(socialDb.getSocialConnectionByPlatform).mockResolvedValue({ isConnected: true, isValidated: true, autoPost: false } as any);
 
     await expect(executeAutomation(schedule)).rejects.toThrow("Auto-Post is disabled");
     expect(publisher.postToMultiplePlatforms).not.toHaveBeenCalled();
@@ -48,11 +48,16 @@ describe("scheduled social automation execution", () => {
   });
 
   it("publishes and logs the provider post ID for a connected Auto-Post account", async () => {
-    vi.mocked(socialDb.getSocialConnectionByPlatform).mockResolvedValue({ isConnected: true, autoPost: true } as any);
-    vi.mocked(publisher.postToMultiplePlatforms).mockResolvedValue([{ platform: "twitter", success: true, postId: "tweet-1" }]);
+    vi.mocked(socialDb.getSocialConnectionByPlatform).mockResolvedValue({ isConnected: true, isValidated: true, autoPost: true } as any);
+    vi.mocked(publisher.postToMultiplePlatforms).mockResolvedValue([{ platform: "instagram", success: true, postId: "post-1" }]);
 
-    await expect(executeAutomation(schedule)).resolves.toMatchObject({ success: true, postId: "tweet-1" });
-    expect(publisher.postToMultiplePlatforms).toHaveBeenCalledWith(7, ["twitter"], expect.objectContaining({ text: "A useful update" }));
-    expect(db.logAutomationExecution).toHaveBeenCalledWith(7, 5, "success", expect.objectContaining({ published: { platform: "twitter", postId: "tweet-1" } }));
+    await expect(executeAutomation(schedule)).resolves.toMatchObject({ success: true, postId: "post-1" });
+    expect(publisher.postToMultiplePlatforms).toHaveBeenCalledWith(7, ["instagram"], expect.objectContaining({ text: "A useful update" }));
+    expect(db.logAutomationExecution).toHaveBeenCalledWith(7, 5, "success", expect.objectContaining({ published: { platform: "instagram", postId: "post-1" } }));
+  });
+
+  it("refuses scheduled X execution before generating content", async () => {
+    await expect(executeAutomation({ ...schedule, platform: "twitter" })).rejects.toThrow("Twitter/X execution is locked");
+    expect(generator.generateContentPackage).not.toHaveBeenCalled();
   });
 });

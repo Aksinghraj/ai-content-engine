@@ -27,10 +27,10 @@ describe("social Connect and automation reliability contracts", () => {
 
   it("requires a connected Auto-Post account before activating automation", () => {
     const automationRouter = read("server/routers/automation.ts");
-    const automationPage = read("client/src/pages/Automation.tsx");
+    const workspace = read("client/src/components/PlatformAutomationWorkspace.tsx");
     expect(automationRouter).toContain("assertAutomationReadiness");
     expect(automationRouter).toContain("Enable Auto-Post");
-    expect(automationPage).toContain("selectedPlatformReady");
-    expect(automationPage).toContain("Open Connected Accounts");
+    expect(workspace).toContain("status.kind !== \"ready\"");
+    expect(workspace).toContain("Connect or reconnect");
   });
 });

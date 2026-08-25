@@ -19,6 +19,10 @@ const PUBLISHABLE_PLATFORMS = new Set([
  */
 export async function executeAutomation(schedule: AutomationSchedule) {
   try {
+    if (schedule.platform === "twitter") {
+      throw new Error("Twitter/X execution is locked until an owner-approved API usage budget is configured");
+    }
+
     const generatedContent = await generateContentPackage({
       niche: schedule.niche,
       targetAudience: schedule.targetAudience,
@@ -44,6 +48,12 @@ export async function executeAutomation(schedule: AutomationSchedule) {
     const connection = await getSocialConnectionByPlatform(schedule.userId, schedule.platform);
     if (!connection?.isConnected) {
       throw new Error(`${schedule.platform} account is not connected`);
+    }
+    if (!connection.isValidated) {
+      throw new Error(`${schedule.platform} account needs to be reconnected before automation can run`);
+    }
+    if (connection.tokenExpiresAt && connection.tokenExpiresAt.getTime() <= Date.now()) {
+      throw new Error(`${schedule.platform} access token has expired; reconnect the account before automation can run`);
     }
     if (!connection.autoPost) {
       throw new Error(`Auto-Post is disabled for the connected ${schedule.platform} account`);

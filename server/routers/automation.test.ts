@@ -36,10 +36,10 @@ const context = () => ({
 const createdSchedule = {
   id: 42,
   userId: 7,
-  name: "Daily X post",
+  name: "Daily Instagram post",
   niche: "Technology",
   targetAudience: "Founders",
-  platform: "twitter",
+  platform: "instagram",
   goal: "Engagement",
   contentStyle: "Professional",
   cronExpression: "0 0 9 * * *",
@@ -67,10 +67,10 @@ describe("Heartbeat-backed automation router", () => {
     vi.mocked(db.getAutomationSchedulesByUserId).mockResolvedValue([{ ...createdSchedule, scheduleCronTaskUid: "task-42" }] as any);
 
     const result = await appRouter.createCaller(context()).automation.create({
-      name: "Daily X post",
+      name: "Daily Instagram post",
       niche: "Technology",
       targetAudience: "Founders",
-      platform: "twitter",
+      platform: "instagram",
       goal: "Engagement",
       contentStyle: "Professional",
       cronExpression: "0 9 * * *",
@@ -124,10 +124,10 @@ describe("Heartbeat-backed automation router", () => {
     } as any);
 
     await expect(appRouter.createCaller(context()).automation.create({
-      name: "Daily X post",
+      name: "Daily Instagram post",
       niche: "Technology",
       targetAudience: "Founders",
-      platform: "twitter",
+      platform: "instagram",
       goal: "Engagement",
       contentStyle: "Professional",
       cronExpression: "0 9 * * *",
@@ -141,6 +141,19 @@ describe("Heartbeat-backed automation router", () => {
     const result = await appRouter.createCaller(context()).automation.runNow({ id: "42" });
 
     expect(automationEngine.executeAutomation).toHaveBeenCalledWith(createdSchedule);
-    expect(result).toMatchObject({ success: true, scheduleId: 42, platform: "twitter", postId: "post-42" });
+    expect(result).toMatchObject({ success: true, scheduleId: 42, platform: "instagram", postId: "post-42" });
+  });
+
+  it("locks X execution before it can create a durable job", async () => {
+    await expect(appRouter.createCaller(context()).automation.create({
+      name: "Daily X post",
+      niche: "Technology",
+      targetAudience: "Founders",
+      platform: "twitter",
+      goal: "Engagement",
+      contentStyle: "Professional",
+      cronExpression: "0 9 * * *",
+    })).rejects.toThrow("Twitter/X execution is locked");
+    expect(heartbeat.createHeartbeatJob).not.toHaveBeenCalled();
   });
 });
