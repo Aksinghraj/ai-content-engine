@@ -237,8 +237,8 @@ function DashboardLayoutContent({
               {!isCollapsed ? (
                 <div className="flex items-center gap-2 min-w-0">
                   <img
-                    src="/manus-storage/lumae-logo-icon_ccacaad9.jpg"
-                    alt="Lumae AI"
+                    src="/manus-storage/lumae-symbol-approved_9f697591.jpg"
+                    alt="Lumae symbol"
                     width={28}
                     height={28}
                     className="w-7 h-7 rounded-md object-cover shrink-0 ring-1 ring-primary/35"

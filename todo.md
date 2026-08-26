@@ -1221,3 +1221,9 @@
 - [x] Add previewable theme and cover preset cards to the profile edit flow
 - [x] Preserve private-by-default public sharing and existing custom avatar/cover uploads
 - [x] Add profile customization and responsive regression coverage
+
+## Sidebar and Footer Logo Update (IN PROGRESS)
+- [x] Upload the approved symbol-only Lumae logo for managed website delivery
+- [x] Replace the app sidebar logo with the approved symbol-only mark
+- [x] Replace the website footer logo with the approved symbol-only mark
+- [x] Verify desktop and mobile logo sizing, then publish the update

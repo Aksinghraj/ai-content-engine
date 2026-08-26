@@ -12,8 +12,8 @@ export default function Footer() {
           <div className="space-y-4">
             <div className="flex items-center gap-3 mb-1">
               <img
-                src="/manus-storage/lumae-logo-icon_ccacaad9.jpg"
-                alt="Lumae AI"
+                src="/manus-storage/lumae-symbol-approved_9f697591.jpg"
+                alt="Lumae symbol"
                 width={40}
                 height={40}
                 className="w-10 h-10 rounded-lg object-cover"
