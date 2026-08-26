@@ -14,6 +14,7 @@ import { initializeAutomationEngine } from "./automationEngine";
 import { runScheduledAutomation } from "../routes/scheduledAutomation";
 import { refreshScheduledTrends } from "../routes/scheduledTrendRefresh";
 import { ensureTrendRefreshJob } from "./trendScheduler";
+import { storageGetSignedUrl } from "../storage";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
@@ -233,6 +234,36 @@ async function startServer() {
   // Bound non-file request bodies to reduce memory-exhaustion risk.
   app.use(express.json({ limit: "1mb" }));
   app.use(express.urlencoded({ limit: "1mb", extended: true }));
+
+  // Keep the public Lumae preview animation on the same origin. The generic
+  // storage route is intentionally intercepted by the deployment gateway,
+  // while video elements need an actual MP4 response instead of a redirect.
+  app.get("/api/public/preview-eagle.mp4", async (req, res) => {
+    try {
+      const signedUrl = await storageGetSignedUrl("lumae-eagle-dive-motion_84502f79.mp4");
+      const range = typeof req.headers.range === "string" ? req.headers.range : undefined;
+      const upstream = await fetch(signedUrl, { headers: range ? { Range: range } : undefined });
+
+      if (!upstream.ok) {
+        console.error(`[PreviewMedia] eagle upstream error: ${upstream.status}`);
+        return res.status(502).send("Preview media unavailable");
+      }
+
+      const contentLength = upstream.headers.get("content-length");
+      const contentRange = upstream.headers.get("content-range");
+      res.status(upstream.status === 206 ? 206 : 200);
+      res.set("Content-Type", upstream.headers.get("content-type") || "video/mp4");
+      res.set("Accept-Ranges", "bytes");
+      res.set("Cache-Control", "public, max-age=31536000, immutable");
+      if (contentLength) res.set("Content-Length", contentLength);
+      if (contentRange) res.set("Content-Range", contentRange);
+      return res.send(Buffer.from(await upstream.arrayBuffer()));
+    } catch (error) {
+      console.error("[PreviewMedia] eagle delivery failed:", error);
+      return res.status(502).send("Preview media unavailable");
+    }
+  });
+
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   app.post("/api/scheduled/social-automation", runScheduledAutomation);

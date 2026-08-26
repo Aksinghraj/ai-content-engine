@@ -1248,3 +1248,9 @@
 - [x] Diagnose why the self-hosted eagle animation is black on the published preview
 - [x] Fix only the /lumae-preview media rendering path while retaining the approved design unchanged
 - [x] Verify visible animated media on desktop and mobile before publishing
+
+## Final Preview Video Verification (IN PROGRESS)
+- [x] Recheck the published eagle video source, MIME type, codec, and active playback state
+- [x] Verify mobile 9:16 and desktop video framing without changing approved design elements
+- [x] Apply and publish only a confirmed video delivery or scaling correction
+- [x] Serve the managed eagle video through a dedicated same-origin endpoint that bypasses the intercepted storage route
