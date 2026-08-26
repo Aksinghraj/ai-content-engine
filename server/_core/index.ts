@@ -240,7 +240,7 @@ async function startServer() {
   // while video elements need an actual MP4 response instead of a redirect.
   app.get("/api/trpc/preview-eagle.mp4", async (req, res) => {
     try {
-      const signedUrl = await storageGetSignedUrl("lumae-eagle-dive-motion_84502f79.mp4");
+      const signedUrl = await storageGetSignedUrl("lumae-eagle-eye-reveal-motion_672b5d27.mp4");
       const range = typeof req.headers.range === "string" ? req.headers.range : undefined;
       const upstream = await fetch(signedUrl, { headers: range ? { Range: range } : undefined });
 
@@ -261,6 +261,26 @@ async function startServer() {
     } catch (error) {
       console.error("[PreviewMedia] eagle delivery failed:", error);
       return res.status(502).send("Preview media unavailable");
+    }
+  });
+
+  app.get("/api/trpc/preview-eagle-poster.png", async (_req, res) => {
+    try {
+      const signedUrl = await storageGetSignedUrl("lumae-eagle-eye-reveal-keyframe_699aa27b.png");
+      const upstream = await fetch(signedUrl);
+
+      if (!upstream.ok) {
+        console.error(`[PreviewMedia] eagle poster upstream error: ${upstream.status}`);
+        return res.status(502).send("Preview poster unavailable");
+      }
+
+      res.status(200);
+      res.set("Content-Type", upstream.headers.get("content-type") || "image/png");
+      res.set("Cache-Control", "public, max-age=31536000, immutable");
+      return res.send(Buffer.from(await upstream.arrayBuffer()));
+    } catch (error) {
+      console.error("[PreviewMedia] eagle poster delivery failed:", error);
+      return res.status(502).send("Preview poster unavailable");
     }
   });
 

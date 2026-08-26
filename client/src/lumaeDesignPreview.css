@@ -16,12 +16,13 @@
 .lumae-design-preview__hero h1 { margin: 0; color: #f5f5f7; font-family: "Arial Rounded MT Bold", Arial, sans-serif; font-size: clamp(2.75rem, 5vw, 5.5rem); line-height: .94; letter-spacing: -.075em; text-wrap: balance; text-shadow: 0 3px 18px rgba(0,0,0,.34); }
 .lumae-design-preview__hero h1 span { display: block; }
 
-.lumae-design-preview__pane { position: relative; min-height: 100dvh; display: grid; place-items: center; padding: 6rem clamp(1.5rem, 5vw, 4.5rem) 2rem; background: #09090b; }
-.lumae-design-preview__back { position: absolute; top: 1.5rem; left: clamp(1.5rem, 5vw, 4.5rem); display: inline-flex; align-items: center; gap: .45rem; border: 0; padding: .45rem 0; background: transparent; color: #9a9aa2; font: inherit; font-size: .86rem; cursor: pointer; }
+.lumae-design-preview__pane { position: relative; isolation: isolate; min-height: 100dvh; display: grid; place-items: center; overflow: hidden; padding: 6rem clamp(1.5rem, 5vw, 4.5rem) 2rem; background: #09090b; }
+.lumae-design-preview__watermark { position: absolute; z-index: -1; top: -14%; right: -17%; color: rgba(212,175,106,.035); font-family: "Arial Rounded MT Bold", Arial, sans-serif; font-size: clamp(19rem, 42vw, 47rem); font-weight: 700; line-height: .8; pointer-events: none; user-select: none; }
+.lumae-design-preview__back { position: absolute; z-index: 1; top: 1.5rem; left: clamp(1.5rem, 5vw, 4.5rem); display: inline-flex; align-items: center; gap: .45rem; border: 0; padding: .45rem 0; background: transparent; color: #9a9aa2; font: inherit; font-size: .86rem; cursor: pointer; }
 .lumae-design-preview__back svg { width: 1rem; height: 1rem; }
 .lumae-design-preview__back:hover { color: #f5f5f7; }
 .lumae-design-preview__back:focus-visible, .lumae-design-preview button:focus-visible { outline: 2px solid #8b5cf6; outline-offset: 3px; }
-.lumae-design-preview__card { width: min(100%, 38.25rem); padding: clamp(2rem, 5vw, 4.3rem) clamp(1.45rem, 5vw, 3.9rem); border: 1px solid rgba(255,255,255,.06); border-radius: 1.6rem; background: rgba(20,20,23,.90); box-shadow: 0 20px 56px rgba(0,0,0,.42); backdrop-filter: blur(28px) saturate(160%); }
+.lumae-design-preview__card { position: relative; z-index: 1; width: min(100%, 38.25rem); padding: clamp(2rem, 5vw, 4.3rem) clamp(1.45rem, 5vw, 3.9rem); border: 1px solid rgba(255,255,255,.06); border-radius: 1.6rem; background: rgba(20,20,23,.90); box-shadow: 0 20px 56px rgba(0,0,0,.42); backdrop-filter: blur(28px) saturate(160%); }
 .lumae-design-preview__eyebrow { margin: 0 0 .75rem; color: #9a9aa2; font-size: .72rem; font-weight: 700; letter-spacing: .14em; }
 .lumae-design-preview__card h2 { margin: 0; color: #f5f5f7; font-family: "Arial Rounded MT Bold", Arial, sans-serif; font-size: clamp(2.25rem, 4vw, 3.45rem); letter-spacing: -.065em; line-height: .95; }
 .lumae-design-preview__subcopy { margin: 1.2rem 0 2rem; color: #9a9aa2; font-size: 1.05rem; line-height: 1.55; }
@@ -33,6 +34,9 @@
 .lumae-design-preview__secondary:hover { background: rgba(37,37,42,.98); }
 .lumae-design-preview__primary:active, .lumae-design-preview__secondary:active { transform: translateY(1px); }
 .lumae-design-preview__primary svg { width: 1.2rem; height: 1.2rem; }
+.lumae-design-preview__primary:disabled, .lumae-design-preview__secondary:disabled { cursor: wait; opacity: .82; }
+.lumae-design-preview__spinner { animation: lumae-design-preview-spinner .72s linear infinite; }
+@keyframes lumae-design-preview-spinner { to { transform: rotate(360deg); } }
 .lumae-design-preview__google-mark { display: inline-grid; width: 1.35rem; height: 1.35rem; place-items: center; border-radius: 50%; color: #8ab4f8; font-family: Arial, sans-serif; font-weight: 800; }
 .lumae-design-preview__security { display: flex; align-items: center; justify-content: center; gap: .4rem; margin: 1.35rem 0 0; color: #9a9aa2; font-size: .77rem; line-height: 1.45; text-align: center; }
 .lumae-design-preview__security svg { flex: 0 0 auto; width: .95rem; height: .95rem; color: #10b981; }
@@ -46,6 +50,7 @@
   .lumae-design-preview__hero { bottom: 1.85rem; }
   .lumae-design-preview__hero h1 { font-size: clamp(2.45rem, 10.5vw, 4.65rem); }
   .lumae-design-preview__pane { min-height: auto; padding: 2rem 1.25rem 2.5rem; }
+  .lumae-design-preview__watermark { top: -12%; right: -15%; font-size: clamp(17rem, 70vw, 28rem); }
   .lumae-design-preview__back { position: static; width: 100%; margin: 0 0 1.25rem; }
   .lumae-design-preview__card { padding: 1.7rem; }
 }

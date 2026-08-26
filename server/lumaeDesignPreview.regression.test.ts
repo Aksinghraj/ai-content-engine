@@ -11,7 +11,9 @@ describe("Lumae visual design preview", () => {
     const home = read("client/src/pages/Home.tsx");
 
     expect(preview).toContain('/api/trpc/preview-eagle.mp4');
-    expect(preview).toContain('/manus-storage/lumae-eagle-primary-reference_a67516d6.jpg');
+    expect(preview).toContain('/api/trpc/preview-eagle-poster.png');
+    expect(preview).toContain('lumae-design-preview__watermark');
+    expect(preview).toContain('Opening sign in…');
     expect(preview).toContain('aria-label="Lumae motion design preview"');
     expect(preview).toContain('autoPlay');
     expect(preview).toContain('muted');
@@ -31,7 +33,10 @@ describe("Lumae visual design preview", () => {
     expect(storageProxy).toContain('res.send(Buffer.from(await videoResp.arrayBuffer()))');
     const server = read("server/_core/index.ts");
     expect(server).toContain('app.get("/api/trpc/preview-eagle.mp4"');
-    expect(server).toContain('storageGetSignedUrl("lumae-eagle-dive-motion_84502f79.mp4")');
+    expect(server).toContain('app.get("/api/trpc/preview-eagle-poster.png"');
+    expect(server).toContain('lumae-eagle-eye-reveal-motion_672b5d27.mp4');
+    expect(server).toContain('lumae-eagle-eye-reveal-keyframe_699aa27b.png');
+    expect(server).toContain('storageGetSignedUrl("lumae-eagle-eye-reveal-motion_672b5d27.mp4")');
     expect(app).toContain('path="/lumae-preview"');
     expect(home).toContain('navigate("/lumae-preview")');
   });

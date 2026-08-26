@@ -1258,3 +1258,10 @@
 - [x] Restore the proven /api/public same-origin eagle endpoint after live verification
 - [x] Align the preview source with the verified playable /api/trpc eagle endpoint
 - [x] Add a self-hosted eagle poster frame so the preview is visible before video playback begins
+
+## Confirmed Preview Enhancements (IN PROGRESS)
+- [x] Add an accessible sign-in loading spinner without changing authentication requests or destinations
+- [x] Add a static low-opacity Lumae L watermark behind the preview card and navigation
+- [x] Create a new self-hosted 9:16 eagle motion with a subtle Lumae eye-reflection reveal and matching poster
+- [x] Serve the new eagle poster from the same gateway-compatible origin for immediate first-frame visibility
+- [x] Verify desktop, tablet, mobile, video playback, and login isolation before publishing
