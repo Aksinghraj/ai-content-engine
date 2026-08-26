@@ -1254,3 +1254,4 @@
 - [x] Verify mobile 9:16 and desktop video framing without changing approved design elements
 - [x] Apply and publish only a confirmed video delivery or scaling correction
 - [x] Serve the managed eagle video through a dedicated same-origin endpoint that bypasses the intercepted storage route
+- [x] Move the dedicated eagle endpoint under the production-recognized /api/trpc gateway prefix
