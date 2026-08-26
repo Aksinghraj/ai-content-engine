@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import "@/lumaeDesignPreview.css";
 
-const EAGLE_VIDEO_URL = "/api/trpc/preview-eagle.mp4";
+const EAGLE_VIDEO_URL = "/api/public/preview-eagle.mp4";
 
 export default function LumaeDesignPreview() {
   const [, navigate] = useLocation();

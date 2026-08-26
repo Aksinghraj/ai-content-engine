@@ -10,7 +10,7 @@ describe("Lumae visual design preview", () => {
     const app = read("client/src/App.tsx");
     const home = read("client/src/pages/Home.tsx");
 
-    expect(preview).toContain('/api/trpc/preview-eagle.mp4');
+    expect(preview).toContain('/api/public/preview-eagle.mp4');
     expect(preview).toContain('aria-label="Lumae motion design preview"');
     expect(preview).toContain('autoPlay');
     expect(preview).toContain('muted');
@@ -29,7 +29,7 @@ describe("Lumae visual design preview", () => {
     expect(storageProxy).toContain('LUMAE_PREVIEW_EAGLE_VIDEO_KEY');
     expect(storageProxy).toContain('res.send(Buffer.from(await videoResp.arrayBuffer()))');
     const server = read("server/_core/index.ts");
-    expect(server).toContain('app.get("/api/trpc/preview-eagle.mp4"');
+    expect(server).toContain('app.get("/api/public/preview-eagle.mp4"');
     expect(server).toContain('storageGetSignedUrl("lumae-eagle-dive-motion_84502f79.mp4")');
     expect(app).toContain('path="/lumae-preview"');
     expect(home).toContain('navigate("/lumae-preview")');

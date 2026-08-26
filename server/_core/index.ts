@@ -238,7 +238,7 @@ async function startServer() {
   // Keep the public Lumae preview animation on the same origin. The generic
   // storage route is intentionally intercepted by the deployment gateway,
   // while video elements need an actual MP4 response instead of a redirect.
-  app.get("/api/trpc/preview-eagle.mp4", async (req, res) => {
+  app.get("/api/public/preview-eagle.mp4", async (req, res) => {
     try {
       const signedUrl = await storageGetSignedUrl("lumae-eagle-dive-motion_84502f79.mp4");
       const range = typeof req.headers.range === "string" ? req.headers.range : undefined;
