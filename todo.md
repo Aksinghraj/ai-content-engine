@@ -1243,3 +1243,8 @@
 - [x] Replace the preview media with a newly generated self-hosted eagle-dive clip
 - [x] Apply the approved dark glass theme, copy, and indigo-violet buttons to /lumae-preview
 - [x] Verify video playback, desktop/mobile layouts, source copy, and login-route isolation
+
+## Preview Media Visibility Fix (IN PROGRESS)
+- [x] Diagnose why the self-hosted eagle animation is black on the published preview
+- [x] Fix only the /lumae-preview media rendering path while retaining the approved design unchanged
+- [x] Verify visible animated media on desktop and mobile before publishing

@@ -110,6 +110,8 @@ async function startServer() {
         formAction: ["'self'"],
         frameAncestors: ["'self'"],
         imgSrc: ["'self'", "data:", "blob:", "https:"],
+        // Managed /manus-storage media resolves through this signed CDN origin.
+        mediaSrc: ["'self'", "https://d36hbw14aib5lz.cloudfront.net"],
         objectSrc: ["'none'"],
         scriptSrc: ["'self'", "'unsafe-inline'", "https:"],
         styleSrc: ["'self'", "'unsafe-inline'", "https:"],
