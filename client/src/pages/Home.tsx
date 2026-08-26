@@ -111,7 +111,7 @@ export default function Home() {
               <p>Write it once. Lumae helps you shape clear posts, scripts, and plans without starting from zero each time.</p>
               <div className="lumae-hero-actions">
                 <Button onClick={startFree} className="lumae-signal-button lumae-signal-button--large">{signedIn ? "Create in your workspace" : "Build your first signal"} <ArrowUpRight className="h-4 w-4" /></Button>
-                <button onClick={() => navigate("/pricing")} className="lumae-text-link">Explore the system <span>↗</span></button>
+                <button onClick={() => navigate("/lumae-preview")} className="lumae-text-link">Preview the motion <span>↗</span></button>
               </div>
               <div className="lumae-trust-line"><CheckCircle2 className="h-4 w-4" /> Three free generations <span /> <CheckCircle2 className="h-4 w-4" /> No card required <span /> <CheckCircle2 className="h-4 w-4" /> Keep control of your work</div>
             </div>

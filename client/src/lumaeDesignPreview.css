@@ -1,0 +1,63 @@
+.lumae-design-preview {
+  min-height: 100dvh;
+  background: #fefefe;
+  color: #2c3343;
+  display: grid;
+  grid-template-columns: minmax(0, 57.1fr) minmax(430px, 42.9fr);
+  font-family: Arial, "Helvetica Neue", sans-serif;
+}
+
+.lumae-design-preview__media { position: relative; min-height: 100dvh; overflow: hidden; background: #0c1218; isolation: isolate; }
+.lumae-design-preview__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 62% center; z-index: -3; background: #10171d; }
+.lumae-design-preview__video--wide { display: none; }
+.lumae-design-preview__scrim { position: absolute; inset: 0; z-index: -2; background: linear-gradient(180deg, rgba(5, 10, 14, .04) 30%, rgba(5, 10, 14, .54) 100%); }
+.lumae-design-preview__hero { position: absolute; left: clamp(1.5rem, 3vw, 3rem); right: clamp(1.5rem, 3vw, 3rem); bottom: clamp(2rem, 7vh, 5rem); color: #fff; max-width: 44rem; }
+.lumae-design-preview__badge { display: inline-flex; align-items: center; gap: .55rem; margin: 0 0 1.35rem; padding: .75rem 1rem; border-radius: 999px; background: rgba(26, 28, 30, .76); box-shadow: 0 6px 18px rgba(0,0,0,.2); font-size: .72rem; font-weight: 700; letter-spacing: .1em; }
+.lumae-design-preview__badge svg { width: 1rem; height: 1rem; }
+.lumae-design-preview__hero h1 { margin: 0; font-family: "Arial Rounded MT Bold", Arial, sans-serif; font-size: clamp(2.8rem, 5vw, 5.6rem); line-height: .93; letter-spacing: -.075em; text-wrap: balance; }
+.lumae-design-preview__hero h1 span { display: block; }
+.lumae-design-preview__hero-note { max-width: 34rem; margin: 1.5rem 0 0; color: rgba(255,255,255,.84); font-size: clamp(.94rem, 1.3vw, 1.05rem); line-height: 1.55; }
+
+.lumae-design-preview__pane { position: relative; min-height: 100dvh; display: grid; place-items: center; padding: 6rem clamp(1.5rem, 5vw, 4.5rem) 2rem; background: linear-gradient(135deg, #fefefe 0%, #f9fbfc 100%); }
+.lumae-design-preview__back { position: absolute; top: 1.5rem; left: clamp(1.5rem, 5vw, 4.5rem); border: 0; padding: .45rem 0; background: transparent; color: #606060; display: inline-flex; align-items: center; gap: .45rem; font: inherit; font-size: .86rem; cursor: pointer; }
+.lumae-design-preview__back svg { width: 1rem; height: 1rem; }
+.lumae-design-preview__back:hover { color: #171c24; }
+.lumae-design-preview__back:focus-visible, .lumae-design-preview button:focus-visible { outline: 2px solid #2b6cb0; outline-offset: 3px; }
+.lumae-design-preview__card { width: min(100%, 38.25rem); padding: clamp(2rem, 5vw, 4.3rem) clamp(1.45rem, 5vw, 3.9rem); border: 1px solid rgba(0, 0, 0, .05); border-radius: 1.6rem; background: rgba(254,254,254,.9); box-shadow: 1px 10px 14px rgba(10,14,20,.14), 0 1px 3px rgba(10,14,20,.05); }
+.lumae-design-preview__eyebrow { margin: 0 0 .75rem; color: #606060; font-size: .72rem; font-weight: 700; letter-spacing: .14em; }
+.lumae-design-preview__card h2 { margin: 0; color: #2c3343; font-family: "Arial Rounded MT Bold", Arial, sans-serif; font-size: clamp(2.25rem, 4vw, 3.45rem); letter-spacing: -.065em; line-height: .95; }
+.lumae-design-preview__subcopy { margin: 1.2rem 0 2rem; color: #797979; font-size: 1.05rem; line-height: 1.55; }
+.lumae-design-preview__subcopy strong { color: #2c3343; }
+.lumae-design-preview__panel { display: flex; gap: 1rem; padding: 1rem; margin: 0 0 1.35rem; border: 1px solid #e2e6e8; border-radius: 1rem; background: #fafafa; }
+.lumae-design-preview__panel-icon { flex: 0 0 auto; width: 2.25rem; height: 2.25rem; display: grid; place-items: center; border-radius: .7rem; background: #293340; color: #fff; }
+.lumae-design-preview__panel-icon svg { width: 1.2rem; height: 1.2rem; }
+.lumae-design-preview__panel strong { display: block; color: #232424; font-size: .94rem; }
+.lumae-design-preview__panel p { margin: .28rem 0 0; color: #606060; font-size: .84rem; line-height: 1.45; }
+.lumae-design-preview__primary, .lumae-design-preview__secondary { width: 100%; min-height: 3.75rem; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; gap: .65rem; font: inherit; font-size: 1rem; cursor: pointer; transition: transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s ease, filter .18s ease, background .18s ease; }
+.lumae-design-preview__primary { border: 0; color: #fff; background: linear-gradient(180deg, #283139 0%, #293340 100%); box-shadow: 0 8px 20px rgba(18,26,34,.16), 0 2px 5px rgba(18,26,34,.1); }
+.lumae-design-preview__primary:hover { filter: brightness(1.12); }
+.lumae-design-preview__secondary { margin-top: 1rem; border: 1.5px solid #c8c8ca; color: #232424; background: rgba(255,255,255,.92); }
+.lumae-design-preview__secondary:hover { background: #fff; box-shadow: 0 3px 10px rgba(0,0,0,.07); }
+.lumae-design-preview__primary:active, .lumae-design-preview__secondary:active { transform: translateY(1px); }
+.lumae-design-preview__primary svg { width: 1.2rem; height: 1.2rem; }
+.lumae-design-preview__google-mark { width: 1.35rem; height: 1.35rem; display: inline-grid; place-items: center; border-radius: 50%; color: #4285f4; font-weight: 800; font-family: Arial, sans-serif; }
+.lumae-design-preview__security { margin: 1.35rem 0 0; color: #606060; display: flex; justify-content: center; align-items: center; gap: .4rem; font-size: .77rem; text-align: center; line-height: 1.45; }
+.lumae-design-preview__security svg { flex: 0 0 auto; width: .95rem; height: .95rem; color: #238e7d; }
+
+@media (max-width: 880px) {
+  .lumae-design-preview { display: block; min-height: 100dvh; }
+  .lumae-design-preview__media { min-height: min(47rem, 49svh); }
+  .lumae-design-preview__video--tall { display: none; }
+  .lumae-design-preview__video--wide { display: block; object-position: center 36%; }
+  .lumae-design-preview__scrim { background: linear-gradient(180deg, rgba(255,255,255,.03) 18%, rgba(6,10,13,.68) 100%); }
+  .lumae-design-preview__hero { bottom: 1.85rem; }
+  .lumae-design-preview__hero h1 { font-size: clamp(2.5rem, 11vw, 4.65rem); }
+  .lumae-design-preview__hero-note { margin-top: .9rem; font-size: .92rem; }
+  .lumae-design-preview__pane { min-height: auto; padding: 2rem 1.25rem 2.5rem; }
+  .lumae-design-preview__back { position: static; width: 100%; margin: 0 0 1.25rem; }
+  .lumae-design-preview__card { padding: 1.7rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lumae-design-preview *, .lumae-design-preview *::before, .lumae-design-preview *::after { transition: none !important; animation: none !important; }
+}

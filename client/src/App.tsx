@@ -70,6 +70,7 @@ import ResetPassword from "./pages/ResetPassword";
 import DeleteAccount from "./pages/DeleteAccount";
 import Feedback from "./pages/Feedback";
 import FeedbackReview from "./pages/FeedbackReview";
+import LumaeDesignPreview from "./pages/LumaeDesignPreview";
 
 function GroupedGenerator() {
   return <GroupedRouteShell><Generator /></GroupedRouteShell>;
@@ -103,7 +104,7 @@ function App() {
   const [location] = useLocation();
   const applicationPrefixes = [
     "/dashboard", "/content-studio", "/scheduling", "/automation", "/business", "/analytics", "/account", "/billing", "/feedback", "/admin",
-    "/ai-assistant", "/personal-ai", "/brand-voice", "/calendar", "/content-calendar", "/demo-videos", "/publishing-test-dashboard",
+    "/ai-assistant", "/personal-ai", "/brand-voice", "/calendar", "/content-calendar", "/demo-videos", "/publishing-test-dashboard", "/lumae-preview",
   ];
   const showPublicFooter = !applicationPrefixes.some((prefix) => location === prefix || location.startsWith(`${prefix}/`));
 
@@ -133,6 +134,7 @@ function App() {
             <Route path="/blog/category/:category" component={BlogCategory} />
             <Route path="/blog/:category/:slug" component={BlogPost} />
             <Route path="/u/:slug" component={PublicProfile} />
+            <Route path="/lumae-preview" component={LumaeDesignPreview} />
 
             {/* Canonical seven-area application routes */}
             <Route path="/dashboard" component={SimpleDashboard} />

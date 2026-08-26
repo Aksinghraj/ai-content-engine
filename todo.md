@@ -1227,3 +1227,13 @@
 - [x] Replace the app sidebar logo with the approved symbol-only mark
 - [x] Replace the website footer logo with the approved symbol-only mark
 - [x] Verify desktop and mobile logo sizing, then publish the update
+
+## Public Landing-Page Access Check (IN PROGRESS)
+- [x] Investigate the reported 403 error when opening the landing-page view
+- [x] Verify direct public access to the live landing page and replace any inaccessible shared artifact
+
+## Lumae Signal Design Preview (IN PROGRESS)
+- [x] Create an original self-hosted falcon motion visual without third-party media
+- [x] Build a separate visual-only Lumae design-preview page without changing secure login behavior
+- [x] Add a clear landing-page link to the design preview
+- [x] Verify responsive layouts, preview navigation, and existing auth-flow preservation
