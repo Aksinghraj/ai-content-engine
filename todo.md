@@ -1269,3 +1269,8 @@
 ## Preview Autoplay Reliability (IN PROGRESS)
 - [x] Start the muted eagle video explicitly once its same-origin media is ready
 - [x] Verify automatic desktop and mobile playback after the immediate poster frame
+
+## Automation Reliability Audit (IN PROGRESS)
+- [x] Audit connection health, workflow execution, schedules, and run-now diagnostics across supported platforms
+- [x] Identify implementation defects separately from provider permissions, approval requirements, and missing credentials
+- [x] Prepare a verified platform-by-platform repair plan without disrupting connected accounts
