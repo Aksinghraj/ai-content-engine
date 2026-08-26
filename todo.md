@@ -1237,3 +1237,9 @@
 - [x] Build a separate visual-only Lumae design-preview page without changing secure login behavior
 - [x] Add a clear landing-page link to the design preview
 - [x] Verify responsive layouts, preview navigation, and existing auth-flow preservation
+
+## Lumae Preview Correction (IN PROGRESS)
+- [x] Remove residual Signal wording from the preview route while keeping /login unchanged
+- [x] Replace the preview media with a newly generated self-hosted eagle-dive clip
+- [x] Apply the approved dark glass theme, copy, and indigo-violet buttons to /lumae-preview
+- [x] Verify video playback, desktop/mobile layouts, source copy, and login-route isolation

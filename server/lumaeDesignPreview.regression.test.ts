@@ -5,15 +5,26 @@ import { describe, expect, it } from "vitest";
 const read = (relativePath: string) => readFileSync(resolve(process.cwd(), relativePath), "utf8");
 
 describe("Lumae visual design preview", () => {
-  it("keeps the preview separate from secure login and uses the managed original video asset", () => {
+  it("keeps the preview separate from secure login and uses the approved dark eagle design", () => {
     const preview = read("client/src/pages/LumaeDesignPreview.tsx");
     const app = read("client/src/App.tsx");
     const home = read("client/src/pages/Home.tsx");
 
-    expect(preview).toContain('/manus-storage/lumae-falcon-motion_7162a4a1.mp4');
+    expect(preview).toContain('/manus-storage/lumae-eagle-dive-motion_84502f79.mp4');
     expect(preview).toContain('aria-label="Lumae motion design preview"');
+    expect(preview).toContain('autoPlay');
+    expect(preview).toContain('muted');
+    expect(preview).toContain('loop');
+    expect(preview).toContain('playsInline');
     expect(preview).toContain('navigate("/login")');
+    expect(preview).toContain('Turn Ideas Into Content');
+    expect(preview).toContain('Instantly');
+    expect(preview).toContain('Welcome Back!');
+    expect(preview).toContain('Built for creators who move fast');
+    expect(preview.toLowerCase()).not.toContain('signal');
     expect(preview).not.toContain('cloudfront.net');
+    expect(read("client/src/lumaeDesignPreview.css")).toContain('background: #09090b');
+    expect(read("client/src/lumaeDesignPreview.css")).toContain('linear-gradient(180deg,#4f46e5,#7c3aed)');
     expect(app).toContain('path="/lumae-preview"');
     expect(home).toContain('navigate("/lumae-preview")');
   });
