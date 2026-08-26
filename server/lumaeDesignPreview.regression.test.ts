@@ -25,7 +25,9 @@ describe("Lumae visual design preview", () => {
     expect(preview).not.toContain('cloudfront.net');
     expect(read("client/src/lumaeDesignPreview.css")).toContain('background: #09090b');
     expect(read("client/src/lumaeDesignPreview.css")).toContain('linear-gradient(180deg,#4f46e5,#7c3aed)');
-    expect(read("server/_core/index.ts")).toContain('mediaSrc: ["\'self\'", "https://d36hbw14aib5lz.cloudfront.net"]');
+    const storageProxy = read("server/_core/storageProxy.ts");
+    expect(storageProxy).toContain('LUMAE_PREVIEW_EAGLE_VIDEO_KEY');
+    expect(storageProxy).toContain('res.send(Buffer.from(await videoResp.arrayBuffer()))');
     expect(app).toContain('path="/lumae-preview"');
     expect(home).toContain('navigate("/lumae-preview")');
   });
