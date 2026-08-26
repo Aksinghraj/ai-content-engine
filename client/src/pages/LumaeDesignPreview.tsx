@@ -4,6 +4,7 @@ import { useLocation } from "wouter";
 import "@/lumaeDesignPreview.css";
 
 const EAGLE_VIDEO_URL = "/api/trpc/preview-eagle.mp4";
+const EAGLE_POSTER_URL = "/manus-storage/lumae-eagle-primary-reference_a67516d6.jpg";
 
 export default function LumaeDesignPreview() {
   const [, navigate] = useLocation();
@@ -29,6 +30,7 @@ export default function LumaeDesignPreview() {
           loop
           playsInline
           preload="metadata"
+          poster={EAGLE_POSTER_URL}
         >
           <source src={EAGLE_VIDEO_URL} type="video/mp4" />
         </video>
@@ -41,6 +43,7 @@ export default function LumaeDesignPreview() {
           loop
           playsInline
           preload="metadata"
+          poster={EAGLE_POSTER_URL}
         >
           <source src={EAGLE_VIDEO_URL} type="video/mp4" />
         </video>

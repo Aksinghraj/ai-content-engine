@@ -1257,3 +1257,4 @@
 - [x] Move the dedicated eagle endpoint under the production-recognized /api/trpc gateway prefix
 - [x] Restore the proven /api/public same-origin eagle endpoint after live verification
 - [x] Align the preview source with the verified playable /api/trpc eagle endpoint
+- [x] Add a self-hosted eagle poster frame so the preview is visible before video playback begins

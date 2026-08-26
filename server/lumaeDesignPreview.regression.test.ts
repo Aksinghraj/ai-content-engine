@@ -11,6 +11,7 @@ describe("Lumae visual design preview", () => {
     const home = read("client/src/pages/Home.tsx");
 
     expect(preview).toContain('/api/trpc/preview-eagle.mp4');
+    expect(preview).toContain('/manus-storage/lumae-eagle-primary-reference_a67516d6.jpg');
     expect(preview).toContain('aria-label="Lumae motion design preview"');
     expect(preview).toContain('autoPlay');
     expect(preview).toContain('muted');
