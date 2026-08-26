@@ -65,6 +65,8 @@ export async function executeAutomation(schedule: AutomationSchedule) {
       {
         text: generatedContent.caption,
         hashtags: generatedContent.hashtags,
+        imageUrl: schedule.mediaType === "image" ? schedule.mediaUrl || undefined : undefined,
+        videoUrl: schedule.mediaType === "video" ? schedule.mediaUrl || undefined : undefined,
       },
     );
 

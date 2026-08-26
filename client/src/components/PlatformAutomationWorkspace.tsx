@@ -125,7 +125,7 @@ export function PlatformAutomationWorkspace() {
   const [activeId, setActiveId] = useState<PlatformId>("instagram");
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [draft, setDraft] = useState({ name: "", niche: "", targetAudience: "", cronExpression: CADENCES[0].value });
+  const [draft, setDraft] = useState({ name: "", niche: "", targetAudience: "", cronExpression: CADENCES[0].value, mediaUrl: "", mediaType: "image" as "image" | "video" });
   const { data: schedulesData, isLoading: schedulesLoading, refetch } = trpc.automation.list.useQuery();
   const { data: accounts, isLoading: accountsLoading, refetch: refetchAccounts } = trpc.socialOAuthIntegration.getConnectedAccounts.useQuery();
   const workspace = WORKSPACES.find((item) => item.id === activeId) ?? WORKSPACES[0];
@@ -141,7 +141,7 @@ export function PlatformAutomationWorkspace() {
       toast.success(`${workspace.name} schedule created.`);
       setShowForm(false);
       setError(null);
-      setDraft({ name: "", niche: "", targetAudience: "", cronExpression: CADENCES[0].value });
+      setDraft({ name: "", niche: "", targetAudience: "", cronExpression: CADENCES[0].value, mediaUrl: "", mediaType: "image" });
       void refetch();
     },
     onError: (mutationError) => setError(mutationError.message || "Unable to create this schedule."),
@@ -158,6 +158,13 @@ export function PlatformAutomationWorkspace() {
     onSuccess: (result) => { toast.success(result.message); void refetch(); },
     onError: (mutationError) => toast.error(mutationError.message || "Diagnostic run failed."),
   });
+  const uploadMediaMutation = trpc.socialMedia.uploadMedia.useMutation({
+    onSuccess: (result) => {
+      setDraft((current) => ({ ...current, mediaUrl: result.url, mediaType: result.mediaType }));
+      toast.success("Schedule media attached.");
+    },
+    onError: (mutationError) => setError(mutationError.message || "Unable to upload schedule media."),
+  });
 
   const openAccounts = () => navigate("/scheduling/connected-accounts");
   const selectWorkspace = (id: PlatformId) => { setActiveId(id); setShowForm(false); setError(null); };
@@ -166,7 +173,26 @@ export function PlatformAutomationWorkspace() {
     if (!draft.name.trim() || !draft.niche.trim() || !draft.targetAudience.trim()) return setError("Add a schedule name, niche, and target audience before continuing.");
     if (status.kind !== "ready") return setError(status.detail);
     setError(null);
-    createMutation.mutate({ ...draft, platform: activeId, goal: "growth", contentStyle: "educational" });
+    const needsImageOrVideo = activeId === "instagram";
+    const needsVideo = activeId === "youtube";
+    if (needsImageOrVideo && !draft.mediaUrl) return setError("Attach a Lumae-managed image or video before scheduling Instagram publishing.");
+    if (needsVideo && (!draft.mediaUrl || draft.mediaType !== "video")) return setError("Attach a Lumae-managed video before scheduling YouTube publishing.");
+    createMutation.mutate({ ...draft, mediaUrl: draft.mediaUrl || undefined, mediaType: draft.mediaUrl ? draft.mediaType : undefined, platform: activeId, goal: "growth", contentStyle: "educational" });
+  };
+  const attachMedia = (file: File | undefined) => {
+    if (!file) return;
+    const mediaType = file.type.startsWith("video/") ? "video" : file.type.startsWith("image/") ? "image" : null;
+    if (!mediaType) return setError("Choose a PNG, JPEG, WebP, MP4, WebM, or MOV file.");
+    if (file.size > 650 * 1024) return setError("Schedule media must be 650 KB or smaller.");
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = typeof reader.result === "string" ? reader.result.split(",")[1] : "";
+      if (!base64) return setError("Unable to read the selected media file.");
+      setError(null);
+      uploadMediaMutation.mutate({ filename: file.name, fileData: base64, mediaType });
+    };
+    reader.onerror = () => setError("Unable to read the selected media file.");
+    reader.readAsDataURL(file);
   };
   const runSchedule = (schedule: any) => {
     if (schedule.platform === "twitter") return toast.error("X execution is locked pending an approved API budget.");
@@ -214,7 +240,7 @@ export function PlatformAutomationWorkspace() {
 
     <Card><CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><CardTitle className="flex items-center gap-2"><CalendarClock className="h-5 w-5 text-primary" />{workspace.name} schedule</CardTitle><CardDescription>Each schedule belongs to this platform only.</CardDescription></div>{!xLocked && <Button onClick={() => { setShowForm((open) => !open); setError(null); }}><Plus className="mr-2 h-4 w-4" />{showForm ? "Close form" : "Create schedule"}</Button>}</CardHeader><CardContent className="space-y-6">
       {xLocked && <div className="flex gap-3 border border-amber-400/30 bg-amber-400/10 p-4 text-amber-100"><LockKeyhole className="mt-0.5 h-5 w-5 shrink-0" /><div><p className="font-medium">X execution remains locked</p><p className="mt-1 text-sm text-amber-100/80">Creating, activating, publishing, replying, and DM actions stay disabled until a budget is approved.</p></div></div>}
-      {showForm && !xLocked && <div className="border border-primary/25 bg-primary/5 p-5"><div className="grid gap-4 md:grid-cols-2"><Field label="Schedule name" value={draft.name} onChange={(value) => setDraft((current) => ({ ...current, name: value }))} placeholder="Monday creator tip" /><Field label="Niche" value={draft.niche} onChange={(value) => setDraft((current) => ({ ...current, niche: value }))} placeholder="Creator productivity" /><Field label="Target audience" value={draft.targetAudience} onChange={(value) => setDraft((current) => ({ ...current, targetAudience: value }))} placeholder="Early-stage creators" /><div className="space-y-2"><Label>Publishing cadence</Label><Select value={draft.cronExpression} onValueChange={(value) => setDraft((current) => ({ ...current, cronExpression: value }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{CADENCES.map((cadence) => <SelectItem key={cadence.value} value={cadence.value}>{cadence.label}</SelectItem>)}</SelectContent></Select></div></div>{status.kind !== "ready" && <div className="mt-4 flex items-center justify-between gap-3 border border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-100"><span>{status.detail}</span><Button size="sm" variant="outline" onClick={openAccounts}>Accounts</Button></div>}{error && <p className="mt-4 border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive" role="alert">{error}</p>}<div className="mt-5 flex flex-col gap-3 sm:flex-row"><Button className="sm:flex-1" onClick={createSchedule} disabled={createMutation.isPending || status.kind !== "ready"}>{createMutation.isPending ? "Creating…" : "Create platform schedule"}</Button><Button className="sm:flex-1" variant="outline" onClick={() => { setShowForm(false); setError(null); }}>Cancel</Button></div></div>}
+      {showForm && !xLocked && <div className="border border-primary/25 bg-primary/5 p-5"><div className="grid gap-4 md:grid-cols-2"><Field label="Schedule name" value={draft.name} onChange={(value) => setDraft((current) => ({ ...current, name: value }))} placeholder="Monday creator tip" /><Field label="Niche" value={draft.niche} onChange={(value) => setDraft((current) => ({ ...current, niche: value }))} placeholder="Creator productivity" /><Field label="Target audience" value={draft.targetAudience} onChange={(value) => setDraft((current) => ({ ...current, targetAudience: value }))} placeholder="Early-stage creators" /><div className="space-y-2"><Label>Publishing cadence</Label><Select value={draft.cronExpression} onValueChange={(value) => setDraft((current) => ({ ...current, cronExpression: value }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{CADENCES.map((cadence) => <SelectItem key={cadence.value} value={cadence.value}>{cadence.label}</SelectItem>)}</SelectContent></Select></div></div><div className="mt-4 space-y-2"><Label>{activeId === "youtube" ? "Video for YouTube" : activeId === "instagram" ? "Image or video for Instagram" : "Optional publishing media"}</Label><Input type="file" accept={activeId === "youtube" ? "video/mp4,video/webm,video/quicktime" : "image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"} disabled={uploadMediaMutation.isPending} onChange={(event) => attachMedia(event.target.files?.[0])} /><p className="text-xs text-muted-foreground">Lumae stores the selected file securely for this schedule. PNG, JPEG, WebP, MP4, WebM, or MOV only; 650 KB maximum.</p>{draft.mediaUrl && <div className="flex items-center justify-between border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-100"><span>{draft.mediaType === "video" ? "Video" : "Image"} attached for this schedule.</span><Button size="sm" variant="ghost" onClick={() => setDraft((current) => ({ ...current, mediaUrl: "" }))}>Remove</Button></div>}</div>{status.kind !== "ready" && <div className="mt-4 flex items-center justify-between gap-3 border border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-100"><span>{status.detail}</span><Button size="sm" variant="outline" onClick={openAccounts}>Accounts</Button></div>}{error && <p className="mt-4 border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive" role="alert">{error}</p>}<div className="mt-5 flex flex-col gap-3 sm:flex-row"><Button className="sm:flex-1" onClick={createSchedule} disabled={createMutation.isPending || uploadMediaMutation.isPending || status.kind !== "ready"}>{createMutation.isPending ? "Creating…" : uploadMediaMutation.isPending ? "Uploading media…" : "Create platform schedule"}</Button><Button className="sm:flex-1" variant="outline" onClick={() => { setShowForm(false); setError(null); }}>Cancel</Button></div></div>}
       {schedulesLoading || accountsLoading ? <p className="flex items-center gap-3 py-6 text-muted-foreground"><LumaeLightPulse state="working" size={18} label="Lumae is checking this workspace" />Checking {workspace.name} schedules…</p> : selectedSchedules.length === 0 ? <div className="border border-dashed border-border p-8 text-center"><Clock3 className="mx-auto h-6 w-6 text-muted-foreground" /><p className="mt-3 font-medium">No {workspace.name} schedules yet</p><p className="mt-1 text-sm text-muted-foreground">Schedules created here never publish to another platform.</p></div> : <div className="space-y-3">{selectedSchedules.map((schedule: any) => <ScheduleRow key={schedule.id} schedule={schedule} xLocked={xLocked} running={runNowMutation.isPending} updating={updateMutation.isPending} deleting={deleteMutation.isPending} onRun={() => runSchedule(schedule)} onToggle={() => toggleSchedule(schedule)} onDelete={() => deleteMutation.mutate({ id: schedule.id.toString() })} />)}</div>}
     </CardContent></Card>
 

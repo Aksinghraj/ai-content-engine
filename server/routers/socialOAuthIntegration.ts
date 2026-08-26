@@ -125,14 +125,26 @@ export const socialOAuthIntegrationRouter = router({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable." });
       }
 
+      const [connection] = await database
+        .select({ id: socialConnections.id, isConnected: socialConnections.isConnected, isValidated: socialConnections.isValidated, tokenExpiresAt: socialConnections.tokenExpiresAt })
+        .from(socialConnections)
+        .where(and(eq(socialConnections.userId, ctx.user.id), eq(socialConnections.platform, input.platform)))
+        .limit(1);
+
+      if (!connection?.isConnected || !connection.isValidated) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: `Reconnect and validate your ${input.platform} account before enabling Auto-Post.` });
+      }
+      if (connection.tokenExpiresAt && connection.tokenExpiresAt.getTime() <= Date.now()) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: `Your ${input.platform} access token has expired. Reconnect before enabling Auto-Post.` });
+      }
+
       await database
         .update(socialConnections)
         .set({ autoPost: input.enabled, updatedAt: new Date() })
         .where(
           and(
+            eq(socialConnections.id, connection.id),
             eq(socialConnections.userId, ctx.user.id),
-            eq(socialConnections.platform, input.platform),
-            eq(socialConnections.isConnected, true),
           ),
         );
       return { success: true, autoPost: input.enabled };

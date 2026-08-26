@@ -29,7 +29,22 @@ const automationInput = z.object({
   platform: platformSchema,
   goal: z.string().min(1).max(100),
   contentStyle: z.string().min(1).max(100),
+  mediaUrl: z.string().trim().max(2048).url().optional(),
+  mediaType: z.enum(["image", "video"]).optional(),
   cronExpression: z.string().min(1).max(100),
+}).superRefine((input, ctx) => {
+  if (input.mediaUrl && !input.mediaType) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["mediaType"], message: "Choose whether the attached media is an image or video." });
+  }
+  if (input.mediaType && !input.mediaUrl) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["mediaUrl"], message: "Add a public media URL for the selected media type." });
+  }
+  if (input.platform === "instagram" && !input.mediaUrl) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["mediaUrl"], message: "Instagram publishing requires an image or video URL." });
+  }
+  if (input.platform === "youtube" && input.mediaType !== "video") {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["mediaType"], message: "YouTube publishing requires a video URL." });
+  }
 });
 
 function normalizeCron(expression: string) {

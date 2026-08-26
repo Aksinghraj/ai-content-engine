@@ -158,11 +158,12 @@ export async function handleOAuthCallback(
   const userInfo = await userInfoResponse.json();
 
   // Extract user ID based on platform
-  const platformUserId = extractPlatformUserId(platform, userInfo);
-  const username = extractUsername(platform, userInfo);
-
   // Validate credentials with platform API
   const validationResult = await validateCredentials(platform as any, tokenData.access_token);
+  // Prefer the provider identity obtained from its validation endpoint. This is
+  // especially important for Instagram professional-account publishing.
+  const platformUserId = validationResult.userId || extractPlatformUserId(platform, userInfo);
+  const username = validationResult.username || extractUsername(platform, userInfo);
 
   // Save connection to database
   const connection = await saveSocialConnection(

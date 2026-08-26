@@ -241,7 +241,7 @@ export default function ConnectedAccounts() {
                       </div>
                       <Switch
                         checked={Boolean(isConnected.autoPost)}
-                        disabled={autoPostMutation.isPending}
+                        disabled={autoPostMutation.isPending || !isConnected.isValidated}
                         onCheckedChange={(enabled) => handleAutoPostChange(platform.id, enabled)}
                         aria-label={`Toggle Auto-Post for ${platform.name}`}
                       />

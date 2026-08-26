@@ -342,6 +342,9 @@ export const automationSchedules = mysqlTable("automationSchedules", {
   platform: varchar("platform", { length: 100 }).notNull(),
   goal: varchar("goal", { length: 100 }).notNull(),
   contentStyle: varchar("contentStyle", { length: 100 }).notNull(),
+  // Optional Lumae-managed asset for providers that require image or video media.
+  mediaUrl: varchar("mediaUrl", { length: 2048 }),
+  mediaType: mysqlEnum("mediaType", ["image", "video"]),
   // Cron expression for scheduling
   cronExpression: varchar("cronExpression", { length: 100 }).notNull(),
   // Manus Heartbeat task UID; durable schedule lifecycle is keyed by this value.

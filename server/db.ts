@@ -281,6 +281,8 @@ export async function createAutomationSchedule(userId: number, schedule: any) {
       platform: schedule.platform,
       goal: schedule.goal,
       contentStyle: schedule.contentStyle,
+      mediaUrl: schedule.mediaUrl,
+      mediaType: schedule.mediaType,
       cronExpression: schedule.cronExpression,
       isActive: true,
     });

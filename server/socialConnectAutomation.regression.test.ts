@@ -33,4 +33,11 @@ describe("social Connect and automation reliability contracts", () => {
     expect(workspace).toContain("status.kind !== \"ready\"");
     expect(workspace).toContain("Connect or reconnect");
   });
+
+  it("requires a validated, non-expired connection before Auto-Post can be enabled", () => {
+    const oauthRouter = read("server/routers/socialOAuthIntegration.ts");
+    expect(oauthRouter).toContain("Reconnect and validate your ${input.platform} account before enabling Auto-Post.");
+    expect(oauthRouter).toContain("access token has expired. Reconnect before enabling Auto-Post.");
+    expect(oauthRouter).toContain("eq(socialConnections.id, connection.id)");
+  });
 });

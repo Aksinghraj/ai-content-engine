@@ -73,6 +73,8 @@ describe("Heartbeat-backed automation router", () => {
       platform: "instagram",
       goal: "Engagement",
       contentStyle: "Professional",
+      mediaUrl: "https://lumae.co.in/manus-storage/social-media/7/instagram.jpg",
+      mediaType: "image",
       cronExpression: "0 9 * * *",
     });
 
@@ -130,6 +132,8 @@ describe("Heartbeat-backed automation router", () => {
       platform: "instagram",
       goal: "Engagement",
       contentStyle: "Professional",
+      mediaUrl: "https://lumae.co.in/manus-storage/social-media/7/instagram.jpg",
+      mediaType: "image",
       cronExpression: "0 9 * * *",
     })).rejects.toThrow("Enable Auto-Post");
     expect(heartbeat.createHeartbeatJob).not.toHaveBeenCalled();

@@ -115,6 +115,7 @@ export const socialMediaRouter = router({
           url,
           key,
           filename: input.filename,
+          mediaType: input.mediaType,
         };
       } catch (error) {
         if (error instanceof TRPCError) throw error;

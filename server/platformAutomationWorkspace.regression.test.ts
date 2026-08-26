@@ -34,4 +34,14 @@ describe("platform automation safe-launch contracts", () => {
     expect(executorSource).toContain("needs to be reconnected before automation can run");
     expect(executorSource).toContain("access token has expired; reconnect the account before automation can run");
   });
+
+  it("requires provider-valid managed media for Instagram and YouTube schedules", () => {
+    expect(routerSource).toContain("Instagram publishing requires an image or video URL.");
+    expect(routerSource).toContain("YouTube publishing requires a video URL.");
+    expect(workspaceSource).toContain("Attach a Lumae-managed image or video before scheduling Instagram publishing.");
+    expect(workspaceSource).toContain("Attach a Lumae-managed video before scheduling YouTube publishing.");
+    expect(workspaceSource).toContain("trpc.socialMedia.uploadMedia.useMutation");
+    expect(executorSource).toContain("mediaType === \"image\"");
+    expect(executorSource).toContain("mediaType === \"video\"");
+  });
 });

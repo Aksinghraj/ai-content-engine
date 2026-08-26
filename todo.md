@@ -1274,3 +1274,11 @@
 - [x] Audit connection health, workflow execution, schedules, and run-now diagnostics across supported platforms
 - [x] Identify implementation defects separately from provider permissions, approval requirements, and missing credentials
 - [x] Prepare a verified platform-by-platform repair plan without disrupting connected accounts
+
+## Provider Publishing Repairs (IN PROGRESS)
+- [x] Implement Instagram media-container publishing through the required publish step and validate safe media inputs
+- [x] Replace the LinkedIn legacy UGC post call with the current Posts API request contract
+- [x] Replace the obsolete YouTube activity-post call with safe video-upload capability handling
+- [ ] Verify Instagram and LinkedIn reconnection readiness and enable Auto-Post only after successful validation
+- [x] Add optional, validated media references to platform automation schedules for provider-valid publishing
+- [x] Require a validated and non-expired connection before Auto-Post can be enabled
