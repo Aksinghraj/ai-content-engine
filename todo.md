@@ -1256,3 +1256,4 @@
 - [x] Serve the managed eagle video through a dedicated same-origin endpoint that bypasses the intercepted storage route
 - [x] Move the dedicated eagle endpoint under the production-recognized /api/trpc gateway prefix
 - [x] Restore the proven /api/public same-origin eagle endpoint after live verification
+- [x] Align the preview source with the verified playable /api/trpc eagle endpoint
