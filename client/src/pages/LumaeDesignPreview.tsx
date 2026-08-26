@@ -18,6 +18,24 @@ export default function LumaeDesignPreview() {
     wideVideoRef.current?.pause();
   }, []);
 
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const videos = [tallVideoRef.current, wideVideoRef.current].filter(
+      (video): video is HTMLVideoElement => Boolean(video),
+    );
+    const startPlayback = () => {
+      videos.forEach((video) => {
+        video.muted = true;
+        video.defaultMuted = true;
+        void video.play().catch(() => undefined);
+      });
+    };
+
+    startPlayback();
+    videos.forEach((video) => video.addEventListener("canplay", startPlayback, { once: true }));
+    return () => videos.forEach((video) => video.removeEventListener("canplay", startPlayback));
+  }, []);
+
   const openSecureLogin = () => {
     if (isOpeningLogin) return;
     setIsOpeningLogin(true);

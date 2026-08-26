@@ -14,6 +14,7 @@ describe("Lumae visual design preview", () => {
     expect(preview).toContain('/api/trpc/preview-eagle-poster.png');
     expect(preview).toContain('lumae-design-preview__watermark');
     expect(preview).toContain('Opening sign in…');
+    expect(preview).toContain('video.play().catch(() => undefined)');
     expect(preview).toContain('aria-label="Lumae motion design preview"');
     expect(preview).toContain('autoPlay');
     expect(preview).toContain('muted');

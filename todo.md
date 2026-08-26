@@ -1265,3 +1265,7 @@
 - [x] Create a new self-hosted 9:16 eagle motion with a subtle Lumae eye-reflection reveal and matching poster
 - [x] Serve the new eagle poster from the same gateway-compatible origin for immediate first-frame visibility
 - [x] Verify desktop, tablet, mobile, video playback, and login isolation before publishing
+
+## Preview Autoplay Reliability (IN PROGRESS)
+- [x] Start the muted eagle video explicitly once its same-origin media is ready
+- [x] Verify automatic desktop and mobile playback after the immediate poster frame
