@@ -1331,12 +1331,12 @@
 - [x] Replace canonical Usage Analytics hard-coded charts, monthly totals, and platform usage with authentic records or an honest empty state
 - [x] Replace active Content Calendar mock events and totals with persisted scheduled posts or an honest empty state
 - [x] Replace active mock workflow views with honest empty states or user-owned persisted data
-- [ ] Diagnose Facebook, YouTube, and LinkedIn authorization failures without exposing credentials or bypassing provider approval
+- [x] Diagnose Facebook, YouTube, and LinkedIn authorization failures without exposing credentials or bypassing provider approval
 - [x] Show clear, provider-specific corrective guidance when a connection cannot complete
 - [x] Add a secure persisted account-language setting with a user-facing language selector
 - [x] Localize the supported application shell and account settings through an extensible translation foundation
 - [x] Add Bhojpuri as a selectable content-generation language and preserve the selected language in generation requests
-- [ ] Test authentic-data display, provider guidance, language persistence, Bhojpuri requests, and mobile layout before publishing
+- [x] Test authentic-data display, provider guidance, language persistence, Bhojpuri requests, and mobile layout before publishing
 
 ## Evidence-Based Security Audit (IN PROGRESS)
 - [x] Audit repository controls across all 36 requested security checks without changing production data or infrastructure

@@ -21,11 +21,11 @@ type PlatformId = (typeof PLATFORMS)[number]["id"];
 type Connection = { id: number; platform: string; username: string; isConnected?: boolean; isValidated: boolean; autoPost: boolean; canEnableAutoPost?: boolean; tokenExpiresAt: Date | string | null; validationError?: string | null };
 
 const PROVIDER_GUIDANCE: Partial<Record<PlatformId, string>> = {
-  facebook: "Connect a Facebook account that can create content on exactly one Page. Customer connections need Meta review and Page permissions.",
+  facebook: "Choose an account that manages a Page. In Meta, add the Pages permissions and register https://lumae.co.in/api/oauth/callback/facebook exactly. Customer connections also need the required Meta review approval.",
   instagram: "While the Meta app is unpublished, only app-role testers can connect. Customer connections need Meta Business Verification, App Review, and Live mode.",
   twitter: "X uses paid API credits. You can connect an account, but the owner must approve the API budget before publishing or Auto-Post is available.",
-  linkedin: "Requires the OpenID Connect and Share on LinkedIn products with the exact callback registered in LinkedIn. Current publishing supports text posts.",
-  youtube: "Enable YouTube Data API v3 and add the connecting Google account as a test user while the Google consent screen is in Testing.",
+  linkedin: "In LinkedIn Developer Portal, enable OpenID Connect and Share on LinkedIn, then register https://lumae.co.in/api/oauth/callback/linkedin exactly. Current publishing supports text posts.",
+  youtube: "The Google ‘app hasn’t been verified’ screen is a Google consent-screen requirement, not a Lumae login failure. Enable YouTube Data API v3 and add the connecting Google account under OAuth consent screen → Test users while the app is in Testing.",
 };
 
 function statusFor(connection: Connection | undefined) {
