@@ -116,18 +116,33 @@ export default function ConnectedAccounts() {
 
   const handleConnect = async (platformId: string) => {
     setConnecting(platformId);
+    // OAuth providers, including Meta, block embedded authentication frames.
+    // Opening a blank top-level page within the direct click event preserves the
+    // user gesture on mobile browsers; the fresh authorization URL is assigned
+    // only after the protected server mutation has completed.
+    const providerWindow = window.open("about:blank", "_blank");
+    if (providerWindow) {
+      providerWindow.opener = null;
+    }
     try {
       // Call tRPC mutation to get authorization URL (can't use hooks inside event handlers)
       const result = await trpcClient.socialOAuthIntegration.getAuthorizationUrl.mutate(
         { platform: platformId as any }
       );
       if (result?.url) {
-        // Redirect to OAuth provider
-        window.location.href = result.url;
+        // Navigate a top-level browser tab, never an embedded frame.
+        if (providerWindow) {
+          providerWindow.location.replace(result.url);
+        } else {
+          window.location.assign(result.url);
+        }
       } else {
         throw new Error("No authorization URL provided");
       }
     } catch (error) {
+      if (providerWindow && providerWindow !== window) {
+        providerWindow.close();
+      }
       console.error("OAuth error:", error);
       toast.error(`Failed to connect ${platformId}: ${(error as Error)?.message || "Unknown error"}`);
       setConnecting(null);

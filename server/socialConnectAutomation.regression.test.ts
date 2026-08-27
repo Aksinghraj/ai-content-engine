@@ -40,4 +40,13 @@ describe("social Connect and automation reliability contracts", () => {
     expect(oauthRouter).toContain("access token has expired. Reconnect before enabling Auto-Post.");
     expect(oauthRouter).toContain("eq(socialConnections.id, connection.id)");
   });
+
+  it("opens provider authorization at the top level instead of embedding Meta login on mobile", () => {
+    const connectedAccounts = read("client/src/pages/ConnectedAccounts.tsx");
+    expect(connectedAccounts).toContain('window.open("about:blank", "_blank")');
+    expect(connectedAccounts).toContain("providerWindow.opener = null");
+    expect(connectedAccounts).toContain("providerWindow.location.replace(result.url)");
+    expect(connectedAccounts).toContain("window.location.assign(result.url)");
+    expect(connectedAccounts).not.toContain("window.location.href = result.url");
+  });
 });
