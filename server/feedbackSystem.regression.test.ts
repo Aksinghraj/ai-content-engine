@@ -25,11 +25,13 @@ describe("user feedback and rating system", () => {
     expect(router).toContain("notifyOwner({");
   });
 
-  it("exposes a direct authenticated feedback route and account-menu entry", () => {
+  it("exposes a direct authenticated feedback route, account-menu entry, and visible desktop and mobile header controls", () => {
     expect(app).toContain('Route path="/feedback" component={Feedback}');
     expect(app).toContain('"/feedback"');
     expect(shell).toContain('setLocation("/feedback")');
     expect(shell).toContain("Send feedback");
+    expect(shell).toContain('{t("Feedback")}');
+    expect(shell).toContain('title={t("Send feedback")}');
   });
 
   it("provides accessible rating, category, privacy, and submission feedback controls", () => {

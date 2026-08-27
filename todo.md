@@ -1347,6 +1347,11 @@
 - [x] Extend the shared translation foundation to cover visible navigation, account settings, and common workspace actions
 - [x] Validate payment routing, language persistence, translated UI labels, and mobile layouts before publishing
 
+## Feedback Access Restoration (IN PROGRESS)
+- [x] Audit why the customer feedback entry is not visible in the active interface
+- [x] Restore a clear feedback entry in authenticated navigation without exposing the owner-only feedback dashboard
+- [x] Verify customer feedback submission, user status visibility, and mobile access use real persisted reports
+
 ## Evidence-Based Security Audit (IN PROGRESS)
 - [x] Audit repository controls across all 36 requested security checks without changing production data or infrastructure
 - [x] Inspect the public deployment’s security headers, public routes, debug exposure, and build artifacts

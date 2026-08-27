@@ -313,6 +313,10 @@ function DashboardLayoutContent({
       <SidebarInset>
         {!isMobile && (
           <div className="sticky top-0 z-30 hidden h-14 items-center justify-end border-b border-border/70 bg-background/92 px-5 backdrop-blur-xl md:flex">
+            <Button variant="ghost" size="sm" onClick={() => setLocation("/feedback")} className="mr-1 gap-2 text-muted-foreground hover:text-foreground" aria-label={t("Send feedback")} title={t("Send feedback")}>
+              <MessageCircle className="h-4 w-4" />
+              <span className="hidden lg:inline">{t("Feedback")}</span>
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => setShortcutReferenceOpen(true)} className="mr-1 gap-2 text-muted-foreground hover:text-foreground" aria-label="Open workspace keyboard shortcuts" title="Keyboard shortcuts">
               <Keyboard className="h-4 w-4" />
               <span className="hidden lg:inline">Shortcuts</span>
@@ -336,6 +340,9 @@ function DashboardLayoutContent({
             </div>
             <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9 text-muted-foreground hover:text-foreground" aria-label={`Switch to ${effectiveTheme === "dark" ? "bright" : "dark"} mode`}>
               {effectiveTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => setLocation("/feedback")} className="h-9 w-9 text-muted-foreground hover:text-foreground" aria-label={t("Send feedback")} title={t("Send feedback")}>
+              <MessageCircle className="h-4 w-4" />
             </Button>
             {user && (
               <DropdownMenu>
