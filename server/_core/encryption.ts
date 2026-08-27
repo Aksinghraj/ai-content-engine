@@ -4,6 +4,7 @@
  * Used across all features: social credentials, chat messages, scheduled posts, etc.
  */
 import crypto from "crypto";
+import { ENV } from "./env";
 
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 16;
@@ -17,7 +18,7 @@ const SALT = "ai-content-engine-e2e-salt-v1";
  * predictable fallback value.
  */
 function getEncryptionKey(customKey?: string): Buffer {
-  const secret = customKey || process.env.DATA_ENCRYPTION_KEY || process.env.JWT_SECRET;
+  const secret = customKey || ENV.dataEncryptionKey || ENV.cookieSecret;
   if (!secret || secret.length < 32) {
     throw new Error("A 32-character DATA_ENCRYPTION_KEY or JWT_SECRET is required for encryption");
   }
@@ -99,7 +100,7 @@ export function generateSecureToken(length: number = 32): string {
  * Verify data integrity using HMAC
  */
 export function createHMAC(data: string, key?: string): string {
-  const secret = key || process.env.DATA_ENCRYPTION_KEY || process.env.JWT_SECRET;
+  const secret = key || ENV.dataEncryptionKey || ENV.cookieSecret;
   if (!secret || secret.length < 32) {
     throw new Error("A 32-character DATA_ENCRYPTION_KEY or JWT_SECRET is required for HMAC operations");
   }
