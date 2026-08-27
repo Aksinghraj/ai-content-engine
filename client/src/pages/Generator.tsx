@@ -116,6 +116,7 @@ const LANGUAGES = [
   { code: "en", name: "English" },
   { code: "hi", name: "Hindi" },
   { code: "hinglish", name: "Hinglish" },
+  { code: "bho", name: "Bhojpuri" },
   { code: "ta", name: "Tamil" },
   { code: "te", name: "Telugu" },
   { code: "kn", name: "Kannada" },
@@ -124,7 +125,9 @@ const LANGUAGES = [
   { code: "gu", name: "Gujarati" },
   { code: "bn", name: "Bengali" },
   { code: "pa", name: "Punjabi" },
-];
+] as const;
+
+type SupportedLanguage = (typeof LANGUAGES)[number]["code"];
 
 type UnifiedTrendTopic = {
   id: string;
@@ -176,7 +179,12 @@ export default function Generator() {
     onSuccess: () => toast.success("Length defaults saved for your next generation."),
     onError: (error) => toast.error(error.message || "Unable to save length defaults."),
   });
+  const accountLanguageQuery = trpc.accountPreferences.getLanguage.useQuery(undefined, { enabled: isAuthenticated });
+  const saveAccountLanguage = trpc.accountPreferences.setLanguage.useMutation({
+    onError: (error) => toast.error(error.message || "Unable to save your language preference."),
+  });
   const [hasRestoredLengthPreferences, setHasRestoredLengthPreferences] = useState(false);
+  const [hasRestoredLanguage, setHasRestoredLanguage] = useState(false);
 
   const platformPreset = PLATFORM_LENGTH_PRESETS[formData.platform];
   const requestedVideoSeconds = formData.videoLength === "custom" ? Number(formData.customVideoSeconds) : VIDEO_SECONDS[formData.videoLength];
@@ -230,6 +238,20 @@ export default function Generator() {
     }));
     setHasRestoredLengthPreferences(true);
   }, [hasRestoredLengthPreferences, lengthPreferencesQuery.data]);
+
+  useEffect(() => {
+    const savedLanguage = accountLanguageQuery.data;
+    if (!savedLanguage || hasRestoredLanguage || !LANGUAGES.some((language) => language.code === savedLanguage)) return;
+    setFormData((current) => ({ ...current, language: savedLanguage }));
+    setSelectedLanguage(savedLanguage);
+    setHasRestoredLanguage(true);
+  }, [accountLanguageQuery.data, hasRestoredLanguage]);
+
+  const selectLanguage = (language: string) => {
+    setFormData((current) => ({ ...current, language }));
+    setSelectedLanguage(language);
+    if (isAuthenticated) saveAccountLanguage.mutate({ language: language as SupportedLanguage });
+  };
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -581,7 +603,7 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
 
                   <div>
                     <Label className="text-slate-300">Language</Label>
-                    <Select value={formData.language} onValueChange={(value) => setFormData({ ...formData, language: value })}>
+                    <Select value={formData.language} onValueChange={selectLanguage}>
                       <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
                         <SelectValue placeholder="Select language" />
                       </SelectTrigger>

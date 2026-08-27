@@ -24,7 +24,12 @@ export interface OAuthPlatforms {
  * Get the exact callback URI mounted by the Express OAuth router.
  */
 function getRedirectUri(baseUrl: string, platform: string): string {
-  return `${baseUrl}/api/oauth/callback/${platform}/callback`;
+  // Instagram Business Login is configured separately in Meta with this exact
+  // callback suffix. The other providers use the short URI previously supplied
+  // for their registered redirect settings.
+  return platform === "instagram"
+    ? `${baseUrl}/api/oauth/callback/instagram/callback`
+    : `${baseUrl}/api/oauth/callback/${platform}`;
 }
 
 /**

@@ -1327,14 +1327,14 @@
 - [x] Restore the clipped mobile Generate Content button shown beneath the content brief language selector
 - [ ] Audit canonical user-facing pages for fabricated messages, metrics, activity, and sample identities
 - [x] Replace active Auto-Reply, Reply Inbox, and Escalation demo records with user-owned persisted events or honest empty states
-- [ ] Replace active Analytics Dashboard mock charts, metrics, and top-content records with account-owned analytics or clear empty states
-- [ ] Replace active Content Calendar mock events and totals with persisted scheduled posts or an honest empty state
+- [x] Replace active Analytics Dashboard mock charts, metrics, and top-content records with account-owned analytics or clear empty states
+- [x] Replace active Content Calendar mock events and totals with persisted scheduled posts or an honest empty state
 - [ ] Replace active mock workflow views with honest empty states or user-owned persisted data
 - [ ] Diagnose Facebook, YouTube, and LinkedIn authorization failures without exposing credentials or bypassing provider approval
 - [ ] Show clear, provider-specific corrective guidance when a connection cannot complete
-- [ ] Add a secure persisted account-language setting with a user-facing language selector
+- [x] Add a secure persisted account-language setting with a user-facing language selector
 - [ ] Localize the supported application shell and account settings through an extensible translation foundation
-- [ ] Add Bhojpuri as a selectable content-generation language and preserve the selected language in generation requests
+- [x] Add Bhojpuri as a selectable content-generation language and preserve the selected language in generation requests
 - [ ] Test authentic-data display, provider guidance, language persistence, Bhojpuri requests, and mobile layout before publishing
 
 ## Evidence-Based Security Audit (IN PROGRESS)

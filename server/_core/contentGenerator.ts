@@ -189,6 +189,7 @@ function getLanguageName(language: string): string {
     gu: "Gujarati",
     bn: "Bengali",
     pa: "Punjabi",
+    bho: "Bhojpuri",
   };
   return map[language] || "English";
 }
@@ -206,6 +207,7 @@ function getDetailedLanguageInstructions(language: string): string {
     gu: "Generate ALL content in Gujarati. Use engaging and simple Gujarati language suitable for social media.",
     bn: "Generate ALL content in Bengali. Use engaging and simple Bengali language suitable for social media.",
     pa: "Generate ALL content in Punjabi. Use engaging and simple Punjabi language suitable for social media.",
+    bho: "Generate ALL content in natural Bhojpuri. Use simple, respectful, engaging Bhojpuri vocabulary and grammar suitable for social media. Do not silently switch to Hindi or English.",
   };
   return instructions[language] || instructions["en"];
 }

@@ -46,6 +46,16 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
+/** User-owned interface and generation language; kept separate from identity fields. */
+export const accountLanguagePreferences = mysqlTable("accountLanguagePreferences", {
+  userId: int("userId").primaryKey(),
+  language: varchar("language", { length: 32 }).notNull().default("en"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AccountLanguagePreference = typeof accountLanguagePreferences.$inferSelect;
+export type InsertAccountLanguagePreference = typeof accountLanguagePreferences.$inferInsert;
+
 /**
  * One encrypted TOTP authenticator per account. The seed is never returned to
  * the browser after enrollment; recovery codes are stored only as keyed hashes.

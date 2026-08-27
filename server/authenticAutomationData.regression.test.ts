@@ -36,4 +36,17 @@ describe("authentic automation data", () => {
     expect(escalation).not.toContain("MOCK_ESCALATIONS");
     expect(escalation).not.toContain("Response sent!");
   });
+
+  it("keeps Calendar, Analytics, and Settings free of fabricated account data", () => {
+    const calendar = read("client/src/pages/ContentCalendar.tsx");
+    const analytics = read("client/src/pages/AnalyticsDashboard.tsx");
+    const settings = read("client/src/pages/SettingsAdvanced.tsx");
+
+    expect(calendar).toContain("trpc.socialMedia.getScheduledPosts.useQuery");
+    expect(calendar).not.toContain("MOCK_EVENTS");
+    expect(analytics).toContain('export { default } from "./UsageAnalytics"');
+    expect(settings).toContain("trpc.accountPreferences.getLanguage.useQuery");
+    expect(settings).not.toContain("user@example.com");
+    expect(settings).not.toContain("sk_live_");
+  });
 });

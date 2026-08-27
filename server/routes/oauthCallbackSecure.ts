@@ -19,7 +19,7 @@ async function handleOAuthCallback(
     if (error) {
       console.error(`[OAuth] ${platform} error:`, error, error_description);
       return res.redirect(
-        `${BASE_URL}/connected-accounts?error=${error}&platform=${platform}`
+        `${BASE_URL}/scheduling/connected-accounts?error=${encodeURIComponent(String(error))}&platform=${encodeURIComponent(platform)}&message=${encodeURIComponent(typeof error_description === "string" ? error_description : "The provider did not approve this connection.")}`
       );
     }
 
@@ -28,7 +28,7 @@ async function handleOAuthCallback(
     }
 
     if (!state || typeof state !== "string") {
-      return res.redirect(`${BASE_URL}/connected-accounts?error=invalid_state&platform=${platform}`);
+      return res.redirect(`${BASE_URL}/scheduling/connected-accounts?error=invalid_state&platform=${platform}&message=${encodeURIComponent("The connection session expired. Start Connect again from Lumae.")}`);
     }
 
     // The state store binds the callback to the initiating user and preserves
@@ -43,7 +43,7 @@ async function handleOAuthCallback(
     // Redirect to success page
     const callbackPath = completed.returnPath.startsWith("/") && !completed.returnPath.startsWith("//")
       ? completed.returnPath
-      : "/connected-accounts";
+      : "/scheduling/connected-accounts";
     const separator = callbackPath.includes("?") ? "&" : "?";
     if (!completed.isValidated) {
       const validationMessage = encodeURIComponent(completed.validationError || "Lumae could not validate the provider connection.");
@@ -55,7 +55,7 @@ async function handleOAuthCallback(
   } catch (error) {
     console.error(`[OAuth] ${platform} callback error:`, error);
     return res.redirect(
-      `${BASE_URL}/connected-accounts?error=callback_failed&platform=${platform}`
+      `${BASE_URL}/scheduling/connected-accounts?error=callback_failed&platform=${platform}&message=${encodeURIComponent("Lumae could not complete the provider connection. Check the provider-specific guidance and try again.")}`
     );
   }
 }
@@ -70,21 +70,37 @@ router.get("/instagram/callback", async (req: Request, res: Response) => {
 });
 
 // Twitter callback
+router.get("/twitter", async (req: Request, res: Response) => {
+  await handleOAuthCallback(req, res, "twitter");
+});
+
 router.get("/twitter/callback", async (req: Request, res: Response) => {
   await handleOAuthCallback(req, res, "twitter");
 });
 
 // LinkedIn callback
+router.get("/linkedin", async (req: Request, res: Response) => {
+  await handleOAuthCallback(req, res, "linkedin");
+});
+
 router.get("/linkedin/callback", async (req: Request, res: Response) => {
   await handleOAuthCallback(req, res, "linkedin");
 });
 
 // Facebook callback
+router.get("/facebook", async (req: Request, res: Response) => {
+  await handleOAuthCallback(req, res, "facebook");
+});
+
 router.get("/facebook/callback", async (req: Request, res: Response) => {
   await handleOAuthCallback(req, res, "facebook");
 });
 
 // YouTube callback
+router.get("/youtube", async (req: Request, res: Response) => {
+  await handleOAuthCallback(req, res, "youtube");
+});
+
 router.get("/youtube/callback", async (req: Request, res: Response) => {
   await handleOAuthCallback(req, res, "youtube");
 });
