@@ -84,4 +84,14 @@ describe("scheduling and connected-account repair contracts", () => {
     expect(accounts).toContain("const guidance = platform ? PROVIDER_GUIDANCE[platform as PlatformId] : undefined;");
     expect(accounts).toContain("guidance ? `${message} ${guidance}` : message");
   });
+
+  it("requests only the Instagram permissions supported by the current publishing workflow", () => {
+    const platforms = read("server/_core/oauthPlatforms.ts");
+    const instagramConfig = platforms.slice(platforms.indexOf("instagram: {"), platforms.indexOf("twitter: {"));
+    expect(instagramConfig).toContain('"instagram_business_basic"');
+    expect(instagramConfig).toContain('"instagram_business_content_publish"');
+    expect(instagramConfig).not.toContain("instagram_business_manage_messages");
+    expect(instagramConfig).not.toContain("instagram_business_manage_comments");
+    expect(instagramConfig).not.toContain("instagram_business_manage_insights");
+  });
 });

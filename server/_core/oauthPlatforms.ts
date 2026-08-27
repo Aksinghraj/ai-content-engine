@@ -44,10 +44,7 @@ export function initializeOAuthConfigs(baseUrl: string): OAuthPlatforms {
       userInfoEndpoint: "https://graph.instagram.com/v26.0/me?fields=id,username,name",
       scopes: [
         "instagram_business_basic",
-        "instagram_business_manage_messages",
-        "instagram_business_manage_comments",
         "instagram_business_content_publish",
-        "instagram_business_manage_insights",
       ],
       scopeSeparator: "comma",
       pkceRequired: false,

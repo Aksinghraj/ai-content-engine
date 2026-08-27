@@ -1302,7 +1302,7 @@
 - [ ] Diagnose why the latest Instagram consent did not produce a connected and validated account record
 
 ## Meta Live-Mode Preparation (IN PROGRESS)
-- [ ] Prepare truthful Meta App Review responses for the Instagram Business Login permissions Lumae needs
+- [x] Prepare truthful Meta App Review responses for the Instagram Business Login permissions Lumae needs
 - [ ] Guide the owner through business verification, app review submission, and Live-mode activation
 - [ ] Retest Instagram connection for a non-tester account after Meta approval
 
