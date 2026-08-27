@@ -1,18 +1,52 @@
 import type { Express } from "express";
 import { ENV } from "./env";
+import { sdk } from "./sdk";
 
 const LUMAE_PREVIEW_EAGLE_VIDEO_KEY = "lumae-eagle-dive-motion_84502f79.mp4";
 
+function normalizeRequestedKey(value: string): string | null {
+  const key = value.replace(/^\/+/, "");
+  if (!key || key.includes("\\") || key.split("/").some((part) => !part || part === "." || part === "..")) return null;
+  return key;
+}
+
+function ownerIdForPrivateKey(key: string): number | null {
+  const match = /^(?:feedback|social-media)\/(\d+)\//.exec(key);
+  return match ? Number(match[1]) : null;
+}
+
+function isExplicitlyPublicAsset(key: string): boolean {
+  return key === LUMAE_PREVIEW_EAGLE_VIDEO_KEY || key.startsWith("lumae-");
+}
+
 export function registerStorageProxy(app: Express) {
   app.get("/manus-storage/*", async (req, res) => {
-    const key = (req.params as any)[0] as string;
+    const key = normalizeRequestedKey((req.params as any)[0] as string);
     if (!key) {
-      res.status(400).send("Missing storage key");
+      res.status(404).send("Not found");
       return;
     }
 
+    if (!isExplicitlyPublicAsset(key)) {
+      const ownerId = ownerIdForPrivateKey(key);
+      if (!ownerId) {
+        res.status(404).send("Not found");
+        return;
+      }
+      try {
+        const user = await sdk.authenticateRequest(req);
+        if (user.isCron || (user.id !== ownerId && user.role !== "admin")) {
+          res.status(404).send("Not found");
+          return;
+        }
+      } catch {
+        res.status(404).send("Not found");
+        return;
+      }
+    }
+
     if (!ENV.forgeApiUrl || !ENV.forgeApiKey) {
-      res.status(500).send("Storage proxy not configured");
+      res.status(503).send("Storage unavailable");
       return;
     }
 
@@ -28,9 +62,8 @@ export function registerStorageProxy(app: Express) {
       });
 
       if (!forgeResp.ok) {
-        const body = await forgeResp.text().catch(() => "");
-        console.error(`[StorageProxy] forge error: ${forgeResp.status} ${body}`);
-        res.status(502).send("Storage backend error");
+        console.error(`[StorageProxy] forge error: ${forgeResp.status}`);
+        res.status(502).send("Storage unavailable");
         return;
       }
 

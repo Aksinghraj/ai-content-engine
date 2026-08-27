@@ -18,7 +18,7 @@ function getQueryParam(req: Request, key: string): string | undefined {
 
 const GOOGLE_OAUTH_ORIGIN = (process.env.FRONTEND_URL || "https://lumae.co.in").replace(/\/$/, "");
 const GOOGLE_OAUTH_REDIRECT_URI = `${GOOGLE_OAUTH_ORIGIN}/api/oauth/google/callback`;
-const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30;
+const SESSION_TTL_MS = 1000 * 60 * 60 * 12;
 const GOOGLE_OAUTH_STATE_COOKIE = "lumae_google_oauth_state";
 const GOOGLE_OAUTH_STATE_TTL_MS = 1000 * 60 * 10;
 

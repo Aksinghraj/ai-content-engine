@@ -26,9 +26,11 @@
  * ```
  */
 import { ENV } from "./env";
+import { storageGetSignedUrl } from "../storage";
 
 export type TranscribeOptions = {
-  audioUrl: string; // URL to the audio file (e.g., S3 URL)
+  /** A Lumae /manus-storage/ URL or managed storage key. Arbitrary URLs are rejected. */
+  audioUrl: string;
   language?: string; // Optional: specify language code (e.g., "en", "es", "zh")
   prompt?: string; // Optional: custom prompt for the transcription
 };
@@ -64,6 +66,25 @@ export type TranscriptionError = {
   details?: string;
 };
 
+function managedAudioKey(value: string): string | null {
+  const trimmed = value.trim();
+  let pathname = trimmed;
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const url = new URL(trimmed);
+      const host = url.hostname.toLowerCase();
+      const isLumaeHost = host === "lumae.co.in" || host === "www.lumae.co.in" || host.endsWith(".manus.space") || host.endsWith(".manus.computer");
+      if (url.protocol !== "https:" || !isLumaeHost) return null;
+      pathname = url.pathname;
+    } catch {
+      return null;
+    }
+  }
+  const key = pathname.startsWith("/manus-storage/") ? decodeURIComponent(pathname.slice("/manus-storage/".length)) : pathname;
+  if (!key || key.length > 1024 || key.includes("\\") || key.split("/").some((part) => !part || part === "." || part === "..")) return null;
+  return key;
+}
+
 /**
  * Transcribe audio to text using the internal Speech-to-Text service
  * 
@@ -90,16 +111,20 @@ export async function transcribeAudio(
       };
     }
 
-    // Step 2: Download audio from URL
+    // Step 2: Download only from a signed Lumae-managed storage object.
     let audioBuffer: Buffer;
     let mimeType: string;
     try {
-      const response = await fetch(options.audioUrl);
+      const key = managedAudioKey(options.audioUrl);
+      if (!key) {
+        return { error: "Audio must be uploaded to Lumae first", code: "INVALID_FORMAT" };
+      }
+      const signedUrl = await storageGetSignedUrl(key);
+      const response = await fetch(signedUrl, { redirect: "error" });
       if (!response.ok) {
         return {
-          error: "Failed to download audio file",
-          code: "INVALID_FORMAT",
-          details: `HTTP ${response.status}: ${response.statusText}`
+          error: "Failed to download the uploaded audio file",
+          code: "INVALID_FORMAT"
         };
       }
       
@@ -117,9 +142,8 @@ export async function transcribeAudio(
       }
     } catch (error) {
       return {
-        error: "Failed to fetch audio file",
-        code: "SERVICE_ERROR",
-        details: error instanceof Error ? error.message : "Unknown error"
+        error: "Failed to retrieve the uploaded audio file",
+        code: "SERVICE_ERROR"
       };
     }
 
@@ -162,11 +186,9 @@ export async function transcribeAudio(
     });
 
     if (!response.ok) {
-      const errorText = await response.text().catch(() => "");
       return {
         error: "Transcription service request failed",
-        code: "TRANSCRIPTION_FAILED",
-        details: `${response.status} ${response.statusText}${errorText ? `: ${errorText}` : ""}`
+        code: "TRANSCRIPTION_FAILED"
       };
     }
 
@@ -188,8 +210,7 @@ export async function transcribeAudio(
     // Handle unexpected errors
     return {
       error: "Voice transcription failed",
-      code: "SERVICE_ERROR",
-      details: error instanceof Error ? error.message : "An unexpected error occurred"
+      code: "SERVICE_ERROR"
     };
   }
 }

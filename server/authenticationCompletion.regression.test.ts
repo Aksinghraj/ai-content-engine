@@ -48,10 +48,10 @@ describe("authentication completion and recovery", () => {
     expect(login).toContain("Phone OTP coming soon");
     expect(login).toContain("Remember me for 30 days");
     expect(forgot).toContain("single-use link that expires in 30 minutes");
-    expect(router).toContain('status: "oauth_only"');
+    expect(router).not.toContain('status: "oauth_only"');
     expect(router).toContain("requestPasswordReset");
     expect(router).toContain("resetPassword");
-    expect(router).toContain('status: "throttled"');
+    expect(router).toContain('accepted: true, emailDeliveryAvailable: true');
     expect(router).toContain("if (!delivered) await revokeLocalPasswordResetToken");
     expect(router).toContain("original sign-in method instead of creating a second account");
   });

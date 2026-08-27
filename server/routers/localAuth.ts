@@ -8,7 +8,7 @@ import { sdk, TWO_FACTOR_CHALLENGE_COOKIE } from "../_core/sdk";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { COOKIE_NAME } from "../../shared/const";
 
-const STANDARD_SESSION_TTL_MS = 1000 * 60 * 60 * 12;
+const STANDARD_SESSION_TTL_MS = 1000 * 60 * 60 * 8;
 const REMEMBER_ME_SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30;
 const VERIFY_TTL_MS = 1000 * 60 * 30;
 const emailInput = z.string().trim().email("Enter a valid email address.").max(320).transform((value) => value.toLowerCase());
@@ -94,16 +94,17 @@ export const localAuthRouter = router({
   }),
 
   requestPasswordReset: publicProcedure.input(z.object({ email: emailInput })).mutation(async ({ input }) => {
-    if (!isTransactionalEmailConfigured()) return { status: "delivery_unavailable" as const };
+    const emailDeliveryConfigured = isTransactionalEmailConfigured();
+    if (!emailDeliveryConfigured) return { accepted: true, emailDeliveryAvailable: false };
     const result = await createLocalPasswordResetToken(input.email);
     if (result.kind === "local") {
       const delivered = await sendPasswordResetEmail(result.user.email!, result.token);
       if (!delivered) await revokeLocalPasswordResetToken(result.token);
-      return { status: delivered ? "sent" as const : "delivery_unavailable" as const };
+      return { accepted: true, emailDeliveryAvailable: delivered };
     }
-    if (result.kind === "oauth_only") return { status: "oauth_only" as const };
-    if (result.kind === "throttled") return { status: "throttled" as const, retryAfterSeconds: result.retryAfterSeconds };
-    return { status: "sent" as const };
+    // The public response must not reveal whether the email exists, uses OAuth,
+    // or is temporarily rate-limited. All of those cases receive the same answer.
+    return { accepted: true, emailDeliveryAvailable: true };
   }),
 
   resetPassword: publicProcedure.input(z.object({ token: z.string().min(20).max(255), password: passwordInput })).mutation(async ({ input }) => {

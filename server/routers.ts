@@ -21,7 +21,6 @@ import { multimodalRouter } from "./routers/multimodal";
 import { workflowRouter } from "./routers/workflow";
 import { publishingRouter } from "./routers/publishing";
 import { personalizationRouter } from "./routers/personalization";
-import { monetizationRouter } from "./routers/monetization";
 import { securityRouter } from "./routers/security";
 import { aiAgentsRouter } from "./routers/aiAgents";
 import { templatesRouter } from "./routers/templates";
@@ -105,7 +104,6 @@ export const appRouter = router({
   workflow: workflowRouter,
   publishing: publishingRouter,
   personalization: personalizationRouter,
-  monetization: monetizationRouter,
   security: securityRouter,
   aiAgents: aiAgentsRouter,
   templates: templatesRouter,

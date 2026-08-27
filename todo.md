@@ -1352,6 +1352,15 @@
 - [x] Restore a clear feedback entry in authenticated navigation without exposing the owner-only feedback dashboard
 - [x] Verify customer feedback submission, user status visibility, and mobile access use real persisted reports
 
+## Defense-in-Depth Security Hardening (IN PROGRESS)
+- [x] Re-audit sensitive authentication, authorization, payments, storage proxy, transcription, CSRF, logging, and frontend-exposure paths
+- [x] Bind payment verification and credit issuance to server-owned order, package, and user records
+- [x] Restrict storage and external URL handling to authorized objects and safe destinations
+- [x] Enforce CSRF protections for unsafe authenticated requests, including requests without an Origin header
+- [x] Strengthen session lifetime, logging redaction, and generic client-safe error handling
+- [x] Add adversarial regression coverage and run the complete verification suite
+- [x] Document implemented controls and any provider or infrastructure protections that require owner action
+
 ## Evidence-Based Security Audit (IN PROGRESS)
 - [x] Audit repository controls across all 36 requested security checks without changing production data or infrastructure
 - [x] Inspect the public deployment’s security headers, public routes, debug exposure, and build artifacts

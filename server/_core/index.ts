@@ -94,6 +94,17 @@ const allowedOrigins = [
   "https://aicontent-femeuybh.manus.space",
 ];
 const isAllowedOrigin = (origin: string) => allowedOrigins.includes(origin) || process.env.NODE_ENV !== "production";
+const hasTrustedRequestOrigin = (req: express.Request) => {
+  const origin = req.headers.origin;
+  if (typeof origin === "string") return isAllowedOrigin(origin);
+  const referer = req.headers.referer;
+  if (typeof referer !== "string") return false;
+  try {
+    return isAllowedOrigin(new URL(referer).origin);
+  } catch {
+    return false;
+  }
+};
 
 async function startServer() {
   const app = express();
@@ -150,9 +161,8 @@ async function startServer() {
   app.use("/api/trpc/twoFactor", twoFactorLimiter);
   app.use("/api/trpc/localAuth", localAuthLimiter);
   app.use("/api/trpc", (req, res, next) => {
-    const origin = req.headers.origin;
     const unsafeMethod = ["POST", "PUT", "PATCH", "DELETE"].includes(req.method);
-    if (unsafeMethod && origin && !isAllowedOrigin(origin)) {
+    if (unsafeMethod && !hasTrustedRequestOrigin(req)) {
       return res.status(403).json({ error: "untrusted-origin" });
     }
     next();
@@ -196,9 +206,7 @@ async function startServer() {
     express.raw({ type: "application/json", limit: "256kb" }),
     async (req, res) => {
       try {
-        const rawBody = req.body.toString("utf8");
-        req.body = JSON.parse(rawBody);
-        await handleRazorpayWebhook(req, res);
+        await handleRazorpayWebhook(req, res, req.body as Buffer);
       } catch {
         return res.status(400).json({ error: "Invalid webhook payload" });
       }
@@ -312,7 +320,7 @@ async function startServer() {
         // Attempt to verify session cookie using configured cookie name
         const match = cookies.match(new RegExp(`${COOKIE_NAME}=([^;]+)`)) || [];
         const session = await sdk.verifySession(match[1]);
-        res.json({ session });
+        res.json({ authenticated: Boolean(session) });
       } catch (err) {
         console.error("/api/debug/me error:", err);
         res.status(500).json({ error: "failed" });
@@ -341,7 +349,7 @@ async function startServer() {
 
         const sessionToken = await sdk.createSessionToken(openId, { name: "Dev User" });
         const cookieOptions = getSessionCookieOptions(req);
-        res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: 1000 * 60 * 60 * 24 * 30 });
+        res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: 1000 * 60 * 60 * 8 });
         res.redirect("/");
       } catch (err) {
         console.error("/dev-login error:", err);

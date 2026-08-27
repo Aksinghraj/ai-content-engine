@@ -46,7 +46,7 @@ describe("local email/password authentication", () => {
     const sdk = read("server/_core/sdk.ts");
     const page = read("client/src/pages/LoginEnhanced.tsx");
 
-    expect(localRouter).toContain("STANDARD_SESSION_TTL_MS = 1000 * 60 * 60 * 12");
+    expect(localRouter).toContain("STANDARD_SESSION_TTL_MS = 1000 * 60 * 60 * 8");
     expect(localRouter).toContain("REMEMBER_ME_SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30");
     expect(localRouter).toContain("rememberMe: z.boolean().default(false)");
     expect(sdk).toContain("rememberMe: boolean");
@@ -92,7 +92,7 @@ describe("local email/password authentication", () => {
   it("does not issue a local password-reset token when the configured Resend sender is unavailable", () => {
     const router = read("server/routers/localAuth.ts");
 
-    expect(router).toContain('if (!isTransactionalEmailConfigured()) return { status: "delivery_unavailable" as const };');
+    expect(router).toContain('if (!emailDeliveryConfigured) return { accepted: true, emailDeliveryAvailable: false };');
     expect(router).toContain("const result = await createLocalPasswordResetToken(input.email);");
   });
 });

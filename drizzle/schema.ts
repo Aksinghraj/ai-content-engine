@@ -497,10 +497,40 @@ export const creditTransactions = mysqlTable("creditTransactions", {
   stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
   relatedContentId: int("relatedContentId"), // For usage transactions, link to content generation
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+}, (table) => ({
+  providerPaymentUnique: uniqueIndex("credit_transactions_provider_payment_unique").on(table.stripePaymentIntentId),
+}));
 
 export type CreditTransaction = typeof creditTransactions.$inferSelect;
 export type InsertCreditTransaction = typeof creditTransactions.$inferInsert;
+
+/**
+ * Server-owned Razorpay purchase intent. The browser receives only the provider
+ * order ID; user, package, amount, and credits are fixed here before checkout.
+ */
+export const razorpayCreditOrders = mysqlTable("razorpayCreditOrders", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  razorpayOrderId: varchar("razorpayOrderId", { length: 255 }).notNull(),
+  receiptId: varchar("receiptId", { length: 255 }).notNull(),
+  packageId: varchar("packageId", { length: 32 }).notNull(),
+  credits: int("credits").notNull(),
+  amountPaise: int("amountPaise").notNull(),
+  currency: varchar("currency", { length: 8 }).notNull().default("INR"),
+  status: mysqlEnum("status", ["created", "verifying", "credited", "failed", "cancelled"]).default("created").notNull(),
+  razorpayPaymentId: varchar("razorpayPaymentId", { length: 255 }),
+  paidAt: timestamp("paidAt"),
+  creditedAt: timestamp("creditedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  orderUnique: uniqueIndex("razorpay_credit_orders_order_unique").on(table.razorpayOrderId),
+  receiptUnique: uniqueIndex("razorpay_credit_orders_receipt_unique").on(table.receiptId),
+  paymentUnique: uniqueIndex("razorpay_credit_orders_payment_unique").on(table.razorpayPaymentId),
+  userCreatedIndex: index("razorpay_credit_orders_user_created_index").on(table.userId, table.createdAt),
+}));
+
+export type RazorpayCreditOrder = typeof razorpayCreditOrders.$inferSelect;
 
 /**
  * Free actions are tracked independently from credits.

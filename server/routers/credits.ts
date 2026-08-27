@@ -1,6 +1,6 @@
 import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
-import { getUserCredits, initializeUserCredits, addCredits, getCreditTransactions, getCreditPackages, getUserGenerationStats } from "../db";
+import { getUserCredits, initializeUserCredits, addCredits, getCreditTransactions, getCreditPackages, getUserGenerationStats, createRazorpayCreditOrder, getRazorpayCreditOrderForUser, creditRazorpayOrder } from "../db";
 import Stripe from "stripe";
 import crypto from "crypto";
 import { sendPaymentReceiptEmail } from "../_core/emailService";
@@ -142,19 +142,24 @@ export const creditsRouter = router({
       const credits = await getUserCredits(ctx.user.id);
       if (!credits) await initializeUserCredits(ctx.user.id);
 
-      const receiptId = `credits_${ctx.user.id}_${input.packageId}_${Date.now()}`;
+      const receiptId = `credits_${ctx.user.id}_${crypto.randomUUID()}`;
       const order = await razorpayRequest("/orders", "POST", {
         amount: pkg.amountPaise,
         currency: "INR",
         receipt: receiptId,
         notes: {
-          userId: ctx.user.id.toString(),
-          userEmail: ctx.user.email || "",
-          userName: ctx.user.name || "",
-          packageId: input.packageId,
-          credits: pkg.credits.toString(),
-          packageName: pkg.name,
+          purchaseType: "lumae_credits",
         },
+      });
+
+      await createRazorpayCreditOrder({
+        userId: ctx.user.id,
+        razorpayOrderId: order.id,
+        receiptId,
+        packageId: pkg.id,
+        credits: pkg.credits,
+        amountPaise: pkg.amountPaise,
+        currency: "INR",
       });
 
       return {
@@ -173,14 +178,20 @@ export const creditsRouter = router({
    */
   verifyRazorpayPayment: protectedProcedure
     .input(z.object({
-      orderId: z.string(),
-      paymentId: z.string(),
-      signature: z.string(),
-      packageId: z.enum(["starter", "pro", "enterprise"]),
+      orderId: z.string().regex(/^order_[A-Za-z0-9]+$/),
+      paymentId: z.string().regex(/^pay_[A-Za-z0-9]+$/),
+      signature: z.string().regex(/^[a-f0-9]{64}$/i),
+      // Retained for backwards-compatible clients, but never trusted.
+      packageId: z.enum(["starter", "pro", "enterprise"]).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       if (!process.env.RAZORPAY_KEY_SECRET) {
         throw new Error("Payment service not configured.");
+      }
+
+      const order = await getRazorpayCreditOrderForUser(ctx.user.id, input.orderId);
+      if (!order || order.status === "credited" || order.status === "failed" || order.status === "cancelled") {
+        throw new Error("Payment could not be verified. Please contact support if you were charged.");
       }
 
       // HMAC-SHA256 signature verification
@@ -189,41 +200,36 @@ export const creditsRouter = router({
         .update(`${input.orderId}|${input.paymentId}`)
         .digest("hex");
 
-      const isValid = crypto.timingSafeEqual(
-        Buffer.from(input.signature),
-        Buffer.from(expectedSignature)
-      );
+      const providedSignature = Buffer.from(input.signature, "hex");
+      const expectedSignatureBuffer = Buffer.from(expectedSignature, "hex");
+      const isValid = providedSignature.length === expectedSignatureBuffer.length && crypto.timingSafeEqual(providedSignature, expectedSignatureBuffer);
 
       if (!isValid) {
-        throw new Error("Invalid payment signature — possible tampering detected");
+        throw new Error("Payment could not be verified. Please contact support if you were charged.");
       }
 
-      // Fetch payment from Razorpay to confirm captured status
+      // Fetch provider data and compare it to the server-owned order, never the browser input.
       const payment = await razorpayRequest(`/payments/${input.paymentId}`);
-      if (payment.status !== "captured") {
-        throw new Error(`Payment not captured. Status: ${payment.status}`);
+      if (
+        payment.status !== "captured" ||
+        payment.order_id !== order.razorpayOrderId ||
+        Number(payment.amount) !== order.amountPaise ||
+        payment.currency !== order.currency
+      ) {
+        throw new Error("Payment could not be verified. Please contact support if you were charged.");
       }
 
-      const pkg = CREDIT_PACKAGES_INR.find(p => p.id === input.packageId);
-      if (!pkg) throw new Error("Package not found");
+      const result = await creditRazorpayOrder(ctx.user.id, order.razorpayOrderId, input.paymentId);
 
-      // Add credits to user account
-      await addCredits(
-        ctx.user.id,
-        pkg.credits,
-        `Razorpay credit purchase: ${pkg.name} (${pkg.credits} credits)`,
-        input.paymentId
-      );
-
-      // Send payment receipt email
-      const emailSent = ctx.user.email ? await sendPaymentReceiptEmail(
+      // Do not repeat a receipt for idempotent verification retries.
+      const emailSent = !result.alreadyCredited && ctx.user.email ? await sendPaymentReceiptEmail(
         ctx.user.email,
         ctx.user.name || "User",
         {
           orderId: input.orderId,
-          amount: pkg.amountPaise,
-          currency: "INR",
-          creditsAdded: pkg.credits,
+          amount: order.amountPaise,
+          currency: order.currency,
+          creditsAdded: result.creditsAdded,
           paymentMethod: payment.method || "Unknown",
           transactionDate: new Date(payment.created_at * 1000).toISOString(),
         }
@@ -231,9 +237,8 @@ export const creditsRouter = router({
 
       return {
         success: true,
-        message: `Payment verified! ${pkg.credits} credits added to your account.`,
-        creditsAdded: pkg.credits,
-        paymentId: input.paymentId,
+        message: result.alreadyCredited ? "This payment was already applied to your account." : `Payment verified. ${result.creditsAdded} credits were added to your account.`,
+        creditsAdded: result.creditsAdded,
         emailSent,
       };
     }),
@@ -274,6 +279,7 @@ export const creditsRouter = router({
             packageId: input.packageId.toString(),
             credits: selectedPackage.credits.toString(),
           },
+          client_reference_id: ctx.user.id.toString(),
           allow_promotion_codes: true,
         });
 
@@ -298,11 +304,17 @@ export const creditsRouter = router({
         }
 
         const metadata = session.metadata || {};
+        if (metadata.userId !== ctx.user.id.toString() || session.client_reference_id !== ctx.user.id.toString()) {
+          throw new Error("Payment session does not belong to this account");
+        }
         const packageId = parseInt(metadata.packageId || "0");
-        const creditsAmount = parseInt(metadata.credits || "0");
-
-        if (!packageId || !creditsAmount) {
+        if (!packageId) {
           throw new Error("Invalid session metadata");
+        }
+        const packages = await getCreditPackages();
+        const selectedPackage = packages.find((item) => item.id === packageId);
+        if (!selectedPackage || session.amount_total !== selectedPackage.priceInCents) {
+          throw new Error("Payment session verification failed");
         }
 
         const paymentIntentId = typeof session.payment_intent === "string"
@@ -311,12 +323,12 @@ export const creditsRouter = router({
 
         await addCredits(
           ctx.user.id,
-          creditsAmount,
-          `Credit purchase: ${creditsAmount} credits`,
+          selectedPackage.credits,
+          `Credit purchase: ${selectedPackage.credits} credits`,
           paymentIntentId
         );
 
-        return { success: true, creditsAdded: creditsAmount };
+        return { success: true, creditsAdded: selectedPackage.credits };
       } catch (error) {
         console.error("Error verifying checkout session:", error);
         throw new Error("Failed to verify payment");

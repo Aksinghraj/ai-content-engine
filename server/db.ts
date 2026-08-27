@@ -1,6 +1,6 @@
 
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, contentHistory, InsertContentHistory, tokenUsage, automationSchedules, automationExecutionLogs, contentAnalytics, userCredits, creditTransactions, creditPackages, passwordResetTokens, generatorLengthPreferences, professionalProfiles, professionalProfileViews, lumaePulseIntroDismissals, scheduledPosts, socialConnections } from "../drizzle/schema";
+import { InsertUser, users, contentHistory, InsertContentHistory, tokenUsage, automationSchedules, automationExecutionLogs, contentAnalytics, userCredits, creditTransactions, creditPackages, passwordResetTokens, generatorLengthPreferences, professionalProfiles, professionalProfileViews, lumaePulseIntroDismissals, scheduledPosts, socialConnections, razorpayCreditOrders } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { eq, desc, and, gte, sql } from "drizzle-orm";
 
@@ -714,6 +714,77 @@ export async function getCreditPackages() {
     console.error("[Database] Failed to get credit packages:", error);
     return [];
   }
+}
+
+export type RazorpayCreditOrderInput = {
+  userId: number;
+  razorpayOrderId: string;
+  receiptId: string;
+  packageId: string;
+  credits: number;
+  amountPaise: number;
+  currency: string;
+};
+
+/** Creates the server-side source of truth for a Razorpay credit checkout. */
+export async function createRazorpayCreditOrder(input: RazorpayCreditOrderInput) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.insert(razorpayCreditOrders).values(input);
+  const rows = await db.select().from(razorpayCreditOrders)
+    .where(eq(razorpayCreditOrders.razorpayOrderId, input.razorpayOrderId)).limit(1);
+  return rows[0] ?? null;
+}
+
+/** Looks up an order only if it belongs to the authenticated user. */
+export async function getRazorpayCreditOrderForUser(userId: number, razorpayOrderId: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(razorpayCreditOrders)
+    .where(and(eq(razorpayCreditOrders.userId, userId), eq(razorpayCreditOrders.razorpayOrderId, razorpayOrderId)))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+/** Credits one server-owned order. Unique provider references make retries safe. */
+export async function creditRazorpayOrder(userId: number, razorpayOrderId: string, paymentId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  if (!await getUserCredits(userId)) await initializeUserCredits(userId);
+
+  return db.transaction(async (tx) => {
+    const orders = await tx.select().from(razorpayCreditOrders)
+      .where(and(eq(razorpayCreditOrders.userId, userId), eq(razorpayCreditOrders.razorpayOrderId, razorpayOrderId)))
+      .limit(1);
+    const order = orders[0];
+    if (!order) throw new Error("Payment order not found");
+    if (order.razorpayPaymentId && order.razorpayPaymentId !== paymentId) throw new Error("Payment order mismatch");
+    if (order.status === "credited") return { order, creditsAdded: 0, alreadyCredited: true };
+
+    const existing = await tx.select({ id: creditTransactions.id }).from(creditTransactions)
+      .where(eq(creditTransactions.stripePaymentIntentId, paymentId)).limit(1);
+    if (existing[0]) {
+      await tx.update(razorpayCreditOrders).set({ status: "credited", razorpayPaymentId: paymentId, paidAt: new Date(), creditedAt: new Date() })
+        .where(eq(razorpayCreditOrders.id, order.id));
+      return { order, creditsAdded: 0, alreadyCredited: true };
+    }
+
+    await tx.update(userCredits).set({
+      balance: sql`balance + ${order.credits}`,
+      totalPurchased: sql`totalPurchased + ${order.credits}`,
+    }).where(eq(userCredits.userId, userId));
+    await tx.insert(creditTransactions).values({
+      userId,
+      type: "purchase",
+      amount: order.credits,
+      description: `Razorpay credit purchase: ${order.packageId}`,
+      stripePaymentIntentId: paymentId,
+    });
+    await tx.update(razorpayCreditOrders).set({
+      status: "credited", razorpayPaymentId: paymentId, paidAt: new Date(), creditedAt: new Date(),
+    }).where(eq(razorpayCreditOrders.id, order.id));
+    return { order, creditsAdded: order.credits, alreadyCredited: false };
+  });
 }
 
 // ============================================================================

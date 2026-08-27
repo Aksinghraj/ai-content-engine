@@ -15,11 +15,11 @@ describe("password reset and verification resend delivery feedback", () => {
     expect(router).toContain("accepted: emailDeliveryAvailable");
   });
 
-  it("keeps password-reset outcomes visible on the page, including provider-only account guidance", () => {
+  it("keeps password-reset outcomes visible on the page without disclosing account type", () => {
     const page = read("client/src/pages/ForgotPassword.tsx");
 
     expect(page).toContain("const [feedback, setFeedback]");
-    expect(page).toContain("continue with that method");
+    expect(page).not.toContain("continue with that method");
     expect(page).toContain("a reset email has been accepted for delivery");
     expect(page).toContain('role={feedback.tone === "error" ? "alert" : "status"}');
   });

@@ -17,19 +17,11 @@ export default function ForgotPassword() {
   const [sent, setSent] = useState(false);
   const [feedback, setFeedback] = useState<Feedback>(null);
   const requestReset = trpc.localAuth.requestPasswordReset.useMutation({
-    onSuccess: ({ status, retryAfterSeconds }) => {
-      if (status === "oauth_only") {
-        const message = "If you created this account with Google or another sign-in provider, continue with that method. Password reset is available only for email/password accounts.";
-        setFeedback({ tone: "notice", message });
-        toast.message(message);
-      } else if (status === "delivery_unavailable") {
+    onSuccess: ({ emailDeliveryAvailable }) => {
+      if (!emailDeliveryAvailable) {
         const message = "We could not send a reset email. Please try again later.";
         setFeedback({ tone: "error", message });
         toast.error(message);
-      } else if (status === "throttled") {
-        const message = `Please wait about ${Math.max(1, Math.ceil((retryAfterSeconds ?? 60) / 60))} minute before requesting another reset email.`;
-        setFeedback({ tone: "notice", message });
-        toast.message(message);
       } else {
         setSent(true);
         setFeedback({ tone: "success", message: "If an email/password account exists, a reset email has been accepted for delivery. Check your inbox and spam folder." });

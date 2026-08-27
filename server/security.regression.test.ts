@@ -55,6 +55,7 @@ describe("defensive security hardening", () => {
     const oauthManagement = readServer("routers/oauthManagement.ts");
     const socialDb = readServer("db/social.ts");
     const oauth = readServer("_core/oauth.ts");
+    const sdk = readServer("_core/sdk.ts");
 
     expect(appRouter).not.toContain("oauth: oauthCallbackRouter");
     expect(appRouter).not.toContain("oauthFlow: oauthFlowRouter");
@@ -65,8 +66,10 @@ describe("defensive security hardening", () => {
     expect(oauthManagement).toContain("connection.userId !== ctx.user.id");
     expect(socialDb).toContain('accessToken: ""');
     expect(socialDb).toContain("refreshToken: null");
-    expect(oauth).toContain("const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30");
+    expect(oauth).toContain("const SESSION_TTL_MS = 1000 * 60 * 60 * 12");
     expect(oauth).not.toContain("ONE_YEAR_MS");
+    expect(sdk).not.toContain("ONE_YEAR_MS");
+    expect(sdk).toContain("options.expiresInMs ?? 1000 * 60 * 60 * 8");
   });
 
   it("binds Google OAuth callbacks to a short-lived HttpOnly state cookie", () => {
@@ -92,5 +95,52 @@ describe("defensive security hardening", () => {
     expect(socialMedia).toContain("buffer.length > 650 * 1024");
     expect(socialMedia).toContain("crypto.randomUUID()");
     expect(socialMedia).toContain("File extension does not match the selected media type");
+  });
+
+  it("binds crediting to server-owned payment data and prevents duplicate provider references", () => {
+    const schema = readFileSync(resolve(projectRoot, "drizzle/schema.ts"), "utf8");
+    const credits = readServer("routers/credits.ts");
+    const db = readFileSync(resolve(projectRoot, "server/db.ts"), "utf8");
+    const router = readServer("routers.ts");
+
+    expect(schema).toContain('export const razorpayCreditOrders');
+    expect(schema).toContain('credit_transactions_provider_payment_unique');
+    expect(credits).toContain('createRazorpayCreditOrder');
+    expect(credits).toContain('getRazorpayCreditOrderForUser(ctx.user.id, input.orderId)');
+    expect(credits).toContain('payment.order_id !== order.razorpayOrderId');
+    expect(credits).toContain('Number(payment.amount) !== order.amountPaise');
+    expect(credits).toContain('metadata.userId !== ctx.user.id.toString()');
+    expect(db).toContain('creditRazorpayOrder');
+    expect(db).toContain('alreadyCredited: true');
+    expect(router).not.toContain('monetization: monetizationRouter');
+  });
+
+  it("denies guessed private files, arbitrary transcription URLs, missing-origin writes, and reset-account enumeration", () => {
+    const storageProxy = readServer("_core/storageProxy.ts");
+    const transcription = readServer("_core/voiceTranscription.ts");
+    const server = readServer("_core/index.ts");
+    const localAuth = readServer("routers/localAuth.ts");
+
+    expect(storageProxy).toContain('ownerIdForPrivateKey');
+    expect(storageProxy).toContain('sdk.authenticateRequest(req)');
+    expect(storageProxy).toContain('res.status(404).send("Not found")');
+    expect(transcription).toContain('function managedAudioKey');
+    expect(transcription).toContain('storageGetSignedUrl(key)');
+    expect(transcription).not.toContain('fetch(options.audioUrl)');
+    expect(server).toContain('const hasTrustedRequestOrigin');
+    expect(server).toContain('unsafeMethod && !hasTrustedRequestOrigin(req)');
+    expect(localAuth).toContain('return { accepted: true, emailDeliveryAvailable: true }');
+    expect(localAuth).not.toContain('status: "oauth_only"');
+  });
+
+  it("verifies Razorpay signatures from raw bytes and avoids logging customer email from webhook payloads", () => {
+    const server = readServer("_core/index.ts");
+    const webhook = readServer("_core/razorpayWebhook.ts");
+
+    expect(server).toContain('handleRazorpayWebhook(req, res, req.body as Buffer)');
+    expect(webhook).toContain('verifyWebhookSignature(rawBody.toString("utf8"), signature)');
+    expect(webhook).not.toContain('JSON.stringify(req.body)');
+    expect(webhook).not.toContain('userEmail');
+    expect(webhook).not.toContain('addCredits(');
   });
 });
