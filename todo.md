@@ -1293,6 +1293,9 @@
 - [x] Align the Instagram authorization redirect with the previously registered canonical callback URI while retaining the legacy callback alias
 - [x] Identify the remaining Meta app configuration or permission requirement causing the persistent Instagram authorization error
 - [x] Restore the screenshot-confirmed Instagram callback URI ending in /instagram/callback and preserve the shorter alias
+- [ ] Verify the remaining external Meta app mode, product, permission, and role requirements behind the persistent provider rejection
+- [ ] Complete Meta business verification and add the Instagram API Content Publishing use case before retrying connection
+- [x] Configure Instagram Business Login and align Lumae to the selected Instagram Login OAuth model
 
 ## Evidence-Based Security Audit (IN PROGRESS)
 - [x] Audit repository controls across all 36 requested security checks without changing production data or infrastructure

@@ -27,39 +27,28 @@ export async function validateInstagramCredentials(
   accessToken: string
 ): Promise<ValidationResult> {
   try {
-    const pagesResponse = await axios.get("https://graph.facebook.com/v26.0/me/accounts", {
+    const accountResponse = await axios.get("https://graph.instagram.com/v26.0/me", {
       params: {
-        fields: "id,name,access_token,tasks",
+        fields: "id,username,name",
         access_token: accessToken,
       },
       timeout: PROVIDER_VALIDATION_TIMEOUT_MS,
     });
 
-    for (const page of pagesResponse.data?.data ?? []) {
-      if (!page?.id || !page?.access_token) continue;
-      const accountResponse = await axios.get(`https://graph.facebook.com/v26.0/${page.id}`, {
-        params: {
-          fields: "instagram_business_account{id,username,name}",
-          access_token: page.access_token,
-        },
-        timeout: PROVIDER_VALIDATION_TIMEOUT_MS,
-      });
-      const account = accountResponse.data?.instagram_business_account;
-      if (account?.id) {
-        return {
-          isValid: true,
-          username: account.username || account.name || page.name || "Instagram professional account",
-          userId: account.id,
-          publishingAccessToken: page.access_token,
-          message: "Instagram professional account verified successfully",
-        };
-      }
+    const account = accountResponse.data;
+    if (account?.id) {
+      return {
+        isValid: true,
+        username: account.username || account.name || "Instagram professional account",
+        userId: account.id,
+        message: "Instagram professional account verified successfully",
+      };
     }
 
     return {
       isValid: false,
-      error: "No eligible Instagram professional account was found on a Facebook Page you manage",
-      message: "Connect an Instagram Business or Creator account to a Facebook Page, then try again",
+      error: "Instagram did not return a professional account identity",
+      message: "Use an Instagram Business or Creator account, then try again",
     };
   } catch (error: any) {
     const errorMsg = error?.response?.data?.error?.message || error?.message || "Unknown error";

@@ -75,6 +75,10 @@ export async function generateAuthorizationUrl(
     scope: config.scopes.join(scopeSeparator),
   });
 
+  if (platform.toLowerCase() === "instagram") {
+    params.append("force_reauth", "true");
+  }
+
   // Add PKCE parameters if required
   if (config.pkceRequired) {
     params.append("code_challenge", codeChallenge);
@@ -224,6 +228,28 @@ export async function refreshAccessToken(
 
   const platforms = initializeOAuthConfigs(baseUrl);
   const config = getPlatformConfig(platforms, platform);
+
+  if (platform.toLowerCase() === "instagram") {
+    const refreshUrl = new URL("https://graph.instagram.com/refresh_access_token");
+    refreshUrl.searchParams.set("grant_type", "ig_refresh_token");
+    refreshUrl.searchParams.set("access_token", decryptStoredToken(connection.accessToken));
+    const tokenResponse = await fetch(refreshUrl);
+    if (!tokenResponse.ok) {
+      const error = await tokenResponse.text();
+      throw new Error(`Token refresh failed: ${error}`);
+    }
+    const tokenData: any = await tokenResponse.json();
+    await saveSocialConnection(
+      userId,
+      platform,
+      connection.username,
+      tokenData.access_token,
+      connection.platformUserId,
+      connection.refreshToken,
+      tokenData.expires_in ? new Date(Date.now() + tokenData.expires_in * 1000) : undefined,
+    );
+    return { accessToken: tokenData.access_token, expiresIn: tokenData.expires_in };
+  }
 
   const refreshParams = new URLSearchParams({
     grant_type: "refresh_token",

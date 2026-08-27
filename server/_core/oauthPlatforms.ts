@@ -34,20 +34,20 @@ export function initializeOAuthConfigs(baseUrl: string): OAuthPlatforms {
   return {
     instagram: {
       name: "Instagram",
-      // Instagram publishing uses Meta's Instagram API with Facebook Login for
-      // Business. It must use the Meta/Facebook app credentials, not the retired
-      // Basic Display authorization endpoint.
-      clientId: process.env.FACEBOOK_CLIENT_ID || "YOUR_INSTAGRAM_CLIENT_ID",
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET || "YOUR_INSTAGRAM_CLIENT_SECRET",
+      // Instagram uses the configured Instagram API with Instagram Login flow.
+      // This is distinct from retired Basic Display and Facebook Login for Business.
+      clientId: process.env.INSTAGRAM_CLIENT_ID || "YOUR_INSTAGRAM_CLIENT_ID",
+      clientSecret: process.env.INSTAGRAM_CLIENT_SECRET || "YOUR_INSTAGRAM_CLIENT_SECRET",
       redirectUri: getRedirectUri(baseUrl, "instagram"),
-      authorizationEndpoint: "https://www.facebook.com/v26.0/dialog/oauth",
-      tokenEndpoint: "https://graph.facebook.com/v26.0/oauth/access_token",
-      userInfoEndpoint: "https://graph.facebook.com/v26.0/me?fields=id,name",
+      authorizationEndpoint: "https://www.instagram.com/oauth/authorize",
+      tokenEndpoint: "https://api.instagram.com/oauth/access_token",
+      userInfoEndpoint: "https://graph.instagram.com/v26.0/me?fields=id,username,name",
       scopes: [
-        "instagram_basic",
-        "instagram_content_publish",
-        "pages_show_list",
-        "pages_read_engagement",
+        "instagram_business_basic",
+        "instagram_business_manage_messages",
+        "instagram_business_manage_comments",
+        "instagram_business_content_publish",
+        "instagram_business_manage_insights",
       ],
       scopeSeparator: "comma",
       pkceRequired: false,

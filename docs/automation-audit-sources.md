@@ -29,3 +29,9 @@ Sources: <https://developers.google.com/youtube/v3/docs/videos/insert> and <http
 Facebook’s Page Feed API supports publishing to a Page feed rather than to a personal profile. LinkedIn’s current Posts API is the supported post-creation surface, while Lumae currently calls the legacy UGC Posts endpoint. X provides a current create-post route, but use is governed by its developer-plan and usage pricing terms.
 
 Sources: <https://developers.facebook.com/docs/graph-api/reference/page/feed/>, <https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/posts-api?view=li-lms-2026-08>, and <https://docs.x.com/x-api/posts/create-post>
+
+## Confirmed Meta external prerequisite (2026-08-27)
+
+The owner's Meta dashboard screenshot shows Business Verification as **In review** and only the Marketing API use case visibly active. Meta's current Instagram documentation requires the **Instagram > API setup with Facebook login** product in addition to **Facebook Login for Business** for Lumae's selected login model. The Facebook account completing consent must manage the Facebook Page linked to the Instagram Business or Creator account and must have Content or Full Control to grant content-publishing access. Standard Access is limited to people with app or claimed-business roles; Advanced Access requires App Review and Business Verification for broader customer use.
+
+Source: <https://developers.facebook.com/documentation/instagram-platform/overview> and <https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-facebook-login/get-started>

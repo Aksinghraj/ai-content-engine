@@ -80,7 +80,7 @@ describe("Social Media Automation", () => {
     it("should have correct auth URLs for each platform", async () => {
       const { initializeOAuthConfigs } = await import("./_core/oauthPlatforms");
       const configs = initializeOAuthConfigs("http://localhost:3000");
-      expect(configs.instagram.authorizationEndpoint).toContain("facebook.com");
+      expect(configs.instagram.authorizationEndpoint).toContain("instagram.com");
       expect(configs.twitter.authorizationEndpoint).toContain("twitter.com");
       expect(configs.linkedin.authorizationEndpoint).toContain("linkedin.com");
       expect(configs.facebook.authorizationEndpoint).toContain("facebook.com");

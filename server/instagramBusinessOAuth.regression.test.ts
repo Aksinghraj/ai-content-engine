@@ -13,13 +13,13 @@ describe("Instagram Business OAuth contract", () => {
   const oauthRouter = read("server/routers/socialOAuthIntegration.ts");
   const accountsPage = read("client/src/pages/ConnectedAccounts.tsx");
 
-  it("uses Meta Business OAuth rather than the retired Instagram Basic Display path", () => {
-    expect(platforms).toContain('authorizationEndpoint: "https://www.facebook.com/v26.0/dialog/oauth"');
-    expect(platforms).toContain('tokenEndpoint: "https://graph.facebook.com/v26.0/oauth/access_token"');
+  it("uses the configured Instagram Business Login flow rather than Basic Display or Facebook Login", () => {
+    expect(platforms).toContain('authorizationEndpoint: "https://www.instagram.com/oauth/authorize"');
+    expect(platforms).toContain('tokenEndpoint: "https://api.instagram.com/oauth/access_token"');
     expect(platforms).toContain('return `${baseUrl}/api/oauth/callback/${platform}/callback`;');
-    expect(platforms).toContain('"instagram_content_publish"');
-    expect(platforms).toContain('"pages_show_list"');
-    expect(platforms).not.toContain('authorizationEndpoint: "https://api.instagram.com/oauth/authorize"');
+    expect(platforms).toContain('"instagram_business_content_publish"');
+    expect(platforms).toContain('"instagram_business_basic"');
+    expect(platforms).not.toContain('authorizationEndpoint: "https://www.facebook.com/v26.0/dialog/oauth"');
   });
 
   it("accepts both the registered Instagram callback path and the previous callback alias", () => {
@@ -28,13 +28,13 @@ describe("Instagram Business OAuth contract", () => {
     expect(callbacks).toContain('router.get("/instagram/callback", async');
   });
 
-  it("resolves an Instagram professional account and stores its Page publishing token", () => {
-    expect(validation).toContain('https://graph.facebook.com/v26.0/me/accounts');
-    expect(validation).toContain('instagram_business_account{id,username,name}');
-    expect(validation).toContain("publishingAccessToken: page.access_token");
-    expect(flow).toContain("validationResult.publishingAccessToken || tokenData.access_token");
-    expect(publishing).toContain("https://graph.facebook.com/${INSTAGRAM_API_VERSION}/${igUserId}/media");
-    expect(publishing).toContain("https://graph.facebook.com/${INSTAGRAM_API_VERSION}/${igUserId}/media_publish");
+  it("validates the Instagram professional account directly and publishes with its Instagram token", () => {
+    expect(validation).toContain('https://graph.instagram.com/v26.0/me');
+    expect(validation).toContain('fields: "id,username,name"');
+    expect(flow).toContain('params.append("force_reauth", "true")');
+    expect(flow).toContain('https://graph.instagram.com/refresh_access_token');
+    expect(publishing).toContain("https://graph.instagram.com/${INSTAGRAM_API_VERSION}/${igUserId}/media");
+    expect(publishing).toContain("https://graph.instagram.com/${INSTAGRAM_API_VERSION}/${igUserId}/media_publish");
   });
 
   it("creates a fresh non-cacheable authorization state for every Connect action", () => {

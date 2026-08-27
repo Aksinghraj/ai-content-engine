@@ -80,7 +80,7 @@ export async function postToInstagram(
     }
     if (content.text) createParams.set("caption", content.text);
 
-    const createResponse = await fetch(`https://graph.facebook.com/${INSTAGRAM_API_VERSION}/${igUserId}/media`, {
+    const createResponse = await fetch(`https://graph.instagram.com/${INSTAGRAM_API_VERSION}/${igUserId}/media`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -96,7 +96,7 @@ export async function postToInstagram(
     const container = await createResponse.json() as { id?: string };
     if (!container.id) return { success: false, error: "Instagram did not return a media container ID" };
 
-    const publishResponse = await fetch(`https://graph.facebook.com/${INSTAGRAM_API_VERSION}/${igUserId}/media_publish`, {
+    const publishResponse = await fetch(`https://graph.instagram.com/${INSTAGRAM_API_VERSION}/${igUserId}/media_publish`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
