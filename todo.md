@@ -1326,7 +1326,7 @@
 ## Authentic Data, Provider Recovery, and Local Language (IN PROGRESS)
 - [x] Restore the clipped mobile Generate Content button shown beneath the content brief language selector
 - [ ] Audit canonical user-facing pages for fabricated messages, metrics, activity, and sample identities
-- [ ] Replace active Auto-Reply, Reply Inbox, and Escalation demo records with user-owned persisted events or honest empty states
+- [x] Replace active Auto-Reply, Reply Inbox, and Escalation demo records with user-owned persisted events or honest empty states
 - [ ] Replace active Analytics Dashboard mock charts, metrics, and top-content records with account-owned analytics or clear empty states
 - [ ] Replace active Content Calendar mock events and totals with persisted scheduled posts or an honest empty state
 - [ ] Replace active mock workflow views with honest empty states or user-owned persisted data

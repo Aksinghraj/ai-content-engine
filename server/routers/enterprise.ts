@@ -63,7 +63,7 @@ export const enterpriseRouter = router({
   }),
 
   updateEngagementEvent: protectedProcedure
-    .input(z.object({ eventId: z.number(), isEscalated: z.boolean().optional(), resolutionNotes: z.string().trim().max(5000).optional() }))
+    .input(z.object({ eventId: z.number(), isEscalated: z.boolean().optional(), manualReviewNotes: z.string().trim().max(5000).optional() }))
     .mutation(async ({ ctx, input }) => {
       const { eventId, ...updates } = input;
       await enterprise.updateEngagementEventForUser(ctx.user.id, eventId, updates);

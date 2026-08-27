@@ -24,4 +24,16 @@ describe("authentic automation data", () => {
     expect(database).toContain("updateAutoReplyRuleForUser");
     expect(database).toContain("eq(autoReplyRules.userId, userId)");
   });
+
+  it("keeps Reply Inbox and Escalation bound to real engagement events", () => {
+    const inbox = read("client/src/pages/AutoReplyAdvanced.tsx");
+    const escalation = read("client/src/pages/SentimentEscalation.tsx");
+
+    expect(inbox).toContain("trpc.enterprise.getEngagementEvents.useQuery");
+    expect(inbox).not.toContain("john_doe");
+    expect(inbox).not.toContain("Thank You Response");
+    expect(escalation).toContain("trpc.enterprise.getEscalatedEvents.useQuery");
+    expect(escalation).not.toContain("MOCK_ESCALATIONS");
+    expect(escalation).not.toContain("Response sent!");
+  });
 });
