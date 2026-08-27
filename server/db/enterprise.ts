@@ -63,6 +63,16 @@ export async function updateEngagementEvent(
     .where(eq(engagementEvents.id, eventId));
 }
 
+export async function updateEngagementEventForUser(
+  userId: number,
+  eventId: number,
+  data: Partial<InsertEngagementEvent>,
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(engagementEvents).set(data).where(and(eq(engagementEvents.id, eventId), eq(engagementEvents.userId, userId)));
+}
+
 /**
  * Knowledge Base
  */
@@ -101,6 +111,12 @@ export async function deleteKnowledgeBase(id: number) {
   return await db.delete(knowledgeBase).where(eq(knowledgeBase.id, id));
 }
 
+export async function deleteKnowledgeBaseForUser(userId: number, id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(knowledgeBase).where(and(eq(knowledgeBase.id, id), eq(knowledgeBase.userId, userId)));
+}
+
 /**
  * Auto-Reply Rules
  */
@@ -116,12 +132,7 @@ export async function getAutoReplyRules(userId: number) {
   return await db
     .select()
     .from(autoReplyRules)
-    .where(
-      and(
-        eq(autoReplyRules.userId, userId),
-        eq(autoReplyRules.isActive, true)
-      )
-    );
+    .where(eq(autoReplyRules.userId, userId));
 }
 
 export async function updateAutoReplyRule(
@@ -134,6 +145,12 @@ export async function updateAutoReplyRule(
     .update(autoReplyRules)
     .set(data)
     .where(eq(autoReplyRules.id, id));
+}
+
+export async function updateAutoReplyRuleForUser(userId: number, id: number, data: Partial<InsertAutoReplyRule>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(autoReplyRules).set(data).where(and(eq(autoReplyRules.id, id), eq(autoReplyRules.userId, userId)));
 }
 
 /**

@@ -62,6 +62,14 @@ export const enterpriseRouter = router({
     }
   }),
 
+  updateEngagementEvent: protectedProcedure
+    .input(z.object({ eventId: z.number(), isEscalated: z.boolean().optional(), resolutionNotes: z.string().trim().max(5000).optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const { eventId, ...updates } = input;
+      await enterprise.updateEngagementEventForUser(ctx.user.id, eventId, updates);
+      return { success: true };
+    }),
+
   /**
    * Knowledge Base
    */
@@ -98,6 +106,13 @@ export const enterpriseRouter = router({
     }
   }),
 
+  deleteKnowledgeBase: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await enterprise.deleteKnowledgeBaseForUser(ctx.user.id, input.id);
+      return { success: true };
+    }),
+
   /**
    * Auto-Reply Rules
    */
@@ -132,6 +147,13 @@ export const enterpriseRouter = router({
       });
     }
   }),
+
+  updateAutoReplyRule: protectedProcedure
+    .input(z.object({ id: z.number(), isActive: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      await enterprise.updateAutoReplyRuleForUser(ctx.user.id, input.id, { isActive: input.isActive });
+      return { success: true };
+    }),
 
   /**
    * Generate Auto-Reply using AI
