@@ -10,9 +10,42 @@ import {
   createScheduledPost,
   getUserScheduledPosts,
   deleteScheduledPost,
+  createSocialPostDraft,
+  getSocialPostDrafts,
+  deleteSocialPostDraft,
   updateSocialConnectionSettings,
 } from "../db/social";
 import { storagePut } from "../storage";
+
+const supportedPlatforms = z.enum(["instagram", "facebook", "twitter", "linkedin", "youtube", "tiktok"]);
+
+function assertManagedMediaForUser(userId: number, mediaUrl?: string, mediaKey?: string) {
+  if (!mediaUrl && !mediaKey) return;
+  if (!mediaUrl || !mediaKey || !mediaKey.startsWith(`social-media/${userId}/`)) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Use media uploaded through Lumae before publishing or scheduling.",
+    });
+  }
+}
+
+function assertSchedulingReadiness(
+  connection: { platform: string; isConnected: boolean; isValidated: boolean; autoPost: boolean; tokenExpiresAt: Date | null },
+  platform: string,
+) {
+  if (connection.platform !== platform) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: "Choose the connected account that matches the publishing platform." });
+  }
+  if (!connection.isConnected || !connection.isValidated) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: `Reconnect and validate your ${platform} account before scheduling.` });
+  }
+  if (connection.tokenExpiresAt && connection.tokenExpiresAt.getTime() <= Date.now()) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: `Your ${platform} access token has expired. Reconnect before scheduling.` });
+  }
+  if (!connection.autoPost) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: `Enable Auto-Post for your validated ${platform} account before scheduling.` });
+  }
+}
 
 export const socialMediaRouter = router({
   /**
@@ -131,7 +164,7 @@ export const socialMediaRouter = router({
     .input(
       z.object({
         socialConnectionId: z.number(),
-        platform: z.string(),
+        platform: supportedPlatforms,
         content: z.string().trim().min(1).max(20_000),
         scheduledAt: z.date(),
         mediaUrl: z.string().optional(),
@@ -143,7 +176,18 @@ export const socialMediaRouter = router({
       // Verify the connection belongs to the user
       const connection = await getSocialConnection(input.socialConnectionId);
       if (!connection || connection.userId !== ctx.user.id) {
-        throw new Error("Unauthorized");
+        throw new TRPCError({ code: "NOT_FOUND", message: "Connected account not found." });
+      }
+      assertSchedulingReadiness(connection, input.platform);
+      assertManagedMediaForUser(ctx.user.id, input.mediaUrl, input.mediaKey);
+      if (input.platform === "instagram" && !input.mediaUrl) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Instagram scheduling requires a Lumae-managed image or video." });
+      }
+      if (input.platform === "youtube" && input.mediaType !== "video") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "YouTube scheduling requires a Lumae-managed video." });
+      }
+      if (input.scheduledAt.getTime() <= Date.now()) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Choose a future date and time for a scheduled post." });
       }
 
       const post = await createScheduledPost(
@@ -178,6 +222,36 @@ export const socialMediaRouter = router({
     .input(z.object({ postId: z.number() }))
     .mutation(async ({ ctx, input }) => {
       await deleteScheduledPost(ctx.user.id, input.postId);
+      return { success: true };
+    }),
+
+  saveDraft: protectedProcedure
+    .input(z.object({
+      title: z.string().trim().max(255).optional(),
+      content: z.string().trim().min(1).max(20_000),
+      platforms: z.array(supportedPlatforms).max(6),
+      hashtags: z.array(z.string().trim().min(1).max(100)).max(50),
+      mentions: z.array(z.string().trim().min(1).max(255)).max(50),
+      mediaUrl: z.string().max(2048).optional(),
+      mediaType: z.enum(["image", "video"]).optional(),
+      mediaKey: z.string().max(255).optional(),
+    }).superRefine((input, refineCtx) => {
+      if (input.mediaUrl && (!input.mediaType || !input.mediaKey)) {
+        refineCtx.addIssue({ code: z.ZodIssueCode.custom, path: ["mediaUrl"], message: "Saved media requires its type and managed storage key." });
+      }
+    }))
+    .mutation(async ({ ctx, input }) => {
+      assertManagedMediaForUser(ctx.user.id, input.mediaUrl, input.mediaKey);
+      const draft = await createSocialPostDraft(ctx.user.id, input);
+      return { success: true, draft };
+    }),
+
+  getDrafts: protectedProcedure.query(async ({ ctx }) => getSocialPostDrafts(ctx.user.id)),
+
+  deleteDraft: protectedProcedure
+    .input(z.object({ draftId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await deleteSocialPostDraft(ctx.user.id, input.draftId);
       return { success: true };
     }),
 

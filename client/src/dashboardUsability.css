@@ -205,6 +205,24 @@
 }
 
 @media (max-width: 560px) {
+  .lumae-group-tabs:not(.lumae-group-tabs--complete) {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .lumae-group-tabs:not(.lumae-group-tabs--complete) .lumae-group-tabs__rail {
+    width: 100%;
+    max-width: 100%;
+    padding-bottom: 2px;
+    scrollbar-width: thin;
+  }
+
+  .lumae-group-tabs:not(.lumae-group-tabs--complete) .lumae-group-tab {
+    flex: 0 0 auto;
+    min-height: 38px;
+  }
+
   .lumae-dashboard-hero h1 {
     font-size: 34px;
   }

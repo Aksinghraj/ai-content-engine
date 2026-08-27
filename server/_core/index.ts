@@ -14,6 +14,7 @@ import { initializeAutomationEngine } from "./automationEngine";
 import { runScheduledAutomation } from "../routes/scheduledAutomation";
 import { refreshScheduledTrends } from "../routes/scheduledTrendRefresh";
 import { ensureTrendRefreshJob } from "./trendScheduler";
+import { ensureScheduledPostDispatcher, runScheduledPosts } from "./scheduledPostScheduler";
 import { storageGetSignedUrl } from "../storage";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -287,6 +288,7 @@ async function startServer() {
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   app.post("/api/scheduled/social-automation", runScheduledAutomation);
+  app.post("/api/scheduled/social-posts", runScheduledPosts);
   app.post("/api/scheduled/trends/refresh", refreshScheduledTrends);
   // tRPC API
   app.use(
@@ -364,6 +366,9 @@ async function startServer() {
     // Initialize automation engine after server starts
     initializeAutomationEngine().catch(console.error);
     ensureTrendRefreshJob().catch((error) => console.error("[Trend Refresh] Unable to register durable refresh job", error));
+    if (process.env.NODE_ENV === "production") {
+      ensureScheduledPostDispatcher().catch((error) => console.error("[Scheduled Posts] Unable to register durable dispatcher", error));
+    }
   });
 }
 

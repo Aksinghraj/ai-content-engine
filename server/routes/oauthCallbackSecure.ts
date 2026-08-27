@@ -45,6 +45,10 @@ async function handleOAuthCallback(
       ? completed.returnPath
       : "/connected-accounts";
     const separator = callbackPath.includes("?") ? "&" : "?";
+    if (!completed.isValidated) {
+      const validationMessage = encodeURIComponent(completed.validationError || "Lumae could not validate the provider connection.");
+      return res.redirect(`${BASE_URL}${callbackPath}${separator}platform=${platform}&error=validation_failed&message=${validationMessage}`);
+    }
     return res.redirect(
       `${BASE_URL}${callbackPath}${separator}platform=${platform}&success=true&username=${encodeURIComponent(completed.userInfo?.name || completed.userInfo?.username || platform)}`
     );

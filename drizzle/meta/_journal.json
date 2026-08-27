@@ -225,6 +225,20 @@
       "when": 1787739845519,
       "tag": "0031_living_tinkerer",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "5",
+      "when": 1787848515512,
+      "tag": "0032_wooden_vermin",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "5",
+      "when": 1787848761695,
+      "tag": "0033_majestic_runaways",
+      "breakpoints": true
     }
   ]
 }

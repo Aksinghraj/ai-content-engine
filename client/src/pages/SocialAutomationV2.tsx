@@ -238,7 +238,7 @@ export default function SocialAutomationV2() {
 
         await schedulePostMutation.mutateAsync({
           socialConnectionId: connection.id,
-          platform,
+          platform: platform as "instagram" | "facebook" | "twitter" | "linkedin" | "youtube" | "tiktok",
           content: postContent,
           scheduledAt: new Date(scheduleTime),
           mediaUrl,

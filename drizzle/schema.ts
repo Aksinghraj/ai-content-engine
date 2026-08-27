@@ -620,7 +620,7 @@ export const scheduledPosts = mysqlTable("scheduledPosts", {
   mediaKey: varchar("mediaKey", { length: 255 }), // S3 storage key
   scheduledAt: timestamp("scheduledAt").notNull(),
   publishedAt: timestamp("publishedAt"),
-  status: mysqlEnum("status", ["pending", "published", "failed"]).default("pending").notNull(),
+  status: mysqlEnum("status", ["pending", "processing", "published", "failed"]).default("pending").notNull(),
   errorMessage: text("errorMessage"),
   platformPostId: varchar("platformPostId", { length: 255 }), // ID from platform after publishing
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -629,6 +629,28 @@ export const scheduledPosts = mysqlTable("scheduledPosts", {
 
 export type ScheduledPost = typeof scheduledPosts.$inferSelect;
 export type InsertScheduledPost = typeof scheduledPosts.$inferInsert;
+
+/**
+ * User-authored social post drafts. Drafts never imply publication, provider
+ * readiness, or projected engagement; they are saved content only.
+ */
+export const socialPostDrafts = mysqlTable("socialPostDrafts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  title: varchar("title", { length: 255 }),
+  content: text("content").notNull(),
+  platforms: json("platforms").$type<string[]>().notNull(),
+  hashtags: json("hashtags").$type<string[]>().notNull(),
+  mentions: json("mentions").$type<string[]>().notNull(),
+  mediaUrl: varchar("mediaUrl", { length: 2048 }),
+  mediaType: mysqlEnum("mediaType", ["image", "video"]),
+  mediaKey: varchar("mediaKey", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SocialPostDraft = typeof socialPostDrafts.$inferSelect;
+export type InsertSocialPostDraft = typeof socialPostDrafts.$inferInsert;
 
 /** One-time, encrypted OAuth state used to bind provider callbacks to the initiating account. */
 export const socialOAuthStates = mysqlTable("socialOAuthStates", {

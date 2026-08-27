@@ -106,6 +106,8 @@ export async function handleOAuthCallback(
   expiresIn?: number;
   userInfo: any;
   returnPath: string;
+  isValidated: boolean;
+  validationError?: string;
 }> {
   // Verify state parameter
   const oauthState = await getOAuthState(state);
@@ -210,6 +212,8 @@ export async function handleOAuthCallback(
     expiresIn: tokenData.expires_in,
     userInfo,
     returnPath: oauthState.returnPath || "/connected-accounts",
+    isValidated: validationResult.isValid,
+    validationError: validationResult.error,
   };
 }
 
@@ -222,9 +226,7 @@ export async function refreshAccessToken(
   platform: string
 ): Promise<{ accessToken: string; expiresIn: number }> {
   const connection = await getSocialConnectionByPlatform(userId, platform);
-  if (!connection || !connection.refreshToken) {
-    throw new Error("No refresh token available");
-  }
+  if (!connection) throw new Error("Social connection not found");
 
   const platforms = initializeOAuthConfigs(baseUrl);
   const config = getPlatformConfig(platforms, platform);
@@ -245,11 +247,13 @@ export async function refreshAccessToken(
       connection.username,
       tokenData.access_token,
       connection.platformUserId,
-      connection.refreshToken,
+      connection.refreshToken ?? undefined,
       tokenData.expires_in ? new Date(Date.now() + tokenData.expires_in * 1000) : undefined,
     );
     return { accessToken: tokenData.access_token, expiresIn: tokenData.expires_in };
   }
+
+  if (!connection.refreshToken) throw new Error("No refresh token available");
 
   const refreshParams = new URLSearchParams({
     grant_type: "refresh_token",

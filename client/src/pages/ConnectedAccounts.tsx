@@ -1,336 +1,121 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import {
-  AlertCircle,
-  CheckCircle2,
-  Link2,
-  Unlink2,
-  RefreshCw,
-  ExternalLink,
-  Plus,
-  Loader2,
-} from "lucide-react";
+import { AlertCircle, CheckCircle2, Link2, Loader2, RefreshCw, ShieldCheck, Unlink2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { trpc, trpcClient } from "@/lib/trpc";
 
 const PLATFORMS = [
-  {
-    id: "instagram",
-    name: "Instagram",
-    icon: "📸",
-    color: "from-pink-500 to-rose-500",
-    description: "Connect your Instagram business account",
-  },
-  {
-    id: "facebook",
-    name: "Facebook",
-    icon: "👥",
-    color: "from-blue-500 to-blue-600",
-    description: "Connect your Facebook page",
-  },
-  {
-    id: "twitter",
-    name: "Twitter / X",
-    icon: "𝕏",
-    color: "from-slate-700 to-slate-900",
-    description: "Connect your Twitter/X account",
-  },
-  {
-    id: "linkedin",
-    name: "LinkedIn",
-    icon: "💼",
-    color: "from-blue-600 to-blue-700",
-    description: "Connect your LinkedIn profile",
-  },
-  {
-    id: "youtube",
-    name: "YouTube",
-    icon: "📺",
-    color: "from-red-500 to-red-600",
-    description: "Connect your YouTube channel",
-  },
-  {
-    id: "tiktok",
-    name: "TikTok",
-    icon: "🎵",
-    color: "from-slate-900 to-slate-800",
-    description: "Connect your TikTok account",
-  },
-];
+  { id: "instagram", name: "Instagram", icon: "📸", description: "Connect an Instagram professional account for publishing." },
+  { id: "facebook", name: "Facebook", icon: "👥", description: "Connect a Facebook Page for publishing." },
+  { id: "twitter", name: "Twitter / X", icon: "𝕏", description: "Connection can be set up; execution needs an approved API budget." },
+  { id: "linkedin", name: "LinkedIn", icon: "💼", description: "Connect a LinkedIn profile for text publishing." },
+  { id: "youtube", name: "YouTube", icon: "📺", description: "Connect a YouTube channel for private video uploads." },
+  { id: "tiktok", name: "TikTok", icon: "🎵", description: "Connect a TikTok account when provider access is available." },
+] as const;
 
-const PROVIDER_GUIDANCE: Record<string, string> = {
-  linkedin: "Requires the OpenID Connect product and Share on LinkedIn product. Register https://lumae.co.in/api/oauth/callback/linkedin/callback in your LinkedIn app before connecting.",
-  youtube: "YouTube upload access requires a Google OAuth consent screen. Add your Google account as a test user while the app is in Testing, or complete Google verification before connecting other users.",
+type PlatformId = (typeof PLATFORMS)[number]["id"];
+type Connection = { id: number; platform: string; username: string; isConnected?: boolean; isValidated: boolean; autoPost: boolean; tokenExpiresAt: Date | string | null; validationError?: string | null };
+
+const PROVIDER_GUIDANCE: Partial<Record<PlatformId, string>> = {
+  instagram: "While the Meta app is unpublished, only app-role testers can connect. Customer connections need Meta Business Verification, App Review, and Live mode.",
+  linkedin: "Requires the OpenID Connect and Share on LinkedIn products with the exact callback registered in LinkedIn.",
+  youtube: "While the Google OAuth consent screen is in Testing, add the connecting Google account as a test user.",
 };
+
+function statusFor(connection: Connection | undefined) {
+  if (!connection || connection.isConnected === false) return { tone: "neutral", label: "Not connected", detail: "Connect this account to make it available in Lumae." } as const;
+  if (!connection.isValidated) return { tone: "warning", label: "Reconnect needed", detail: connection.validationError || "Lumae could not validate this connection. Reconnect before publishing." } as const;
+  if (connection.tokenExpiresAt && new Date(connection.tokenExpiresAt).getTime() <= Date.now()) return { tone: "warning", label: "Token expired", detail: "Reconnect this account before publishing or enabling Auto-Post." } as const;
+  if (!connection.autoPost) return { tone: "warning", label: "Auto-Post off", detail: "This connection is valid. Enable Auto-Post to use scheduled publishing." } as const;
+  return { tone: "ready", label: "Ready", detail: "Connected, validated, and approved for scheduled publishing." } as const;
+}
 
 export default function ConnectedAccounts() {
   const [connecting, setConnecting] = useState<string | null>(null);
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
-  const [connections, setConnections] = useState<Record<string, any>>({});
+  const accountsQuery = trpc.socialOAuthIntegration.getConnectedAccounts.useQuery();
+  const disconnect = trpc.socialOAuthIntegration.disconnectAccount.useMutation();
+  const refresh = trpc.socialOAuthIntegration.refreshToken.useMutation();
+  const setAutoPost = trpc.socialOAuthIntegration.setAutoPost.useMutation();
+  const accounts = accountsQuery.data ?? [];
+  const accountByPlatform = useMemo(() => new Map(accounts.map((account) => [account.platform, account as Connection])), [accounts]);
 
-  // Fetch connected accounts
-  const { data: connectedAccounts, isLoading, refetch } = trpc.socialOAuthIntegration.getConnectedAccounts.useQuery();
-
-  // Mutations
-  const disconnectMutation = trpc.socialOAuthIntegration.disconnectAccount.useMutation();
-  const refreshTokenMutation = trpc.socialOAuthIntegration.refreshToken.useMutation();
-  const autoPostMutation = trpc.socialOAuthIntegration.setAutoPost.useMutation();
-
-  // Build connections map
   useEffect(() => {
-    if (connectedAccounts) {
-      const map: Record<string, any> = {};
-      connectedAccounts.forEach((conn: any) => {
-        map[conn.platform] = conn;
-      });
-      setConnections(map);
-    }
-  }, [connectedAccounts]);
+    const refreshOnFocus = () => void accountsQuery.refetch();
+    window.addEventListener("focus", refreshOnFocus);
+    return () => window.removeEventListener("focus", refreshOnFocus);
+  }, [accountsQuery]);
 
-  // Check for OAuth callback with success/error
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const success = params.get("success");
     const platform = params.get("platform");
-    const error = params.get("error");
-    const message = params.get("message");
-
-    if (success && platform) {
-      toast.success(`${platform} account connected successfully!`);
-      refetch();
-      // Clear URL params
+    if (params.get("success") && platform) {
+      toast.success(`${platform} authorization completed. Lumae is now verifying the connection.`);
+      void accountsQuery.refetch();
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-
-    if (error) {
-      const guidance = platform ? PROVIDER_GUIDANCE[platform] : undefined;
-      toast.error(guidance ? `${platform}: ${guidance}` : `OAuth Error: ${error} - ${message || "Unknown error"}`);
-      // Clear URL params
+    if (params.get("error")) {
+      const message = params.get("message") || "The provider did not complete the connection.";
+      const guidance = platform ? PROVIDER_GUIDANCE[platform as PlatformId] : undefined;
+      toast.error(guidance ? `${message} ${guidance}` : message);
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [refetch]);
+  }, [accountsQuery]);
 
-  const handleConnect = async (platformId: string) => {
-    setConnecting(platformId);
-    // OAuth providers, including Meta, block embedded authentication frames.
-    // Opening a blank top-level page within the direct click event preserves the
-    // user gesture on mobile browsers; the fresh authorization URL is assigned
-    // only after the protected server mutation has completed.
+  const connect = async (platform: PlatformId) => {
+    setConnecting(platform);
     const providerWindow = window.open("about:blank", "_blank");
-    if (providerWindow) {
-      providerWindow.opener = null;
-    }
+    if (providerWindow) providerWindow.opener = null;
     try {
-      // Call tRPC mutation to get authorization URL (can't use hooks inside event handlers)
-      const result = await trpcClient.socialOAuthIntegration.getAuthorizationUrl.mutate(
-        { platform: platformId as any }
-      );
-      if (result?.url) {
-        // Navigate a top-level browser tab, never an embedded frame.
-        if (providerWindow) {
-          providerWindow.location.replace(result.url);
-        } else {
-          window.location.assign(result.url);
-        }
-      } else {
-        throw new Error("No authorization URL provided");
-      }
+      const result = await trpcClient.socialOAuthIntegration.getAuthorizationUrl.mutate({ platform });
+      if (!result?.url) throw new Error("The provider did not return an authorization address.");
+      if (providerWindow) providerWindow.location.replace(result.url);
+      else window.location.assign(result.url);
     } catch (error) {
-      if (providerWindow && providerWindow !== window) {
-        providerWindow.close();
-      }
-      console.error("OAuth error:", error);
-      toast.error(`Failed to connect ${platformId}: ${(error as Error)?.message || "Unknown error"}`);
+      if (providerWindow && providerWindow !== window) providerWindow.close();
+      toast.error(error instanceof Error ? error.message : `Unable to start ${platform} authorization.`);
       setConnecting(null);
     }
   };
 
-  const handleDisconnect = async (platformId: string) => {
-    setDisconnecting(platformId);
+  const disconnectAccount = async (platform: PlatformId) => {
+    setDisconnecting(platform);
     try {
-      await disconnectMutation.mutateAsync({
-        platform: platformId as any,
-      });
-      toast.success(`${platformId} account disconnected`);
-      refetch();
-    } catch (error) {
-      toast.error(`Failed to disconnect: ${(error as Error)?.message || "Unknown error"}`);
-    } finally {
-      setDisconnecting(null);
-    }
+      await disconnect.mutateAsync({ platform });
+      await accountsQuery.refetch();
+      toast.success(`${PLATFORMS.find((item) => item.id === platform)?.name} was disconnected and its stored tokens were removed.`);
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Unable to disconnect this account."); }
+    finally { setDisconnecting(null); }
   };
 
-  const handleRefreshToken = async (platformId: string) => {
+  const refreshAccount = async (platform: PlatformId) => {
     try {
-      await refreshTokenMutation.mutateAsync({
-        platform: platformId as any,
-      });
-      toast.success(`${platformId} token refreshed`);
-      refetch();
-    } catch (error) {
-      toast.error(`Failed to refresh token: ${(error as Error)?.message || "Unknown error"}`);
-    }
+      await refresh.mutateAsync({ platform });
+      await accountsQuery.refetch();
+      toast.success(`${PLATFORMS.find((item) => item.id === platform)?.name} token refreshed.`);
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Unable to refresh this token. Reconnect the account if needed."); }
   };
 
-  const handleAutoPostChange = async (platformId: string, enabled: boolean) => {
+  const toggleAutoPost = async (platform: PlatformId, enabled: boolean) => {
     try {
-      await autoPostMutation.mutateAsync({ platform: platformId as any, enabled });
-      toast.success(`Auto-Post ${enabled ? "enabled" : "disabled"} for ${platformId}`);
-      refetch();
-    } catch (error) {
-      toast.error(`Unable to update Auto-Post: ${(error as Error).message || "Unknown error"}`);
-    }
+      await setAutoPost.mutateAsync({ platform, enabled });
+      await accountsQuery.refetch();
+      toast.success(`Auto-Post ${enabled ? "enabled" : "disabled"} for ${PLATFORMS.find((item) => item.id === platform)?.name}.`);
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Auto-Post could not be updated."); }
   };
 
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-96">
-          <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-white">Connected Accounts</h1>
-          <p className="text-gray-400 mt-2">
-            Connect your social media accounts to start posting and managing content
-          </p>
-        </div>
-
-        {/* Platforms Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {PLATFORMS.map((platform) => {
-            const isConnected = connections[platform.id];
-            const isConnecting = connecting === platform.id;
-            const isDisconnecting = disconnecting === platform.id;
-
-            return (
-              <Card
-                key={platform.id}
-                className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 p-6 hover:border-slate-600 transition-all"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`text-3xl`}>{platform.icon}</div>
-                    <div>
-                      <h3 className="font-semibold text-white">{platform.name}</h3>
-                      <p className="text-sm text-gray-400">{platform.description}</p>
-                    </div>
-                  </div>
-                  {isConnected && (
-                    <Badge className="bg-green-500/20 text-green-400 border-green-500/50">
-                      <CheckCircle2 className="w-3 h-3 mr-1" />
-                      Connected
-                    </Badge>
-                  )}
-                </div>
-
-                {isConnected ? (
-                  <div className="space-y-3">
-                    <div className="bg-slate-700/50 rounded-lg p-3 text-sm">
-                      <p className="text-gray-300">
-                        <span className="text-gray-400">Username:</span> {isConnected.username}
-                      </p>
-                      {isConnected.tokenExpiresAt && (
-                        <p className="text-gray-300 mt-1">
-                          <span className="text-gray-400">Expires:</span>{" "}
-                          {new Date(isConnected.tokenExpiresAt).toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-between rounded-lg border border-slate-600 px-3 py-2">
-                      <div>
-                        <p className="text-sm font-medium text-white">Auto-Post</p>
-                        <p className="text-xs text-slate-400">Required for scheduled publishing</p>
-                      </div>
-                      <Switch
-                        checked={Boolean(isConnected.autoPost)}
-                        disabled={autoPostMutation.isPending || !isConnected.isValidated}
-                        onCheckedChange={(enabled) => handleAutoPostChange(platform.id, enabled)}
-                        aria-label={`Toggle Auto-Post for ${platform.name}`}
-                      />
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => handleRefreshToken(platform.id)}
-                        disabled={isDisconnecting}
-                      >
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                        Refresh
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => handleDisconnect(platform.id)}
-                        disabled={isDisconnecting}
-                      >
-                        {isDisconnecting ? (
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        ) : (
-                          <Unlink2 className="w-4 h-4 mr-2" />
-                        )}
-                        Disconnect
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {PROVIDER_GUIDANCE[platform.id] && (
-                      <p className="rounded-md border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs leading-relaxed text-amber-100">
-                        {PROVIDER_GUIDANCE[platform.id]}
-                      </p>
-                    )}
-                    <Button
-                      className="w-full bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-500 text-white"
-                      onClick={() => handleConnect(platform.id)}
-                      disabled={isConnecting}
-                    >
-                      {isConnecting ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Link2 className="w-4 h-4 mr-2" />
-                      )}
-                      {isConnecting ? "Connecting..." : "Connect"}
-                    </Button>
-                  </div>
-                )}
-              </Card>
-            );
-          })}
-        </div>
-
-        {/* Info Section */}
-        <Card className="bg-blue-500/10 border-blue-500/30 p-4">
-          <div className="flex gap-3">
-            <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-blue-200">
-              <p className="font-semibold mb-1">How it works</p>
-              <ul className="space-y-1 text-blue-100">
-                <li>• Click "Connect" to authorize your account with the platform</li>
-                <li>• Your access token is encrypted and stored securely</li>
-                <li>• Tokens are automatically refreshed before expiration</li>
-                <li>• Click "Disconnect" to revoke access and remove stored tokens</li>
-              </ul>
-            </div>
-          </div>
-        </Card>
-      </div>
-    </DashboardLayout>
-  );
+  return <DashboardLayout><main className="mx-auto w-full max-w-7xl space-y-5 px-4 py-5 sm:px-6 lg:px-8">
+    <header className="space-y-2"><p className="text-sm font-medium text-muted-foreground">Scheduling</p><h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Connected accounts</h1><p className="max-w-3xl text-sm leading-6 text-muted-foreground">Lumae shows real account validation and token status. Auto-Post can be switched on only after a successful provider validation.</p></header>
+    {accountsQuery.isLoading ? <Card className="border-border bg-card p-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-6 w-6 animate-spin" /><p className="mt-3 text-sm">Checking connected accounts</p></Card> : <section className="grid grid-cols-1 gap-4 md:grid-cols-2">{PLATFORMS.map((platform) => {
+      const account = accountByPlatform.get(platform.id); const status = statusFor(account); const busy = connecting === platform.id || disconnecting === platform.id;
+      const statusClass = status.tone === "ready" ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-500" : status.tone === "warning" ? "border-amber-500/40 bg-amber-500/10 text-amber-500" : "text-muted-foreground";
+      const canToggle = Boolean(account?.isConnected && account.isValidated && (!account.tokenExpiresAt || new Date(account.tokenExpiresAt).getTime() > Date.now()));
+      return <Card key={platform.id} className="flex min-h-72 flex-col border-border bg-card text-card-foreground"><CardHeader className="pb-3"><div className="flex items-start justify-between gap-3"><div className="flex min-w-0 gap-3"><span className="text-2xl" aria-hidden="true">{platform.icon}</span><div><CardTitle className="text-base">{platform.name}</CardTitle><CardDescription className="mt-1 text-xs leading-5">{platform.description}</CardDescription></div></div><Badge variant="outline" className={statusClass}>{status.tone === "ready" ? <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> : status.tone === "warning" ? <AlertCircle className="mr-1 h-3.5 w-3.5" /> : <XCircle className="mr-1 h-3.5 w-3.5" />}{status.label}</Badge></div></CardHeader><CardContent className="flex flex-1 flex-col gap-3"><div className="min-h-16 rounded-md border border-border bg-background/40 p-3 text-xs leading-5 text-muted-foreground">{account?.username && <p className="mb-1 text-sm font-medium text-foreground">@{account.username}</p>}<p>{status.detail}</p>{account?.tokenExpiresAt && status.tone !== "neutral" && <p className="mt-1">Token expiry: {new Date(account.tokenExpiresAt).toLocaleDateString()}</p>}</div>{account ? <><div className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2"><div><p className="text-sm font-medium">Auto-Post</p><p className="text-xs text-muted-foreground">Required for scheduled publishing</p></div><Switch checked={Boolean(account.autoPost)} disabled={!canToggle || setAutoPost.isPending} onCheckedChange={(enabled) => toggleAutoPost(platform.id, enabled)} aria-label={`Toggle Auto-Post for ${platform.name}`} /></div>{!canToggle && <p className="text-xs text-amber-500">Reconnect and validate this account before Auto-Post can be enabled.</p>}<div className="mt-auto grid grid-cols-2 gap-2"><Button type="button" variant="outline" size="sm" onClick={() => refreshAccount(platform.id)} disabled={busy || refresh.isPending}><RefreshCw className="mr-1.5 h-4 w-4" />Refresh</Button><Button type="button" variant="outline" size="sm" className="border-destructive/40 text-destructive hover:text-destructive" onClick={() => disconnectAccount(platform.id)} disabled={busy}>{disconnecting === platform.id ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Unlink2 className="mr-1.5 h-4 w-4" />}Disconnect</Button></div></> : <><div className="min-h-9 text-xs text-amber-500">{PROVIDER_GUIDANCE[platform.id] || "Provider approval may be required before connection is available."}</div><Button type="button" className="mt-auto w-full bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-500 text-white hover:opacity-90" onClick={() => connect(platform.id)} disabled={busy}>{connecting === platform.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Link2 className="mr-2 h-4 w-4" />}{connecting === platform.id ? "Opening provider…" : "Connect"}</Button></>}</CardContent></Card>;
+    })}</section>}
+    <Card className="border-primary/30 bg-primary/5 text-card-foreground"><CardContent className="flex gap-3 p-4"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" /><div className="text-sm leading-6"><p className="font-medium">What Lumae checks</p><p className="text-muted-foreground">Account identity and permissions are validated server-side. Tokens stay encrypted, are never displayed in this page, and are removed when you disconnect. A provider or app-review restriction may still prevent a connection from becoming ready.</p></div></CardContent></Card>
+  </main></DashboardLayout>;
 }

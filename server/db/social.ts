@@ -1,6 +1,6 @@
 import { getDb } from "../db";
-import { socialConnections, scheduledPosts } from "../../drizzle/schema";
-import { eq, and } from "drizzle-orm";
+import { socialConnections, scheduledPosts, socialPostDrafts } from "../../drizzle/schema";
+import { eq, and, desc, lte, or } from "drizzle-orm";
 import { encrypt } from "../_core/encryption";
 
 /**
@@ -273,6 +273,48 @@ export async function updateScheduledPostStatus(
 }
 
 /**
+ * Claims due work atomically so a retrying Heartbeat callback cannot publish
+ * the same social post twice. A stale claim may be reclaimed after five
+ * minutes, which handles process termination during provider calls.
+ */
+export async function claimDueScheduledPosts(limit = 10) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const now = new Date();
+  const staleThreshold = new Date(now.getTime() - 5 * 60 * 1000);
+  const candidates = await db
+    .select()
+    .from(scheduledPosts)
+    .where(and(
+      lte(scheduledPosts.scheduledAt, now),
+      or(
+        eq(scheduledPosts.status, "pending"),
+        and(eq(scheduledPosts.status, "processing"), lte(scheduledPosts.updatedAt, staleThreshold)),
+      ),
+    ))
+    .orderBy(scheduledPosts.scheduledAt)
+    .limit(limit);
+
+  const claimed = [] as typeof candidates;
+  for (const candidate of candidates) {
+    const result = await db
+      .update(scheduledPosts)
+      .set({ status: "processing", updatedAt: now, errorMessage: null })
+      .where(and(
+        eq(scheduledPosts.id, candidate.id),
+        or(
+          eq(scheduledPosts.status, "pending"),
+          and(eq(scheduledPosts.status, "processing"), lte(scheduledPosts.updatedAt, staleThreshold)),
+        ),
+      ));
+    if ((result as any).rowsAffected === 1 || (result as any).affectedRows === 1) {
+      claimed.push({ ...candidate, status: "processing" as const, updatedAt: now });
+    }
+  }
+  return claimed;
+}
+
+/**
  * Delete a scheduled post
  */
 export async function deleteScheduledPost(userId: number, postId: number) {
@@ -286,6 +328,50 @@ export async function deleteScheduledPost(userId: number, postId: number) {
         eq(scheduledPosts.userId, userId)
       )
     );
+}
+
+export async function createSocialPostDraft(
+  userId: number,
+  draft: {
+    title?: string;
+    content: string;
+    platforms: string[];
+    hashtags: string[];
+    mentions: string[];
+    mediaUrl?: string;
+    mediaType?: "image" | "video";
+    mediaKey?: string;
+  },
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(socialPostDrafts).values({ userId, ...draft });
+  return {
+    id: (result as any).insertId as number,
+    userId,
+    ...draft,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+}
+
+export async function getSocialPostDrafts(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db
+    .select()
+    .from(socialPostDrafts)
+    .where(eq(socialPostDrafts.userId, userId))
+    .orderBy(desc(socialPostDrafts.updatedAt));
+}
+
+export async function deleteSocialPostDraft(userId: number, draftId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db
+    .delete(socialPostDrafts)
+    .where(and(eq(socialPostDrafts.id, draftId), eq(socialPostDrafts.userId, userId)));
 }
 
 /**

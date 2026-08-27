@@ -1293,9 +1293,27 @@
 - [x] Align the Instagram authorization redirect with the previously registered canonical callback URI while retaining the legacy callback alias
 - [x] Identify the remaining Meta app configuration or permission requirement causing the persistent Instagram authorization error
 - [x] Restore the screenshot-confirmed Instagram callback URI ending in /instagram/callback and preserve the shorter alias
-- [ ] Verify the remaining external Meta app mode, product, permission, and role requirements behind the persistent provider rejection
+- [x] Verify the remaining external Meta app mode, product, permission, and role requirements behind the persistent provider rejection
 - [ ] Complete Meta business verification and add the Instagram API Content Publishing use case before retrying connection
 - [x] Configure Instagram Business Login and align Lumae to the selected Instagram Login OAuth model
+- [x] Assign the Facebook account used for Instagram testing an Administrator, Developer, or Tester role on the Lumae Meta app
+- [x] Verify successful Instagram connection with the owner’s accepted Meta Tester role
+- [ ] Enable Auto-Post for the owner-confirmed connected Instagram account after server-side validation
+- [ ] Diagnose why the latest Instagram consent did not produce a connected and validated account record
+
+## Meta Live-Mode Preparation (IN PROGRESS)
+- [ ] Prepare truthful Meta App Review responses for the Instagram Business Login permissions Lumae needs
+- [ ] Guide the owner through business verification, app review submission, and Live-mode activation
+- [ ] Retest Instagram connection for a non-tester account after Meta approval
+
+## Scheduling and Connected Accounts Repair (IN PROGRESS)
+- [x] Remove mock scheduled-post metrics and placeholder activity from the scheduling workspace
+- [x] Enable Auto-Post only for validated, non-expired social connections and show truthful status feedback
+- [x] Repair Publish Now, Schedule Post, and Save Draft actions with visible success and error states
+- [x] Restore a clear, functional AI content-generation action for post creation
+- [x] Restore visible publishing controls on the Social Publishing tab and use only connected platforms
+- [x] Correct mobile scheduling layouts, controls, and platform selection behavior
+- [x] Replace Create Post Pro's fabricated draft and performance estimates with truthful persisted drafts and connected-platform controls
 
 ## Evidence-Based Security Audit (IN PROGRESS)
 - [x] Audit repository controls across all 36 requested security checks without changing production data or infrastructure
