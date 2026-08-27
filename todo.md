@@ -1282,6 +1282,7 @@
 - [ ] Verify Instagram and LinkedIn reconnection readiness and enable Auto-Post only after successful validation
 - [x] Add optional, validated media references to platform automation schedules for provider-valid publishing
 - [x] Require a validated and non-expired connection before Auto-Post can be enabled
+- [ ] Provision the required server-side OAuth state encryption key before reconnection
 
 ## Evidence-Based Security Audit (IN PROGRESS)
 - [x] Audit repository controls across all 36 requested security checks without changing production data or infrastructure
