@@ -1289,6 +1289,8 @@
 - [x] Correct OAuth scope separator handling so Meta receives comma-delimited permissions rather than the literal word "comma"
 - [x] Diagnose the user-reported Meta login or consent failure during Instagram reconnection
 - [x] Ensure Instagram and LinkedIn provider authorization launches navigate the top-level browser on mobile
+- [x] Diagnose Meta’s remaining top-level OAuth error after the embedded-frame launch was fixed
+- [x] Align the Instagram authorization redirect with the previously registered canonical callback URI while retaining the legacy callback alias
 
 ## Evidence-Based Security Audit (IN PROGRESS)
 - [x] Audit repository controls across all 36 requested security checks without changing production data or infrastructure

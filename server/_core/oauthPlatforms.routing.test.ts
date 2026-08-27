@@ -5,8 +5,12 @@ describe("production OAuth routing", () => {
   const baseUrl = "https://lumae.co.in";
   const platforms = initializeOAuthConfigs(baseUrl);
 
-  it("uses the mounted callback path for every configured provider", () => {
-    for (const platform of ["instagram", "facebook", "twitter", "linkedin", "youtube", "tiktok"] as const) {
+  it("uses the registered canonical callback for Instagram and mounted callback paths for other providers", () => {
+    expect(platforms.instagram.redirectUri).toBe(
+      `${baseUrl}/api/oauth/callback/instagram`,
+    );
+
+    for (const platform of ["facebook", "twitter", "linkedin", "youtube", "tiktok"] as const) {
       expect(platforms[platform].redirectUri).toBe(
         `${baseUrl}/api/oauth/callback/${platform}/callback`,
       );

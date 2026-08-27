@@ -24,6 +24,12 @@ export interface OAuthPlatforms {
  * Get the exact callback URI mounted by the Express OAuth router.
  */
 function getRedirectUri(baseUrl: string, platform: string): string {
+  // Instagram was originally registered with Meta at this canonical path.
+  // Keep the platform-specific route stable so the exact URI supplied during
+  // authorization matches the existing Meta app dashboard configuration.
+  if (platform === "instagram") {
+    return `${baseUrl}/api/oauth/callback/instagram`;
+  }
   return `${baseUrl}/api/oauth/callback/${platform}/callback`;
 }
 

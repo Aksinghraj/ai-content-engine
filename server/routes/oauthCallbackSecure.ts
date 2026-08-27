@@ -57,6 +57,10 @@ async function handleOAuthCallback(
 }
 
 // Instagram callback
+router.get("/instagram", async (req: Request, res: Response) => {
+  await handleOAuthCallback(req, res, "instagram");
+});
+
 router.get("/instagram/callback", async (req: Request, res: Response) => {
   await handleOAuthCallback(req, res, "instagram");
 });

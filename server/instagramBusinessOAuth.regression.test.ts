@@ -16,9 +16,16 @@ describe("Instagram Business OAuth contract", () => {
   it("uses Meta Business OAuth rather than the retired Instagram Basic Display path", () => {
     expect(platforms).toContain('authorizationEndpoint: "https://www.facebook.com/v26.0/dialog/oauth"');
     expect(platforms).toContain('tokenEndpoint: "https://graph.facebook.com/v26.0/oauth/access_token"');
+    expect(platforms).toContain('return `${baseUrl}/api/oauth/callback/instagram`;');
     expect(platforms).toContain('"instagram_content_publish"');
     expect(platforms).toContain('"pages_show_list"');
     expect(platforms).not.toContain('authorizationEndpoint: "https://api.instagram.com/oauth/authorize"');
+  });
+
+  it("accepts both the registered Instagram callback path and the previous callback alias", () => {
+    const callbacks = read("server/routes/oauthCallbackSecure.ts");
+    expect(callbacks).toContain('router.get("/instagram", async');
+    expect(callbacks).toContain('router.get("/instagram/callback", async');
   });
 
   it("resolves an Instagram professional account and stores its Page publishing token", () => {
