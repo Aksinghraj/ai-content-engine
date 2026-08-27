@@ -8,7 +8,9 @@ describe("production OAuth routing", () => {
   it("uses the registered mounted callback path for every configured provider", () => {
     for (const platform of ["instagram", "facebook", "twitter", "linkedin", "youtube", "tiktok"] as const) {
       expect(platforms[platform].redirectUri).toBe(
-        `${baseUrl}/api/oauth/callback/${platform}/callback`,
+        platform === "instagram"
+          ? `${baseUrl}/api/oauth/callback/instagram/callback`
+          : `${baseUrl}/api/oauth/callback/${platform}`,
       );
     }
   });

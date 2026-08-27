@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Clapperboard, FileText, History, Image, PenLine, Repeat2, ScanLine, Search, Send, Sparkles, Star, WandSparkles, X, type LucideIcon } from "lucide-react";
 import { appNavigation, getNavigationArea } from "@/lib/appNavigation";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut } from "@/components/ui/command";
 
 type NavigationProps = { compact?: boolean; onNavigate?: () => void; };
@@ -33,7 +34,8 @@ const contentStudioTools: Record<string, Omit<ContentStudioTool, "label" | "path
 
 export function AppPrimaryNavigation({ compact = false, onNavigate }: NavigationProps) {
   const [location] = useLocation();
-  return <nav className={compact ? "lumae-top-nav" : "lumae-side-nav"} aria-label="Application navigation">{appNavigation.map((area, index) => { const Icon = area.icon; const active = getNavigationArea(location)?.label === area.label; return <Link key={area.label} href={area.path} onClick={onNavigate} className={`lumae-nav-item ${active ? "is-active" : ""}`}><span className="lumae-nav-item__index">{String(index + 1).padStart(2, "0")}</span><Icon className="h-4 w-4"/><span>{area.label}</span></Link>; })}</nav>;
+  const { t } = useLanguage();
+  return <nav className={compact ? "lumae-top-nav" : "lumae-side-nav"} aria-label="Application navigation">{appNavigation.map((area, index) => { const Icon = area.icon; const active = getNavigationArea(location)?.label === area.label; return <Link key={area.label} href={area.path} onClick={onNavigate} className={`lumae-nav-item ${active ? "is-active" : ""}`}><span className="lumae-nav-item__index">{String(index + 1).padStart(2, "0")}</span><Icon className="h-4 w-4"/><span>{t(area.label)}</span></Link>; })}</nav>;
 }
 
 export function GroupedPageTabs() {
@@ -43,6 +45,7 @@ export function GroupedPageTabs() {
   const [favoritePaths, setFavoritePaths] = useState<string[]>(() => readStoredPaths(FAVORITE_TOOLS_KEY));
   const [showDiscoveryHint, setShowDiscoveryHint] = useState(() => typeof window !== "undefined" && window.localStorage.getItem(DISCOVERY_HINT_KEY) !== "true");
   const activeArea = getNavigationArea(location);
+  const { t } = useLanguage();
   const isContentStudio = activeArea?.label === "Content Studio";
   const tools: ContentStudioTool[] = isContentStudio && activeArea?.tabs
     ? activeArea.tabs.map((tab) => ({ ...tab, ...(contentStudioTools[tab.label] ?? { description: "Open this content tool.", icon: Sparkles }) }))
@@ -73,7 +76,7 @@ export function GroupedPageTabs() {
   const dismissHint = () => { setShowDiscoveryHint(false); try { window.localStorage.setItem(DISCOVERY_HINT_KEY, "true"); } catch { /* no-op */ } };
 
   return <section className={`lumae-group-tabs ${isContentStudio ? "lumae-group-tabs--complete" : ""}`} aria-label={`${activeArea.label} sections`}>
-    <div className="lumae-group-tabs__title"><span>Workspace</span><h1>{activeArea.label}</h1>{isContentStudio && <p>Choose one tool to keep every content task in the same workspace.</p>}</div>
+    <div className="lumae-group-tabs__title"><span>{t("Workspace")}</span><h1>{t(activeArea.label)}</h1>{isContentStudio && <p>Choose one tool to keep every content task in the same workspace.</p>}</div>
     {isContentStudio && <><button type="button" className="lumae-tool-search" onClick={() => setPaletteOpen(true)} aria-label="Search Content Studio tools"><Search className="h-4 w-4"/><span>Search tools</span><kbd>⌘ K</kbd></button>{showDiscoveryHint && <aside className="lumae-discovery-hint" aria-label="What is new in Content Studio"><Sparkles className="h-4 w-4"/><div><strong>What’s new</strong><p>Pin your go-to tools, then use Search tools to switch faster.</p></div><button type="button" onClick={dismissHint} aria-label="Dismiss Content Studio update"><X className="h-4 w-4"/></button></aside>}</>}
     <div className={`lumae-group-tabs__rail ${isContentStudio ? "lumae-group-tabs__rail--complete" : ""}`} role="tablist" aria-label={`${activeArea.label} tabs`}>
       {activeArea.tabs.map((tab, index) => {

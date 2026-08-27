@@ -40,12 +40,16 @@ describe("authentic automation data", () => {
   it("keeps Calendar, Analytics, and Settings free of fabricated account data", () => {
     const calendar = read("client/src/pages/ContentCalendar.tsx");
     const analytics = read("client/src/pages/AnalyticsDashboard.tsx");
+    const usageAnalytics = read("client/src/pages/UsageAnalytics.tsx");
     const settings = read("client/src/pages/SettingsAdvanced.tsx");
 
     expect(calendar).toContain("trpc.socialMedia.getScheduledPosts.useQuery");
     expect(calendar).not.toContain("MOCK_EVENTS");
     expect(analytics).toContain('export { default } from "./UsageAnalytics"');
-    expect(settings).toContain("trpc.accountPreferences.getLanguage.useQuery");
+    expect(usageAnalytics).toContain("trpc.analytics.getContentAnalytics.useQuery");
+    expect(usageAnalytics).not.toContain("Mock data for demonstration");
+    expect(usageAnalytics).not.toContain("Tokens Used Today");
+    expect(settings).toContain("useLanguage");
     expect(settings).not.toContain("user@example.com");
     expect(settings).not.toContain("sk_live_");
   });

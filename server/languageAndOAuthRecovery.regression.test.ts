@@ -21,10 +21,15 @@ describe("language and OAuth recovery", () => {
     const generator = read("client/src/pages/Generator.tsx");
     const contentGenerator = read("server/_core/contentGenerator.ts");
     const preferenceRouter = read("server/routers/accountPreferences.ts");
+    const languageContext = read("client/src/contexts/LanguageContext.tsx");
+    const navigation = read("client/src/components/AppNavigation.tsx");
     expect(generator).toContain('{ code: "bho", name: "Bhojpuri" }');
     expect(generator).toContain("trpc.accountPreferences.setLanguage.useMutation");
     expect(contentGenerator).toContain('bho: "Bhojpuri"');
     expect(contentGenerator).toContain("Do not silently switch to Hindi or English");
     expect(preferenceRouter).toContain('"bho"');
+    expect(languageContext).toContain("accountPreferences.getLanguage.useQuery");
+    expect(languageContext).toContain('bho: {');
+    expect(navigation).toContain("const { t } = useLanguage()");
   });
 });

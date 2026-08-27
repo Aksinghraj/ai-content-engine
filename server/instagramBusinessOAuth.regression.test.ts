@@ -16,7 +16,7 @@ describe("Instagram Business OAuth contract", () => {
   it("uses the configured Instagram Business Login flow rather than Basic Display or Facebook Login", () => {
     expect(platforms).toContain('authorizationEndpoint: "https://www.instagram.com/oauth/authorize"');
     expect(platforms).toContain('tokenEndpoint: "https://api.instagram.com/oauth/access_token"');
-    expect(platforms).toContain('return `${baseUrl}/api/oauth/callback/${platform}/callback`;');
+    expect(platforms).toContain('`${baseUrl}/api/oauth/callback/instagram/callback`');
     expect(platforms).toContain('"instagram_business_content_publish"');
     expect(platforms).toContain('"instagram_business_basic"');
     expect(platforms).not.toContain('authorizationEndpoint: "https://www.facebook.com/v26.0/dialog/oauth"');

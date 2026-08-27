@@ -1,215 +1,24 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { Zap, TrendingUp, Calendar, Activity } from "lucide-react";
+import { Activity, BarChart3, Heart, Loader2, Users } from "lucide-react";
+import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+
+type AnalyticsRecord = { date: string | Date; engagement?: number | null; reach?: number | null; conversions?: number | null };
 
 export default function UsageAnalytics() {
-  const { user } = useAuth();
+  const analyticsQuery = trpc.analytics.getContentAnalytics.useQuery({ days: 30 });
+  const records = ((analyticsQuery.data?.data ?? []) as AnalyticsRecord[]).filter((record) => record.date);
+  const reach = records.reduce((total, record) => total + Number(record.reach || 0), 0);
+  const engagement = records.reduce((total, record) => total + Number(record.engagement || 0), 0);
+  const conversions = records.reduce((total, record) => total + Number(record.conversions || 0), 0);
+  const engagementRate = reach > 0 ? ((engagement / reach) * 100).toFixed(2) : "0.00";
+  const chartData = records.map((record) => ({ date: new Date(record.date).toLocaleDateString(undefined, { month: "short", day: "numeric" }), reach: Number(record.reach || 0), engagement: Number(record.engagement || 0) }));
 
-  if (!user) {
-    return <DashboardLayout><div>Sign in to continue</div></DashboardLayout>;
-  }
+  return <DashboardLayout><main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6"><header><h1 className="text-3xl font-semibold text-foreground">Usage Analytics</h1><p className="mt-2 text-sm text-muted-foreground">Measured performance data from your connected providers. Lumae does not fill this view with sample activity.</p></header>
+    {analyticsQuery.isLoading ? <Card><CardContent className="flex min-h-64 flex-col items-center justify-center text-muted-foreground"><Loader2 className="h-6 w-6 animate-spin" /><p className="mt-3">Loading your analytics…</p></CardContent></Card> : records.length === 0 ? <Card><CardContent className="flex min-h-72 flex-col items-center justify-center px-6 text-center"><BarChart3 className="h-10 w-10 text-primary" /><h2 className="mt-4 text-lg font-semibold text-foreground">No measured analytics yet</h2><p className="mt-2 max-w-md text-sm text-muted-foreground">Connect a supported provider and publish or import activity to begin seeing measured performance here. No sample reach, engagement, or conversion figures are displayed.</p></CardContent></Card> : <><section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><Metric icon={Users} label="Measured reach" value={reach.toLocaleString()} /><Metric icon={Heart} label="Measured engagement" value={engagement.toLocaleString()} /><Metric icon={Activity} label="Engagement rate" value={`${engagementRate}%`} /><Metric icon={BarChart3} label="Measured conversions" value={conversions.toLocaleString()} /></section><Card><CardHeader><CardTitle>Measured activity over time</CardTitle><CardDescription>Only data returned and stored for your account is charted.</CardDescription></CardHeader><CardContent><div className="h-80"><ResponsiveContainer width="100%" height="100%"><LineChart data={chartData}><XAxis dataKey="date" stroke="currentColor" tick={{ fill: "currentColor", fontSize: 12 }} /><YAxis stroke="currentColor" tick={{ fill: "currentColor", fontSize: 12 }} /><Tooltip /><Line type="monotone" dataKey="reach" stroke="#6366f1" strokeWidth={2} name="Reach" /><Line type="monotone" dataKey="engagement" stroke="#06b6d4" strokeWidth={2} name="Engagement" /></LineChart></ResponsiveContainer></div></CardContent></Card></>}</main></DashboardLayout>;
+}
 
-  // Mock data for demonstration (will be replaced with real data from backend)
-  const dailyUsageData = [
-    { date: "Mon", tokens: 450, contentGenerated: 12 },
-    { date: "Tue", tokens: 620, contentGenerated: 18 },
-    { date: "Wed", tokens: 380, contentGenerated: 10 },
-    { date: "Thu", tokens: 890, contentGenerated: 25 },
-    { date: "Fri", tokens: 720, contentGenerated: 20 },
-    { date: "Sat", tokens: 540, contentGenerated: 15 },
-    { date: "Sun", tokens: 310, contentGenerated: 8 },
-  ];
-
-  const contentTypeData = [
-    { name: "Captions", value: 35, color: "#667eea" },
-    { name: "Scripts", value: 25, color: "#764ba2" },
-    { name: "Posts", value: 30, color: "#f093fb" },
-    { name: "Other", value: 10, color: "#4facfe" },
-  ];
-
-  const platformStats = [
-    { platform: "Instagram", usage: 45, limit: 100 },
-    { platform: "YouTube", usage: 32, limit: 100 },
-    { platform: "LinkedIn", usage: 28, limit: 100 },
-    { platform: "Twitter", usage: 18, limit: 100 },
-  ];
-
-  return (
-    <DashboardLayout>
-      <div className="flex-1 overflow-auto">
-        <div className="p-6 space-y-6">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Usage Analytics</h1>
-              <p className="text-muted-foreground mt-2">Track your content generation and token usage</p>
-            </div>
-          </div>
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Tokens Used Today</p>
-                  <p className="text-3xl font-bold mt-2">2,890</p>
-                  <p className="text-xs text-green-600 mt-1">↑ 12% from yesterday</p>
-                </div>
-                <Zap className="h-10 w-10 text-yellow-500 opacity-50" />
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Content Generated</p>
-                  <p className="text-3xl font-bold mt-2">108</p>
-                  <p className="text-xs text-green-600 mt-1">↑ 8% from last week</p>
-                </div>
-                <TrendingUp className="h-10 w-10 text-blue-500 opacity-50" />
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Avg. Daily Usage</p>
-                  <p className="text-3xl font-bold mt-2">571</p>
-                  <p className="text-xs text-muted-foreground mt-1">tokens/day</p>
-                </div>
-                <Activity className="h-10 w-10 text-purple-500 opacity-50" />
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Days Remaining</p>
-                  <p className="text-3xl font-bold mt-2">23</p>
-                  <p className="text-xs text-muted-foreground mt-1">in current month</p>
-                </div>
-                <Calendar className="h-10 w-10 text-pink-500 opacity-50" />
-              </div>
-            </Card>
-          </div>
-
-          {/* Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Daily Usage Chart */}
-            <Card className="lg:col-span-2 p-6">
-              <h2 className="text-lg font-semibold mb-4">Daily Token Usage</h2>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={dailyUsageData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="date" stroke="#9ca3af" />
-                  <YAxis stroke="#9ca3af" />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: "#1f2937", border: "1px solid #374151" }}
-                    labelStyle={{ color: "#f3f4f6" }}
-                  />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="tokens" 
-                    stroke="#667eea" 
-                    strokeWidth={2}
-                    dot={{ fill: "#667eea", r: 4 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </Card>
-
-            {/* Content Type Distribution */}
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-4">Content Types</h2>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={contentTypeData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, value }) => `${name} ${value}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {contentTypeData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </Card>
-          </div>
-
-          {/* Platform Usage */}
-          <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Platform-wise Usage</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={platformStats}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="platform" stroke="#9ca3af" />
-                <YAxis stroke="#9ca3af" />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: "#1f2937", border: "1px solid #374151" }}
-                  labelStyle={{ color: "#f3f4f6" }}
-                />
-                <Legend />
-                <Bar dataKey="usage" fill="#667eea" name="Used" />
-                <Bar dataKey="limit" fill="#e5e7eb" name="Limit" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-
-          {/* Usage Summary Table */}
-          <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Monthly Summary</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-3 px-4 font-semibold">Metric</th>
-                    <th className="text-right py-3 px-4 font-semibold">This Month</th>
-                    <th className="text-right py-3 px-4 font-semibold">Last Month</th>
-                    <th className="text-right py-3 px-4 font-semibold">Change</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b border-border hover:bg-muted/50">
-                    <td className="py-3 px-4">Total Tokens Used</td>
-                    <td className="text-right py-3 px-4">13,230</td>
-                    <td className="text-right py-3 px-4">11,450</td>
-                    <td className="text-right py-3 px-4 text-green-600">+15.5%</td>
-                  </tr>
-                  <tr className="border-b border-border hover:bg-muted/50">
-                    <td className="py-3 px-4">Content Generated</td>
-                    <td className="text-right py-3 px-4">378</td>
-                    <td className="text-right py-3 px-4">312</td>
-                    <td className="text-right py-3 px-4 text-green-600">+21.2%</td>
-                  </tr>
-                  <tr className="border-b border-border hover:bg-muted/50">
-                    <td className="py-3 px-4">Avg Tokens per Content</td>
-                    <td className="text-right py-3 px-4">35</td>
-                    <td className="text-right py-3 px-4">37</td>
-                    <td className="text-right py-3 px-4 text-green-600">-5.4%</td>
-                  </tr>
-                  <tr className="hover:bg-muted/50">
-                    <td className="py-3 px-4">Active Days</td>
-                    <td className="text-right py-3 px-4">28</td>
-                    <td className="text-right py-3 px-4">26</td>
-                    <td className="text-right py-3 px-4 text-green-600">+7.7%</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </Card>
-        </div>
-      </div>
-    </DashboardLayout>
-  );
+function Metric({ icon: Icon, label, value }: { icon: typeof Activity; label: string; value: string }) {
+  return <Card><CardContent className="flex items-center justify-between p-5"><div><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold text-foreground">{value}</p></div><Icon className="h-7 w-7 text-primary" /></CardContent></Card>;
 }

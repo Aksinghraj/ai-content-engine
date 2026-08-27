@@ -617,10 +617,11 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
                     </Select>
                   </div>
 
-                  <Button
+                  <div className="block w-full rounded-lg border border-[#6366f1]/60 bg-[#141417] p-1">
+                  <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                    className="flex min-h-12 w-full items-center justify-center rounded-md bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#06b6d4] px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isLoading || generationPulse !== "idle" ? (
                       <>
@@ -633,7 +634,8 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
                         Generate Content
                       </>
                     )}
-                  </Button>
+                  </button>
+                  </div>
 
                   {/* Unified cached trends: Live YouTube + clearly labelled AI estimates. */}
                   {trendingQuery.data?.data && trendingQuery.data.data.length > 0 && (
