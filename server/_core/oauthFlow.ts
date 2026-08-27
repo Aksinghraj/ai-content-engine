@@ -42,6 +42,7 @@ export async function generateAuthorizationUrl(
 ): Promise<{ authorizationUrl: string; state: string }> {
   const platforms = initializeOAuthConfigs(baseUrl);
   const config = getPlatformConfig(platforms, platform);
+  const scopeSeparator = config.scopeSeparator === "comma" ? "," : " ";
 
   if (!validateOAuthConfig(config)) {
     throw new Error(
@@ -71,7 +72,7 @@ export async function generateAuthorizationUrl(
     redirect_uri: config.redirectUri,
     response_type: "code",
     state,
-    scope: config.scopes.join(config.scopeSeparator),
+    scope: config.scopes.join(scopeSeparator),
   });
 
   // Add PKCE parameters if required

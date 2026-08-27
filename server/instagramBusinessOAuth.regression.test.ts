@@ -36,4 +36,9 @@ describe("Instagram Business OAuth contract", () => {
     expect(accountsPage).toContain("getAuthorizationUrl.mutate(");
     expect(accountsPage).not.toContain("getAuthorizationUrl.query(");
   });
+
+  it("serializes Meta permissions as comma-delimited scopes rather than a literal separator label", () => {
+    expect(flow).toContain('config.scopeSeparator === "comma" ? "," : " "');
+    expect(flow).toContain("scope: config.scopes.join(scopeSeparator)");
+  });
 });

@@ -1286,6 +1286,7 @@
 - [x] Explicitly load the configured OAuth encryption key through the server environment module
 - [x] Replace the incompatible Instagram Basic Display connection path with Meta Instagram Business OAuth
 - [x] Prevent stale OAuth authorization URLs by making state-creating connection starts non-cacheable
+- [x] Correct OAuth scope separator handling so Meta receives comma-delimited permissions rather than the literal word "comma"
 
 ## Evidence-Based Security Audit (IN PROGRESS)
 - [x] Audit repository controls across all 36 requested security checks without changing production data or infrastructure
