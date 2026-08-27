@@ -16,7 +16,7 @@ describe("Instagram Business OAuth contract", () => {
   it("uses Meta Business OAuth rather than the retired Instagram Basic Display path", () => {
     expect(platforms).toContain('authorizationEndpoint: "https://www.facebook.com/v26.0/dialog/oauth"');
     expect(platforms).toContain('tokenEndpoint: "https://graph.facebook.com/v26.0/oauth/access_token"');
-    expect(platforms).toContain('return `${baseUrl}/api/oauth/callback/instagram`;');
+    expect(platforms).toContain('return `${baseUrl}/api/oauth/callback/${platform}/callback`;');
     expect(platforms).toContain('"instagram_content_publish"');
     expect(platforms).toContain('"pages_show_list"');
     expect(platforms).not.toContain('authorizationEndpoint: "https://api.instagram.com/oauth/authorize"');

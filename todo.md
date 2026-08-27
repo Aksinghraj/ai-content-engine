@@ -1291,6 +1291,8 @@
 - [x] Ensure Instagram and LinkedIn provider authorization launches navigate the top-level browser on mobile
 - [x] Diagnose Meta’s remaining top-level OAuth error after the embedded-frame launch was fixed
 - [x] Align the Instagram authorization redirect with the previously registered canonical callback URI while retaining the legacy callback alias
+- [x] Identify the remaining Meta app configuration or permission requirement causing the persistent Instagram authorization error
+- [x] Restore the screenshot-confirmed Instagram callback URI ending in /instagram/callback and preserve the shorter alias
 
 ## Evidence-Based Security Audit (IN PROGRESS)
 - [x] Audit repository controls across all 36 requested security checks without changing production data or infrastructure
