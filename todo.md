@@ -1323,6 +1323,17 @@
 - [x] Show clear provider-specific readiness, connection, and scheduling requirements in the automation workspace
 - [x] Test supported workflows, mobile/desktop controls, and all server-side readiness gates before publishing
 
+## Authentic Data, Provider Recovery, and Local Language (IN PROGRESS)
+- [x] Restore the clipped mobile Generate Content button shown beneath the content brief language selector
+- [ ] Audit canonical user-facing pages for fabricated messages, metrics, activity, and sample identities
+- [ ] Replace active mock workflow views with honest empty states or user-owned persisted data
+- [ ] Diagnose Facebook, YouTube, and LinkedIn authorization failures without exposing credentials or bypassing provider approval
+- [ ] Show clear, provider-specific corrective guidance when a connection cannot complete
+- [ ] Add a secure persisted account-language setting with a user-facing language selector
+- [ ] Localize the supported application shell and account settings through an extensible translation foundation
+- [ ] Add Bhojpuri as a selectable content-generation language and preserve the selected language in generation requests
+- [ ] Test authentic-data display, provider guidance, language persistence, Bhojpuri requests, and mobile layout before publishing
+
 ## Evidence-Based Security Audit (IN PROGRESS)
 - [x] Audit repository controls across all 36 requested security checks without changing production data or infrastructure
 - [x] Inspect the public deployment’s security headers, public routes, debug exposure, and build artifacts

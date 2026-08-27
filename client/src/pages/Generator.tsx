@@ -435,7 +435,7 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Form */}
           <div className="lg:col-span-1">
-            <Card className="border-purple-500/20 bg-slate-900/50 backdrop-blur sticky top-6">
+            <Card className="border-purple-500/20 bg-slate-900/50 backdrop-blur lg:sticky lg:top-6">
               <CardHeader>
                 <CardTitle className="text-purple-400">Content Brief</CardTitle>
                 <CardDescription>Fill in your content details</CardDescription>
@@ -579,6 +579,40 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
                     </div>
                   )}
 
+                  <div>
+                    <Label className="text-slate-300">Language</Label>
+                    <Select value={formData.language} onValueChange={(value) => setFormData({ ...formData, language: value })}>
+                      <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                        <SelectValue placeholder="Select language" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-700">
+                        {LANGUAGES.map((lang) => (
+                          <SelectItem key={lang.code} value={lang.code}>
+                            {lang.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                  >
+                    {isLoading || generationPulse !== "idle" ? (
+                      <>
+                        <LumaeLightPulse state={generationPulse} size={18} className="mr-2" label={generationPulse === "error" ? "Content generation needs attention" : "Lumae is generating content"} />
+                        {isLoading ? "Generating..." : "Generate Content"}
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Generate Content
+                      </>
+                    )}
+                  </Button>
+
                   {/* Unified cached trends: Live YouTube + clearly labelled AI estimates. */}
                   {trendingQuery.data?.data && trendingQuery.data.data.length > 0 && (
                     <div>
@@ -615,40 +649,6 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
                       )}
                     </div>
                   )}
-
-                  <div>
-                    <Label className="text-slate-300">Language</Label>
-                    <Select value={formData.language} onValueChange={(value) => setFormData({ ...formData, language: value })}>
-                      <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
-                        <SelectValue placeholder="Select language" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-700">
-                        {LANGUAGES.map((lang) => (
-                          <SelectItem key={lang.code} value={lang.code}>
-                            {lang.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                  >
-                    {isLoading || generationPulse !== "idle" ? (
-                      <>
-                        <LumaeLightPulse state={generationPulse} size={18} className="mr-2" label={generationPulse === "error" ? "Content generation needs attention" : "Lumae is generating content"} />
-                        {isLoading ? "Generating..." : "Generate Content"}
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Generate Content
-                      </>
-                    )}
-                  </Button>
 
                   {isLoading && (
                     <div className="flex items-center gap-3">

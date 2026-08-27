@@ -25,4 +25,16 @@ describe("custom generator lengths and Basic Script Free quota clarity", () => {
     expect(page).toContain("3 script generations per rolling 24 hours");
     expect(page).toContain("No credits used");
   });
+
+  it("keeps Language and the Generate Content action ahead of optional trends on mobile", () => {
+    const page = read("client/src/pages/Generator.tsx");
+    const languageStart = page.indexOf('<Label className="text-slate-300">Language</Label>');
+    const generateStart = page.indexOf('type="submit"');
+    const trendsStart = page.indexOf("Unified cached trends: Live YouTube");
+
+    expect(page).toContain("lg:sticky lg:top-6");
+    expect(languageStart).toBeGreaterThan(-1);
+    expect(generateStart).toBeGreaterThan(languageStart);
+    expect(trendsStart).toBeGreaterThan(generateStart);
+  });
 });
