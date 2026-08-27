@@ -35,6 +35,7 @@ describe("defensive security hardening", () => {
 
     expect(server).toContain("contentSecurityPolicy: process.env.NODE_ENV === \"production\"");
     expect(server).toContain("frameAncestors: [\"'self'\"]");
+    expect(server).toContain('frameSrc: ["\'self\'", "https://checkout.razorpay.com", "https://api.razorpay.com"]');
     expect(server).toContain("const contactLimiter");
     expect(server).toContain("const paymentLimiter");
     expect(server).toContain("const twoFactorLimiter");

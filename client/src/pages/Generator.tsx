@@ -35,6 +35,7 @@ import {
   Download,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { LANGUAGE_OPTIONS } from "@/contexts/LanguageContext";
 
 interface ContentPackage {
   viralIdeas: string[];
@@ -112,22 +113,7 @@ const VIDEO_SECONDS: Record<string, number> = { "15s": 15, "30s": 30, "60s": 60,
 const SCRIPT_WORDS: Record<string, number> = { brief: 50, short: 125, medium: 250, long: 500, extended: 1000 };
 
 const formatDuration = (seconds: number) => seconds >= 60 ? `${Math.floor(seconds / 60)}m ${seconds % 60 ? `${seconds % 60}s` : ""}`.trim() : `${seconds}s`;
-const LANGUAGES = [
-  { code: "en", name: "English" },
-  { code: "hi", name: "Hindi" },
-  { code: "hinglish", name: "Hinglish" },
-  { code: "bho", name: "Bhojpuri" },
-  { code: "ta", name: "Tamil" },
-  { code: "te", name: "Telugu" },
-  { code: "kn", name: "Kannada" },
-  { code: "ml", name: "Malayalam" },
-  { code: "mr", name: "Marathi" },
-  { code: "gu", name: "Gujarati" },
-  { code: "bn", name: "Bengali" },
-  { code: "pa", name: "Punjabi" },
-] as const;
-
-type SupportedLanguage = (typeof LANGUAGES)[number]["code"];
+type SupportedLanguage = (typeof LANGUAGE_OPTIONS)[number]["code"];
 
 type UnifiedTrendTopic = {
   id: string;
@@ -241,7 +227,7 @@ export default function Generator() {
 
   useEffect(() => {
     const savedLanguage = accountLanguageQuery.data;
-    if (!savedLanguage || hasRestoredLanguage || !LANGUAGES.some((language) => language.code === savedLanguage)) return;
+    if (!savedLanguage || hasRestoredLanguage || !LANGUAGE_OPTIONS.some((language) => language.code === savedLanguage)) return;
     setFormData((current) => ({ ...current, language: savedLanguage }));
     setSelectedLanguage(savedLanguage);
     setHasRestoredLanguage(true);
@@ -608,9 +594,9 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
                         <SelectValue placeholder="Select language" />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-slate-700">
-                        {LANGUAGES.map((lang) => (
+                        {LANGUAGE_OPTIONS.map((lang) => (
                           <SelectItem key={lang.code} value={lang.code}>
-                            {lang.name}
+                            {lang.name} · {lang.nativeName}
                           </SelectItem>
                         ))}
                       </SelectContent>

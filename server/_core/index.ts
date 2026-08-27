@@ -117,6 +117,9 @@ async function startServer() {
         styleSrc: ["'self'", "'unsafe-inline'", "https:"],
         fontSrc: ["'self'", "data:", "https:"],
         connectSrc: ["'self'", "https:"],
+        // Razorpay opens its PCI-hosted checkout inside a nested browsing context.
+        // Keep the allowlist narrow rather than relaxing default-src for all frames.
+        frameSrc: ["'self'", "https://checkout.razorpay.com", "https://api.razorpay.com"],
         upgradeInsecureRequests: [],
       },
     } : false,

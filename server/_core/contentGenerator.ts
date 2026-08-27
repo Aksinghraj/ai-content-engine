@@ -189,7 +189,7 @@ function getLanguageName(language: string): string {
     gu: "Gujarati",
     bn: "Bengali",
     pa: "Punjabi",
-    bho: "Bhojpuri",
+    bho: "Bhojpuri", as: "Assamese", brx: "Bodo", doi: "Dogri", ks: "Kashmiri", kok: "Konkani", mai: "Maithili", mni: "Manipuri", ne: "Nepali", or: "Odia", sa: "Sanskrit", sat: "Santali", sd: "Sindhi", ur: "Urdu",
   };
   return map[language] || "English";
 }
@@ -209,7 +209,8 @@ function getDetailedLanguageInstructions(language: string): string {
     pa: "Generate ALL content in Punjabi. Use engaging and simple Punjabi language suitable for social media.",
     bho: "Generate ALL content in natural Bhojpuri. Use simple, respectful, engaging Bhojpuri vocabulary and grammar suitable for social media. Do not silently switch to Hindi or English.",
   };
-  return instructions[language] || instructions["en"];
+  const languageName = getLanguageName(language);
+  return instructions[language] || (languageName !== "English" ? `Generate ALL content in natural, respectful ${languageName}. Do not silently switch to English; use the appropriate script and social-media style for ${languageName}.` : instructions.en);
 }
 
 function getVideoLengthInstructions(videoLength: string, customVideoSeconds?: number): string {

@@ -1338,6 +1338,15 @@
 - [x] Add Bhojpuri as a selectable content-generation language and preserve the selected language in generation requests
 - [x] Test authentic-data display, provider guidance, language persistence, Bhojpuri requests, and mobile layout before publishing
 
+## Buy Credits Recovery and Indian-Language Interface (IN PROGRESS)
+- [x] Diagnose why the Buy Credits route is blocked instead of reaching the configured payment flow
+- [x] Restore the missing Pro Pack Buy Credits control in the verified mobile billing layout
+- [x] Repair the credit-purchase path without bypassing payment provider security, user ownership, or server-side verification
+- [x] Replace any false payment readiness claim with an explicit, truthful availability state
+- [x] Expand Account Settings language selection to English and supported Indian languages
+- [x] Extend the shared translation foundation to cover visible navigation, account settings, and common workspace actions
+- [x] Validate payment routing, language persistence, translated UI labels, and mobile layouts before publishing
+
 ## Evidence-Based Security Audit (IN PROGRESS)
 - [x] Audit repository controls across all 36 requested security checks without changing production data or infrastructure
 - [x] Inspect the public deployment’s security headers, public routes, debug exposure, and build artifacts

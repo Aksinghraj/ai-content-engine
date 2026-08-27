@@ -196,7 +196,7 @@ export default function RazorpayPayments() {
             {packages?.map((pkg) => (
               <Card
                 key={pkg.id}
-                className={`p-6 relative ${
+                className={`relative flex min-h-[300px] flex-col p-6 ${
                   pkg.popular
                     ? "ring-2 ring-purple-500 shadow-lg shadow-purple-500/10"
                     : ""
@@ -226,8 +226,8 @@ export default function RazorpayPayments() {
                 <Button
                   onClick={() => handlePayment(pkg.id as "starter" | "pro" | "enterprise")}
                   disabled={processingPackage !== null}
-                  className={`w-full ${pkg.popular ? "bg-purple-600 hover:bg-purple-700" : ""}`}
-                  variant={pkg.popular ? "default" : "outline"}
+                  className="mt-auto w-full border border-primary/40 bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-500 text-white hover:opacity-90"
+                  variant="default"
                 >
                   {processingPackage === pkg.id ? (
                     <span className="flex items-center gap-2">

@@ -30,6 +30,7 @@ import { AppPrimaryNavigation, GroupedPageTabs } from "./AppNavigation";
 import { getNavigationArea } from "@/lib/appNavigation";
 import { getWorkspaceShortcut, shouldIgnoreWorkspaceShortcut, workspaceShortcuts } from "@/lib/workspaceShortcuts";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { LumaeLightPulseIntroModal } from "@/components/LumaeLightPulseIntroModal";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
 
@@ -49,6 +50,7 @@ export default function DashboardLayout({
   });
   const [location] = useLocation();
   const { loading, user } = useAuth();
+  const { t } = useLanguage();
   const showLightPulseIntroduction = location === "/dashboard";
 
   useEffect(() => {
@@ -72,13 +74,13 @@ export default function DashboardLayout({
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="flex flex-col items-center gap-6">
           <div className="w-10 h-10 rounded-full border-4 border-[#6366f1] border-t-transparent animate-spin" />
-          <p className="text-sm text-muted-foreground">Redirecting to login...</p>
+          <p className="text-sm text-muted-foreground">{t("Redirecting to login...")}</p>
           <Button
             variant="ghost"
             onClick={() => { window.location.href = "/"; }}
             className="text-muted-foreground hover:text-foreground gap-2 text-sm"
           >
-            ← Back to Home
+            ← {t("Back to Home")}
           </Button>
         </div>
       </div>
@@ -116,13 +118,14 @@ function WorkspaceShortcutReference({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useLanguage();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Workspace shortcuts</DialogTitle>
+          <DialogTitle>{t("Workspace shortcuts")}</DialogTitle>
           <DialogDescription>
-            Use these shortcuts from anywhere in the workspace. They pause while you are typing or using a dialog.
+            {t("Use these shortcuts from anywhere in the workspace. They pause while you are typing or using a dialog.")}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-2 pt-1" aria-label="Primary workspace keyboard shortcuts">
@@ -151,6 +154,7 @@ function DashboardLayoutContent({
   const activeMenuItem = getNavigationArea(location);
   const isMobile = useIsMobile();
   const { effectiveTheme, toggleTheme } = useTheme();
+  const { t } = useLanguage();
   const [shortcutReferenceOpen, setShortcutReferenceOpen] = useState(false);
   const [shortcutAnnouncement, setShortcutAnnouncement] = useState("");
 
@@ -230,7 +234,7 @@ function DashboardLayoutContent({
               <button
                 onClick={toggleSidebar}
                 className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0"
-                aria-label="Toggle navigation"
+                aria-label={t("Toggle navigation")}
               >
                 <PanelLeft className="h-4 w-4 text-muted-foreground" />
               </button>
@@ -279,18 +283,18 @@ function DashboardLayoutContent({
                 <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem onClick={() => setLocation("/feedback")} className="cursor-pointer">
                   <MessageCircle className="mr-2 h-4 w-4" />
-                  <span>Send feedback</span>
+                  <span>{t("Send feedback")}</span>
                 </DropdownMenuItem>
                 {user?.role === "admin" && <DropdownMenuItem onClick={() => setLocation("/admin/feedback")} className="cursor-pointer">
                   <ClipboardList className="mr-2 h-4 w-4" />
-                  <span>Review feedback</span>
+                  <span>{t("Review feedback")}</span>
                 </DropdownMenuItem>}
                 <DropdownMenuItem
                   onClick={async () => { await logout(); window.location.assign("/login"); }}
                   className="cursor-pointer text-destructive focus:text-destructive"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Sign out</span>
+                  <span>{t("Sign out")}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
