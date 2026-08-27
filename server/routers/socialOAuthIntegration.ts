@@ -22,7 +22,7 @@ const supportedPlatforms = z.enum([
 export const socialOAuthIntegrationRouter = router({
   getAuthorizationUrl: protectedProcedure
     .input(z.object({ platform: supportedPlatforms }))
-    .query(async ({ input, ctx }) => {
+    .mutation(async ({ input, ctx }) => {
       const baseUrl = process.env.FRONTEND_URL;
       if (!baseUrl) {
         throw new TRPCError({

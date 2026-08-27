@@ -10,6 +10,8 @@ describe("Instagram Business OAuth contract", () => {
   const validation = read("server/_core/credentialValidation.ts");
   const flow = read("server/_core/oauthFlow.ts");
   const publishing = read("server/_core/socialMediaPosting.ts");
+  const oauthRouter = read("server/routers/socialOAuthIntegration.ts");
+  const accountsPage = read("client/src/pages/ConnectedAccounts.tsx");
 
   it("uses Meta Business OAuth rather than the retired Instagram Basic Display path", () => {
     expect(platforms).toContain('authorizationEndpoint: "https://www.facebook.com/v26.0/dialog/oauth"');
@@ -26,5 +28,12 @@ describe("Instagram Business OAuth contract", () => {
     expect(flow).toContain("validationResult.publishingAccessToken || tokenData.access_token");
     expect(publishing).toContain("https://graph.facebook.com/${INSTAGRAM_API_VERSION}/${igUserId}/media");
     expect(publishing).toContain("https://graph.facebook.com/${INSTAGRAM_API_VERSION}/${igUserId}/media_publish");
+  });
+
+  it("creates a fresh non-cacheable authorization state for every Connect action", () => {
+    expect(oauthRouter).toContain("getAuthorizationUrl: protectedProcedure");
+    expect(oauthRouter).toContain(".mutation(async ({ input, ctx }) => {");
+    expect(accountsPage).toContain("getAuthorizationUrl.mutate(");
+    expect(accountsPage).not.toContain("getAuthorizationUrl.query(");
   });
 });

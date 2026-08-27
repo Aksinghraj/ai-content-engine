@@ -118,7 +118,7 @@ export default function ConnectedAccounts() {
     setConnecting(platformId);
     try {
       // Call tRPC mutation to get authorization URL (can't use hooks inside event handlers)
-      const result = await trpcClient.socialOAuthIntegration.getAuthorizationUrl.query(
+      const result = await trpcClient.socialOAuthIntegration.getAuthorizationUrl.mutate(
         { platform: platformId as any }
       );
       if (result?.url) {
