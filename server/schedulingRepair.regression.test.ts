@@ -94,4 +94,49 @@ describe("scheduling and connected-account repair contracts", () => {
     expect(instagramConfig).not.toContain("instagram_business_manage_comments");
     expect(instagramConfig).not.toContain("instagram_business_manage_insights");
   });
+
+  it("treats Facebook as a validated Page connection rather than a personal-profile connection", () => {
+    const platforms = read("server/_core/oauthPlatforms.ts");
+    const validator = read("server/_core/credentialValidation.ts");
+    const publisher = read("server/_core/socialMediaPosting.ts");
+    const facebookConfig = platforms.slice(platforms.indexOf("facebook: {"), platforms.indexOf("youtube: {"));
+    expect(facebookConfig).toContain('"pages_show_list"');
+    expect(facebookConfig).toContain('"pages_read_engagement"');
+    expect(facebookConfig).toContain('"pages_manage_posts"');
+    expect(validator).toContain('https://graph.facebook.com/v26.0/me/accounts');
+    expect(validator).toContain('page.tasks.includes("CREATE_CONTENT")');
+    expect(validator).toContain("publishingAccessToken: page.access_token");
+    expect(publisher).toContain("/${connection.platformUserId}/photos");
+  });
+
+  it("requests durable offline access when a user connects YouTube", () => {
+    const flow = read("server/_core/oauthFlow.ts");
+    expect(flow).toContain('if (normalizedPlatform === "youtube")');
+    expect(flow).toContain('params.append("access_type", "offline")');
+    expect(flow).toContain('params.append("include_granted_scopes", "true")');
+    expect(flow).toContain('params.append("prompt", "consent")');
+  });
+
+  it("keeps X publishing unavailable until the owner explicitly enables an approved API budget", () => {
+    const publisher = read("server/_core/socialMediaPosting.ts");
+    const platforms = read("server/_core/oauthPlatforms.ts");
+    const flow = read("server/_core/oauthFlow.ts");
+    expect(publisher).toContain("isXPublishingEnabled()");
+    expect(publisher).toContain("X publishing is unavailable until the owner enables an approved X API budget.");
+    expect(platforms).toContain('tokenEndpoint: "https://api.x.com/2/oauth2/token"');
+    expect(platforms).toContain('userInfoEndpoint: "https://api.x.com/2/users/me"');
+    expect(flow).toContain('if (normalizedPlatform === "twitter")');
+    expect(flow).toContain("tokenHeaders.Authorization = `Basic ${Buffer.from(`${config.clientId}:${config.clientSecret}`).toString(\"base64\")}`");
+    expect(flow).toContain("refreshHeaders.Authorization = `Basic ${Buffer.from(`${config.clientId}:${config.clientSecret}`).toString(\"base64\")}`");
+  });
+
+  it("requires a connected, validated, unexpired user-owned account before immediate publishing", () => {
+    const router = read("server/routers/socialPosting.ts");
+    expect(router).toContain("async function assertPublishingReadiness");
+    expect(router).toContain("if (!connection?.isConnected)");
+    expect(router).toContain("if (!connection.isValidated)");
+    expect(router).toContain("connection.tokenExpiresAt");
+    expect(router).toContain("await assertPublishingReadiness(ctx.user.id, input.platform)");
+    expect(router).toContain("Promise.all(input.platforms.map((platform) => assertPublishingReadiness(ctx.user.id, platform)))");
+  });
 });

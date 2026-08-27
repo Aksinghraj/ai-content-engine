@@ -15,6 +15,10 @@ const supportedPlatforms = z.enum([
   "tiktok",
 ]);
 
+function isXPublishingEnabled(): boolean {
+  return process.env.X_API_PUBLISHING_APPROVED === "true";
+}
+
 /**
  * The single frontend-facing OAuth router. It delegates state, PKCE, and token
  * exchange to oauthFlow.ts and the Express callback handler.
@@ -55,9 +59,9 @@ export const socialOAuthIntegrationRouter = router({
         id: connection.id,
         platform: connection.platform,
         username: connection.username,
-        followers: 0,
         isValidated: connection.isValidated,
         autoPost: connection.autoPost,
+        canEnableAutoPost: connection.platform !== "twitter" || isXPublishingEnabled(),
         autoReply: connection.autoReply,
         tokenExpiresAt: connection.tokenExpiresAt,
         connectedAt: connection.createdAt,
@@ -136,6 +140,12 @@ export const socialOAuthIntegrationRouter = router({
       }
       if (connection.tokenExpiresAt && connection.tokenExpiresAt.getTime() <= Date.now()) {
         throw new TRPCError({ code: "BAD_REQUEST", message: `Your ${input.platform} access token has expired. Reconnect before enabling Auto-Post.` });
+      }
+      if (input.platform === "twitter" && input.enabled && !isXPublishingEnabled()) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "X Auto-Post is unavailable until the owner enables an approved X API budget.",
+        });
       }
 
       await database

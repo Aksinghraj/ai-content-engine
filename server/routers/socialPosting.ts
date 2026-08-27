@@ -10,6 +10,20 @@ import {
   postToTikTok,
   postToMultiplePlatforms,
 } from "../_core/socialMediaPosting";
+import { getSocialConnectionByPlatform } from "../db/social";
+
+async function assertPublishingReadiness(userId: number, platform: string) {
+  const connection = await getSocialConnectionByPlatform(userId, platform);
+  if (!connection?.isConnected) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: `Connect ${platform} before publishing.` });
+  }
+  if (!connection.isValidated) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: `Validate your ${platform} connection before publishing.` });
+  }
+  if (connection.tokenExpiresAt && new Date(connection.tokenExpiresAt).getTime() <= Date.now()) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: `Reconnect ${platform}; its access has expired.` });
+  }
+}
 
 export const socialPostingRouter = router({
   /**
@@ -27,6 +41,7 @@ export const socialPostingRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       try {
+        await assertPublishingReadiness(ctx.user.id, input.platform);
         let result;
 
         switch (input.platform) {
@@ -106,6 +121,7 @@ export const socialPostingRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       try {
+        await Promise.all(input.platforms.map((platform) => assertPublishingReadiness(ctx.user.id, platform)));
         const results = await postToMultiplePlatforms(ctx.user.id, input.platforms, {
           text: input.text,
           imageUrl: input.imageUrl,

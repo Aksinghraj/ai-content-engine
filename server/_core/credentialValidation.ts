@@ -66,7 +66,7 @@ export async function validateInstagramCredentials(
  */
 export async function validateTwitterCredentials(accessToken: string): Promise<ValidationResult> {
   try {
-    const response = await axios.get("https://api.twitter.com/2/users/me", {
+    const response = await axios.get("https://api.x.com/2/users/me", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -147,27 +147,45 @@ export async function validateFacebookCredentials(
   accessToken: string
 ): Promise<ValidationResult> {
   try {
-    const response = await axios.get("https://graph.facebook.com/me", {
+    const response = await axios.get("https://graph.facebook.com/v26.0/me/accounts", {
       params: {
-        fields: "id,name,email",
+        fields: "id,name,access_token,tasks",
         access_token: accessToken,
       },
       timeout: PROVIDER_VALIDATION_TIMEOUT_MS,
     });
 
-    if (response.data?.id && response.data?.name) {
+    const publishablePages = (response.data?.data || []).filter((page: any) =>
+      page?.id &&
+      page?.name &&
+      page?.access_token &&
+      Array.isArray(page?.tasks) &&
+      page.tasks.includes("CREATE_CONTENT")
+    );
+
+    if (publishablePages.length === 1) {
+      const page = publishablePages[0];
       return {
         isValid: true,
-        username: response.data.name,
-        userId: response.data.id,
-        message: "Facebook credentials verified successfully",
+        username: page.name,
+        userId: page.id,
+        publishingAccessToken: page.access_token,
+        message: `Facebook Page ${page.name} verified successfully`,
+      };
+    }
+
+    if (publishablePages.length > 1) {
+      return {
+        isValid: false,
+        error: "More than one publishable Facebook Page was returned",
+        message: "Choose a single Facebook Page before enabling automation",
       };
     }
 
     return {
       isValid: false,
-      error: "Invalid response from Facebook API",
-      message: "Failed to verify Facebook credentials",
+      error: "No Facebook Page with CREATE_CONTENT permission was returned",
+      message: "Use a Facebook account that can create content on one Page, then reconnect",
     };
   } catch (error: any) {
     const errorMsg = error?.response?.data?.error?.message || error?.message || "Unknown error";

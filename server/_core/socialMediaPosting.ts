@@ -8,6 +8,10 @@ const INSTAGRAM_API_VERSION = "v26.0";
 const LINKEDIN_API_VERSION = "202608";
 const MAX_YOUTUBE_UPLOAD_BYTES = 250 * 1024 * 1024;
 
+function isXPublishingEnabled(): boolean {
+  return process.env.X_API_PUBLISHING_APPROVED === "true";
+}
+
 /**
  * Social Media Posting Service
  * Handles actual posting to connected social media accounts
@@ -122,6 +126,13 @@ export async function postToTwitter(
   content: PostContent
 ): Promise<{ success: boolean; postId?: string; error?: string }> {
   try {
+    if (!isXPublishingEnabled()) {
+      return {
+        success: false,
+        error: "X publishing is unavailable until the owner enables an approved X API budget.",
+      };
+    }
+
     const connection = await getSocialConnectionByPlatform(userId, "twitter");
     if (!connection) {
       return { success: false, error: "Twitter account not connected" };
@@ -134,7 +145,7 @@ export async function postToTwitter(
     }
 
     // Twitter API v2 endpoint
-    const endpoint = "https://api.twitter.com/2/tweets";
+    const endpoint = "https://api.x.com/2/tweets";
 
     const payload: any = {
       text: content.text,
@@ -244,19 +255,31 @@ export async function postToFacebook(
       return { success: false, error: "Failed to get valid access token" };
     }
 
-    // Facebook Graph API endpoint
-    const endpoint = `https://graph.facebook.com/v18.0/${connection.platformUserId}/feed`;
-
-    const formData = new FormData();
-    formData.append("message", content.text);
-    if (content.imageUrl) {
-      formData.append("picture", content.imageUrl);
+    if (content.videoUrl) {
+      return {
+        success: false,
+        error: "Facebook video publishing requires a dedicated Page video upload and is not available yet. Use text or one Lumae-managed image.",
+      };
     }
-    formData.append("access_token", accessToken);
+
+    const endpoint = content.imageUrl
+      ? `https://graph.facebook.com/v26.0/${connection.platformUserId}/photos`
+      : `https://graph.facebook.com/v26.0/${connection.platformUserId}/feed`;
+    const formData = new URLSearchParams();
+    if (content.imageUrl) {
+      formData.append("url", await getManagedSocialMediaUrl(content.imageUrl));
+      if (content.text) formData.append("caption", content.text);
+    } else {
+      formData.append("message", content.text);
+    }
 
     const response = await fetch(endpoint, {
       method: "POST",
-      body: formData,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: formData.toString(),
     });
 
     if (!response.ok) {

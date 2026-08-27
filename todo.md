@@ -1315,6 +1315,14 @@
 - [x] Correct mobile scheduling layouts, controls, and platform selection behavior
 - [x] Replace Create Post Pro's fabricated draft and performance estimates with truthful persisted drafts and connected-platform controls
 
+## Facebook, YouTube, X, and LinkedIn Automation Readiness (IN PROGRESS)
+- [x] Audit the current Facebook, YouTube, X, and LinkedIn connection records without reading tokens
+- [x] Verify each provider’s configured OAuth, refresh, validation, and publishing capability against official requirements
+- [x] Repair supported provider integration defects without weakening ownership or Auto-Post checks
+- [x] Keep X publishing locked unless the owner approves an API budget and provider access is validated
+- [x] Show clear provider-specific readiness, connection, and scheduling requirements in the automation workspace
+- [x] Test supported workflows, mobile/desktop controls, and all server-side readiness gates before publishing
+
 ## Evidence-Based Security Audit (IN PROGRESS)
 - [x] Audit repository controls across all 36 requested security checks without changing production data or infrastructure
 - [x] Inspect the public deployment’s security headers, public routes, debug exposure, and build artifacts

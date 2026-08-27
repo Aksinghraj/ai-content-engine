@@ -75,8 +75,16 @@ export async function generateAuthorizationUrl(
     scope: config.scopes.join(scopeSeparator),
   });
 
-  if (platform.toLowerCase() === "instagram") {
+  const normalizedPlatform = platform.toLowerCase();
+  if (normalizedPlatform === "instagram") {
     params.append("force_reauth", "true");
+  }
+
+  if (normalizedPlatform === "youtube") {
+    // Scheduled publishing needs a refresh token after the user has left Lumae.
+    params.append("access_type", "offline");
+    params.append("include_granted_scopes", "true");
+    params.append("prompt", "consent");
   }
 
   // Add PKCE parameters if required
@@ -123,24 +131,32 @@ export async function handleOAuthCallback(
   const config = getPlatformConfig(platforms, platform);
 
   // Exchange authorization code for tokens
+  const normalizedPlatform = platform.toLowerCase();
   const tokenParams = new URLSearchParams({
     grant_type: "authorization_code",
     code,
-    client_id: config.clientId,
-    client_secret: config.clientSecret,
     redirect_uri: config.redirectUri,
   });
+  if (normalizedPlatform !== "twitter") {
+    tokenParams.set("client_id", config.clientId);
+    tokenParams.set("client_secret", config.clientSecret);
+  }
 
   // Add PKCE verifier if required
   if (config.pkceRequired) {
     tokenParams.append("code_verifier", oauthState.codeVerifier);
   }
 
+  const tokenHeaders: Record<string, string> = {
+    "Content-Type": "application/x-www-form-urlencoded",
+  };
+  if (normalizedPlatform === "twitter") {
+    tokenHeaders.Authorization = `Basic ${Buffer.from(`${config.clientId}:${config.clientSecret}`).toString("base64")}`;
+  }
+
   const tokenResponse = await fetch(config.tokenEndpoint, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
+    headers: tokenHeaders,
     body: tokenParams.toString(),
   });
 
@@ -258,15 +274,22 @@ export async function refreshAccessToken(
   const refreshParams = new URLSearchParams({
     grant_type: "refresh_token",
     refresh_token: decryptStoredToken(connection.refreshToken),
-    client_id: config.clientId,
-    client_secret: config.clientSecret,
   });
+  if (platform.toLowerCase() !== "twitter") {
+    refreshParams.set("client_id", config.clientId);
+    refreshParams.set("client_secret", config.clientSecret);
+  }
+
+  const refreshHeaders: Record<string, string> = {
+    "Content-Type": "application/x-www-form-urlencoded",
+  };
+  if (platform.toLowerCase() === "twitter") {
+    refreshHeaders.Authorization = `Basic ${Buffer.from(`${config.clientId}:${config.clientSecret}`).toString("base64")}`;
+  }
 
   const tokenResponse = await fetch(config.tokenEndpoint, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
+    headers: refreshHeaders,
     body: refreshParams.toString(),
   });
 
