@@ -34,20 +34,20 @@ export function initializeOAuthConfigs(baseUrl: string): OAuthPlatforms {
   return {
     instagram: {
       name: "Instagram",
-      clientId: process.env.INSTAGRAM_CLIENT_ID || "YOUR_INSTAGRAM_CLIENT_ID",
-      clientSecret: process.env.INSTAGRAM_CLIENT_SECRET || "YOUR_INSTAGRAM_CLIENT_SECRET",
+      // Instagram publishing uses Meta's Instagram API with Facebook Login for
+      // Business. It must use the Meta/Facebook app credentials, not the retired
+      // Basic Display authorization endpoint.
+      clientId: process.env.FACEBOOK_CLIENT_ID || "YOUR_INSTAGRAM_CLIENT_ID",
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET || "YOUR_INSTAGRAM_CLIENT_SECRET",
       redirectUri: getRedirectUri(baseUrl, "instagram"),
-      authorizationEndpoint: "https://api.instagram.com/oauth/authorize",
-      tokenEndpoint: "https://graph.instagram.com/v18.0/access_token",
-      userInfoEndpoint: "https://graph.instagram.com/v18.0/me",
+      authorizationEndpoint: "https://www.facebook.com/v26.0/dialog/oauth",
+      tokenEndpoint: "https://graph.facebook.com/v26.0/oauth/access_token",
+      userInfoEndpoint: "https://graph.facebook.com/v26.0/me?fields=id,name",
       scopes: [
         "instagram_basic",
-        "instagram_graph_user",
+        "instagram_content_publish",
+        "pages_show_list",
         "pages_read_engagement",
-        "pages_manage_metadata",
-        "instagram_graph_user_media",
-        "pages_read_user_content",
-        "pages_manage_posts",
       ],
       scopeSeparator: "comma",
       pkceRequired: false,

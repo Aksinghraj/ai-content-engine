@@ -6,6 +6,12 @@ Meta's current Instagram Platform documentation describes a two-stage publishing
 
 Source: <https://developers.facebook.com/documentation/instagram-platform/content-publishing>
 
+## Instagram Business reconnection
+
+Meta's current Instagram API with Facebook Login requires an Instagram Business or Creator account attached to a Facebook Page, a Facebook user with an appropriate Page task, and a Facebook app configured for Facebook Login. The application should request `instagram_basic`, `instagram_content_publish`, `pages_show_list`, and `pages_read_engagement`; it must then resolve the connected Instagram professional account from the Facebook Pages the user manages and retain the Page access token for publishing.
+
+Source: <https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-facebook-login/get-started>
+
 ## TikTok direct posting
 
 TikTok's current Direct Post flow requires creator-information retrieval, user consent, initialization through `/v2/post/publish/video/init/`, and either a public URL pull or an upload to the returned upload URL. It requires the `video.publish` scope. Clients that have not completed TikTok's audit are restricted to private viewing mode.

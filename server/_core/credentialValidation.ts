@@ -14,6 +14,7 @@ interface ValidationResult {
   isValid: boolean;
   username?: string;
   userId?: string;
+  publishingAccessToken?: string;
   error?: string;
   message: string;
 }
@@ -26,27 +27,39 @@ export async function validateInstagramCredentials(
   accessToken: string
 ): Promise<ValidationResult> {
   try {
-    const response = await axios.get("https://graph.instagram.com/me", {
+    const pagesResponse = await axios.get("https://graph.facebook.com/v26.0/me/accounts", {
       params: {
-        fields: "id,username",
+        fields: "id,name,access_token,tasks",
         access_token: accessToken,
       },
       timeout: PROVIDER_VALIDATION_TIMEOUT_MS,
     });
 
-    if (response.data?.id && response.data?.username) {
-      return {
-        isValid: true,
-        username: response.data.username,
-        userId: response.data.id,
-        message: "Instagram credentials verified successfully",
-      };
+    for (const page of pagesResponse.data?.data ?? []) {
+      if (!page?.id || !page?.access_token) continue;
+      const accountResponse = await axios.get(`https://graph.facebook.com/v26.0/${page.id}`, {
+        params: {
+          fields: "instagram_business_account{id,username,name}",
+          access_token: page.access_token,
+        },
+        timeout: PROVIDER_VALIDATION_TIMEOUT_MS,
+      });
+      const account = accountResponse.data?.instagram_business_account;
+      if (account?.id) {
+        return {
+          isValid: true,
+          username: account.username || account.name || page.name || "Instagram professional account",
+          userId: account.id,
+          publishingAccessToken: page.access_token,
+          message: "Instagram professional account verified successfully",
+        };
+      }
     }
 
     return {
       isValid: false,
-      error: "Invalid response from Instagram API",
-      message: "Failed to verify Instagram credentials",
+      error: "No eligible Instagram professional account was found on a Facebook Page you manage",
+      message: "Connect an Instagram Business or Creator account to a Facebook Page, then try again",
     };
   } catch (error: any) {
     const errorMsg = error?.response?.data?.error?.message || error?.message || "Unknown error";

@@ -164,13 +164,14 @@ export async function handleOAuthCallback(
   // especially important for Instagram professional-account publishing.
   const platformUserId = validationResult.userId || extractPlatformUserId(platform, userInfo);
   const username = validationResult.username || extractUsername(platform, userInfo);
+  const persistedAccessToken = validationResult.publishingAccessToken || tokenData.access_token;
 
   // Save connection to database
   const connection = await saveSocialConnection(
     oauthState.userId,
     platform,
     username,
-    tokenData.access_token,
+    persistedAccessToken,
     platformUserId,
     tokenData.refresh_token,
     tokenData.expires_in ? new Date(Date.now() + tokenData.expires_in * 1000) : undefined
