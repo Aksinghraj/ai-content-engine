@@ -53,4 +53,14 @@ describe("authentic automation data", () => {
     expect(settings).not.toContain("user@example.com");
     expect(settings).not.toContain("sk_live_");
   });
+
+  it("does not fabricate analytics, ROI, or trends in the legacy analytics service", () => {
+    const service = read("server/_core/analyticsService.ts");
+
+    expect(service).not.toContain("Math.random");
+    expect(service).not.toContain("mockConnections");
+    expect(service).not.toContain("conversionRate");
+    expect(service).not.toContain("#AI-ContentCreation");
+    expect(service).toContain("Measured analytics will appear after a supported provider insight import.");
+  });
 });

@@ -250,10 +250,9 @@ export default function RazorpayPayments() {
           <div className="flex items-start gap-3">
             <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-muted-foreground space-y-1">
-              <p className="font-semibold text-foreground">Secure &amp; Instant</p>
+              <p className="font-semibold text-foreground">Secure payment verification</p>
               <p>
-                All payments are processed by Razorpay with bank-grade 256-bit SSL encryption.
-                Credits are added to your account immediately after payment confirmation.
+                Payments are processed by Razorpay. Credits are added only after Lumae verifies the provider payment for your signed-in account.
               </p>
               <p>
                 Supported: UPI (GPay, PhonePe, Paytm), Debit/Credit Cards, Net Banking, Wallets.
