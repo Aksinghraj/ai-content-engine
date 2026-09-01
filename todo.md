@@ -1402,3 +1402,8 @@
 
 ## Scope Guard
 - [x] Preserve the existing hero section and do not alter unrelated dashboard rows, columns, navigation, or layout
+
+## Content Studio Gemini Skeleton Loading (IN PROGRESS)
+- [x] Add a skeleton loading animation inside the existing video-script generation area while Gemini is generating
+- [x] Keep the loading state accessible, restrained, and compatible with reduced-motion preferences
+- [x] Verify loading-to-result transition with TypeScript, tests, and a rendered preview

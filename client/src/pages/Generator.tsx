@@ -178,6 +178,50 @@ function buildExportText(content: ContentPackage, brief: { niche: string; platfo
   ].join("\n");
 }
 
+function GenerationSkeleton() {
+  return (
+    <div className="space-y-6" role="status" aria-live="polite" aria-label="Gemini is generating your video script">
+      <Card className="border-[#6366f1]/30 bg-[#141417]/90">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="h-5 w-5 rounded-full bg-[#6366f1]/35 animate-pulse motion-reduce:animate-none" />
+            <div className="h-5 w-44 rounded bg-[#26262b] animate-pulse motion-reduce:animate-none" />
+          </div>
+          <div className="h-3 w-64 rounded bg-[#26262b] animate-pulse motion-reduce:animate-none" />
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="space-y-2">
+            <div className="h-3 w-24 rounded bg-[#26262b] animate-pulse motion-reduce:animate-none" />
+            <div className="h-4 w-full rounded bg-[#26262b] animate-pulse motion-reduce:animate-none" />
+            <div className="h-4 w-11/12 rounded bg-[#26262b] animate-pulse motion-reduce:animate-none" />
+          </div>
+          <div className="space-y-2">
+            <div className="h-3 w-32 rounded bg-[#26262b] animate-pulse motion-reduce:animate-none" />
+            <div className="h-4 w-full rounded bg-[#26262b] animate-pulse motion-reduce:animate-none" />
+            <div className="h-4 w-10/12 rounded bg-[#26262b] animate-pulse motion-reduce:animate-none" />
+            <div className="h-4 w-8/12 rounded bg-[#26262b] animate-pulse motion-reduce:animate-none" />
+          </div>
+          <div className="space-y-2">
+            <div className="h-3 w-20 rounded bg-[#26262b] animate-pulse motion-reduce:animate-none" />
+            <div className="h-4 w-9/12 rounded bg-[#26262b] animate-pulse motion-reduce:animate-none" />
+          </div>
+          <p className="text-sm text-[#9a9aa2]">Gemini is shaping your hook, body, and CTA…</p>
+        </CardContent>
+      </Card>
+      <div className="grid gap-6 md:grid-cols-2">
+        {["ideas", "hooks"].map((section) => (
+          <Card key={section} className="border-[#26262b] bg-[#141417]/90">
+            <CardHeader><div className="h-5 w-36 rounded bg-[#26262b] animate-pulse motion-reduce:animate-none" /></CardHeader>
+            <CardContent className="space-y-3">
+              {["a", "b", "c"].map((line) => <div key={line} className="h-4 w-full rounded bg-[#26262b] animate-pulse motion-reduce:animate-none" />)}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Generator() {
   const { user, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
@@ -1178,6 +1222,8 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
                   </CardContent>
                 </Card>
               </div>
+            ) : isLoading ? (
+              <GenerationSkeleton />
             ) : (
               <Card className="border-purple-500/20 bg-slate-900/50 backdrop-blur h-96 flex items-center justify-center">
                 <CardContent className="text-center">
