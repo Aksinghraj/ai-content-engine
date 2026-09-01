@@ -879,7 +879,9 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
 
           {/* Output */}
           <div className="lg:col-span-2">
-            {generatedContent ? (
+            {isLoading ? (
+              <GenerationSkeleton />
+            ) : generatedContent ? (
               <div className="space-y-6">
                 {/* Export Buttons */}
                 <Card className="border-purple-500/20 bg-slate-900/50 backdrop-blur">
@@ -1222,8 +1224,6 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
                   </CardContent>
                 </Card>
               </div>
-            ) : isLoading ? (
-              <GenerationSkeleton />
             ) : (
               <Card className="border-purple-500/20 bg-slate-900/50 backdrop-blur h-96 flex items-center justify-center">
                 <CardContent className="text-center">
