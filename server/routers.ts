@@ -251,7 +251,9 @@ export const appRouter = router({
           scriptLength: z.string().refine((value) => ["brief", "short", "medium", "long", "extended", "custom"].includes(value), "Invalid script length").optional().default("medium"),
           customVideoSeconds: z.number().int().min(5).max(3600).optional(),
           customScriptWordTarget: z.number().int().min(25).max(3000).optional(),
-          trendingTopics: z.array(z.string()).optional(),
+          trendingTopics: z.array(z.string().max(200)).max(10).optional(),
+          referenceDocumentText: z.string().max(20_000).optional(),
+          referenceImageUrl: z.string().url().max(2_000_000).refine((value) => value.startsWith("data:image/"), "Reference image must be an image data URL").optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {

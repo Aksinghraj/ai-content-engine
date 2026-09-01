@@ -36,6 +36,9 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { LANGUAGE_OPTIONS } from "@/contexts/LanguageContext";
+import { exportToDocx } from "@/lib/docxExport";
+import { exportToPDF } from "@/lib/pdfExport";
+import * as pdfjsLib from "pdfjs-dist";
 
 interface ContentPackage {
   viralIdeas: string[];
@@ -126,6 +129,55 @@ type UnifiedTrendTopic = {
 
 const sourceLabel = (topic: UnifiedTrendTopic) => `${topic.dataKind === "live" ? "Live" : "AI-estimated"} ${topic.source === "twitter" ? "X" : topic.source[0].toUpperCase() + topic.source.slice(1)}`;
 
+function buildExportText(content: ContentPackage, brief: { niche: string; platform: string; goal: string }) {
+  return [
+    "LUMAE AI CONTENT PACKAGE",
+    `Niche: ${brief.niche}`,
+    `Platform: ${brief.platform}`,
+    `Goal: ${brief.goal}`,
+    "",
+    "VIRAL CONTENT IDEAS",
+    ...content.viralIdeas.map((idea, index) => `${index + 1}. ${idea}`),
+    "",
+    "BEST IDEA",
+    content.bestIdea.idea,
+    `Rationale: ${content.bestIdea.rationale}`,
+    "",
+    "HOOKS",
+    ...content.hooks.map((hook, index) => `${index + 1}. ${hook}`),
+    "",
+    "SCRIPT — HOOK",
+    content.script.hook,
+    "",
+    "SCRIPT — BODY",
+    content.script.mainContent,
+    "",
+    "SCRIPT — CTA",
+    content.script.ending,
+    "",
+    "CAPTION",
+    content.caption,
+    "",
+    "HASHTAGS",
+    content.hashtags.join(" "),
+    "",
+    "CAROUSEL",
+    `Slide 1: ${content.carousel.slide1}`,
+    ...content.carousel.slides2to6.map((slide, index) => `Slide ${index + 2}: ${slide}`),
+    `Slide 7: ${content.carousel.slide7}`,
+    "",
+    "REPURPOSE CONTENT",
+    `X Thread:\n${content.repurpose.twitterThread.join("\n")}`,
+    `LinkedIn Post:\n${content.repurpose.linkedInPost}`,
+    `YouTube Shorts:\n${content.repurpose.youtubeShorts}`,
+    "",
+    "OPTIMIZATION TIPS",
+    `Best Posting Time: ${content.optimizationTips.bestPostingTime}`,
+    `Suggested Visuals: ${content.optimizationTips.suggestedVisuals.join(", ")}`,
+    `Engagement Tricks: ${content.optimizationTips.engagementTricks.join(", ")}`,
+  ].join("\n");
+}
+
 export default function Generator() {
   const { user, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
@@ -153,6 +205,10 @@ export default function Generator() {
   const [progress, setProgress] = useState(0);
   const [generationPulse, setGenerationPulse] = useState<LumaeLightPulseState>("idle");
   const [selectedLanguage, setSelectedLanguage] = useState("hinglish");
+  const [referenceFile, setReferenceFile] = useState<File | null>(null);
+  const [referenceDocumentText, setReferenceDocumentText] = useState("");
+  const [referenceImageUrl, setReferenceImageUrl] = useState<string | undefined>();
+  const [isReadingReference, setIsReadingReference] = useState(false);
 
   const generateMutation = trpc.content.generate.useMutation();
   const getHistoryQuery = trpc.content.history.useQuery(undefined, {
@@ -271,6 +327,8 @@ export default function Generator() {
             customVideoSeconds: formData.videoLength === "custom" ? customVideoSeconds : undefined,
             customScriptWordTarget: formData.scriptLength === "custom" ? customScriptWordTarget : undefined,
             trendingTopics: trendingTopics.length > 0 ? trendingTopics : undefined,
+            referenceDocumentText: referenceDocumentText || undefined,
+            referenceImageUrl,
           });
       setGeneratedContent(result);
       setProgress(100);
@@ -301,6 +359,55 @@ export default function Generator() {
     }
   };
 
+  const handleReferenceFile = async (file: File | undefined) => {
+    if (!file) return;
+    const isImage = file.type.startsWith("image/");
+    const isPdf = file.type === "application/pdf";
+    if (!isImage && !isPdf) {
+      toast.error("Attach an image or PDF file only.");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("Reference files must be 8 MB or smaller.");
+      return;
+    }
+    setReferenceFile(file);
+    setIsReadingReference(true);
+    try {
+      if (isImage) {
+        const reader = new FileReader();
+        const imageUrl = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(String(reader.result));
+          reader.onerror = () => reject(new Error("Unable to read image"));
+          reader.readAsDataURL(file);
+        });
+        setReferenceImageUrl(imageUrl);
+        setReferenceDocumentText("");
+      } else {
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+        const pages: string[] = [];
+        for (let pageNumber = 1; pageNumber <= Math.min(pdf.numPages, 20); pageNumber += 1) {
+          const page = await pdf.getPage(pageNumber);
+          const text = await page.getTextContent();
+          pages.push(text.items.map((item) => "str" in item ? item.str : "").join(" "));
+        }
+        const extracted = pages.join("\\n\\n").trim().slice(0, 20000);
+        if (!extracted) throw new Error("No selectable text found in this PDF");
+        setReferenceDocumentText(extracted);
+        setReferenceImageUrl(undefined);
+      }
+      toast.success(`${file.name} attached as generation context.`);
+    } catch (error) {
+      setReferenceFile(null);
+      setReferenceDocumentText("");
+      setReferenceImageUrl(undefined);
+      toast.error(error instanceof Error ? error.message : "Unable to read that reference file.");
+    } finally {
+      setIsReadingReference(false);
+    }
+  };
+
   const applyTrendToBrief = (topic: UnifiedTrendTopic) => {
     setTrendingTopics([topic.title]);
     setFormData((current) => ({
@@ -312,11 +419,32 @@ export default function Generator() {
     toast.success(`Applied “${topic.title}” to your brief`);
   };
 
-  const exportContent = (format: "pdf" | "csv" | "txt" | "json") => {
+  const exportContent = async (format: "pdf" | "docx" | "csv" | "txt" | "json") => {
     if (!generatedContent) return;
 
     let content = "";
     const filename = `content-${Date.now()}`;
+
+    if (format === "docx") {
+      await exportToDocx({
+        filename: `${filename}.docx`,
+        title: "Lumae AI Content Package",
+        content: buildExportText(generatedContent, formData),
+      });
+      toast.success("Content exported as DOCX.");
+      return;
+    }
+
+    if (format === "pdf") {
+      const exported = exportToPDF({
+        filename: `${filename}.pdf`,
+        title: "Lumae AI Content Package",
+        content: buildExportText(generatedContent, formData),
+        metadata: { author: "Lumae AI", subject: "Lumae AI Content Package", keywords: "Lumae AI, lumae.co.in" },
+      });
+      if (exported) toast.success("Content exported as PDF.");
+      return;
+    }
 
     if (format === "json") {
       content = JSON.stringify(generatedContent, null, 2);
@@ -603,6 +731,19 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
                     </Select>
                   </div>
 
+                  <div className="space-y-2 rounded-xl border border-[#26262b] bg-[#141417] p-3">
+                    <Label className="text-[#f5f5f7]">Reference material <span className="text-[#9a9aa2]">(optional)</span></Label>
+                    <p className="text-xs leading-relaxed text-[#9a9aa2]">Attach one image or PDF for the script to understand your product, brief, or source material.</p>
+                    <Input type="file" accept="image/*,application/pdf" onChange={(event) => void handleReferenceFile(event.target.files?.[0])} disabled={isReadingReference} className="border-[#26262b] bg-[#09090b] text-[#f5f5f7] file:mr-3 file:border-0 file:bg-[#26262b] file:px-3 file:py-1.5 file:text-[#f5f5f7]" />
+                    {isReadingReference && <p className="text-xs text-[#8b5cf6]">Reading reference…</p>}
+                    {referenceFile && !isReadingReference && (
+                      <div className="flex items-center justify-between gap-2 text-xs">
+                        <span className="truncate text-[#06b6d4]">Attached: {referenceFile.name}</span>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => { setReferenceFile(null); setReferenceDocumentText(""); setReferenceImageUrl(undefined); }} className="h-7 px-2 text-[#9a9aa2] hover:text-[#f5f5f7]">Remove</Button>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="block w-full rounded-lg border border-[#6366f1]/60 bg-[#141417] p-1">
                   <button
                     type="submit"
@@ -705,10 +846,13 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="flex gap-2 flex-wrap">
-                    <Button onClick={() => exportContent("pdf")} variant="outline" className="border-slate-700 hover:bg-slate-800/50">
+                    <Button onClick={() => void exportContent("pdf")} variant="outline" className="border-slate-700 hover:bg-slate-800/50">
                       PDF
                     </Button>
-                    <Button onClick={() => exportContent("csv")} variant="outline" className="border-slate-700 hover:bg-slate-800/50">
+                    <Button onClick={() => void exportContent("docx")} variant="outline" className="border-slate-700 hover:bg-slate-800/50">
+                      DOCX
+                    </Button>
+                    <Button onClick={() => void exportContent("csv")} variant="outline" className="border-slate-700 hover:bg-slate-800/50">
                       CSV
                     </Button>
                     <Button onClick={() => exportContent("txt")} variant="outline" className="border-slate-700 hover:bg-slate-800/50">

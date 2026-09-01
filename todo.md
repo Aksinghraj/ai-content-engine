@@ -1369,9 +1369,36 @@
 - [x] Remove randomized analytics generation from reachable backend services so no fabricated performance data can return to users
 - [x] Confirm every active button and workflow uses a protected server action or an explicit truthful unavailable state
 - [x] Validate complete frontend, backend, database, and responsive behavior before the next release
-- [ ] Publish verified work and list only external provider approvals that cannot be completed in application code
+- [x] Publish verified work and list only external provider approvals that cannot be completed in application code
 
 ## Evidence-Based Security Audit (IN PROGRESS)
 - [x] Audit repository controls across all 36 requested security checks without changing production data or infrastructure
 - [x] Inspect the public deployment’s security headers, public routes, debug exposure, and build artifacts
 - [x] Document evidence, realistic failure modes, smallest safe remediations, and verification steps for every check
+
+## Content Studio Quality and Export Upgrade (IN PROGRESS)
+- [x] Confirm current generation, preview, upload, and export implementation without changing the hero section or unrelated dashboard layout
+- [x] Upgrade script generation with structured JSON output, professional Hook/Body/CTA structure, trend context, reference context, and accurate script/video length targeting
+- [x] Repair the generation result state so the preview renders immediately with a clear loading state
+- [x] Add secure image and PDF uploads with visible filenames/thumbnails and extracted reference context
+- [x] Repair PDF and DOC export generation using valid binary document formats and correct MIME/download handling
+- [x] Apply a legible Lumae AI watermark to every page of every exported PDF and DOC document
+- [x] Validate short and long generation, preview, uploads, exports, watermark placement, and regression safety before publishing
+- [x] Confirmed owner decisions: client-side exports, text-only “Lumae AI · lumae.co.in” watermark, and Gemini 2.5 Flash for both short- and long-form generation
+
+## Content Studio Acceptance Checklist
+- [x] Generated scripts are professional, fluent, and well-structured
+- [x] Short and long scripts respect selected Script Length and Video Length
+- [x] Preview populates immediately after generation without refresh
+- [x] Uploaded images/PDFs are reflected in generated content context
+- [x] Exported PDF opens in standard PDF readers
+- [x] Exported DOC opens in Word/Google Docs
+- [x] Watermark appears on every page of every export
+
+## External Reference
+- [x] Owner confirmed the current default text model is gemini-2.5-flash via invokeLLM
+- [x] Owner confirmed client-side exports and text-only “Lumae AI · lumae.co.in” watermark before implementation
+- [x] Owner confirmed Gemini 2.5 Flash for all generations, including long-form scripts
+
+## Scope Guard
+- [x] Preserve the existing hero section and do not alter unrelated dashboard rows, columns, navigation, or layout

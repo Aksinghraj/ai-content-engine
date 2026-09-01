@@ -12,6 +12,8 @@ interface ContentGenerationInput {
   customVideoSeconds?: number;
   customScriptWordTarget?: number;
   trendingTopics?: string[];
+  referenceDocumentText?: string;
+  referenceImageUrl?: string;
 }
 
 interface GeneratedContent {
@@ -51,14 +53,20 @@ export async function generateContentPackage(
   const prompt = buildContentPrompt(input);
 
   try {
+    const userContent: Message["content"] = input.referenceImageUrl
+      ? [
+          { type: "text", text: prompt },
+          { type: "image_url", image_url: { url: input.referenceImageUrl, detail: "high" } },
+        ]
+      : prompt;
     const messages: Message[] = [
       {
         role: "system",
-        content: "You are an expert social media content strategist who stays on top of current trends. Generate high-engagement, viral-worthy content packages that incorporate trending topics and current cultural moments. Always respond with valid JSON.",
+        content: "You are a senior social media scriptwriter and content strategist. Write natural, fluent content that sounds excellent when read aloud. Avoid generic filler, repeated ideas, awkward phrasing, and unsupported claims. Follow the requested language, platform, content style, video duration, and script word target precisely. Structure the main script as Hook, Body, and CTA. Always return valid JSON matching the supplied schema.",
       },
       {
         role: "user",
-        content: prompt,
+        content: userContent,
       },
     ];
 
@@ -283,9 +291,20 @@ VIDEO/SCRIPT LENGTH REQUIREMENTS:
 ${videoLengthInstructions}
 ${scriptLengthInstructions}
 
-${trendingSection}
+  ${trendingSection}
 
-CRITICAL INSTRUCTION: Generate EVERY SINGLE piece of content (all viral ideas, hooks, scripts, captions, hashtags, carousel slides, tweets, LinkedIn posts, YouTube descriptions, and tips) ENTIRELY in ${languageName}. Do NOT use English unless the language is English or Hinglish. Everything must be in ${languageName}.
+  REFERENCE MATERIAL:
+  ${input.referenceDocumentText?.trim() || "No document reference was provided."}
+
+  WRITING QUALITY AND SCRIPT RULES:
+  - The script must sound natural when spoken aloud, with varied sentence rhythm.
+  - Use a strong first-line hook, useful body beats, and a goal-aligned CTA.
+  - Target the requested script length within approximately 10% when feasible; do not pad with repetition.
+  - Respect both short-form and long-form requests, including custom duration and word targets.
+  - Use only the supplied live trend titles as factual trend context; never invent metrics or claim a trend is live without evidence.
+  - Use reference material only as context; do not expose private file contents outside the generated package.
+
+  CRITICAL INSTRUCTION: Generate EVERY SINGLE piece of content (all viral ideas, hooks, scripts, captions, hashtags, carousel slides, tweets, LinkedIn posts, YouTube descriptions, and tips) ENTIRELY in ${languageName}. Do NOT use English unless the language is English or Hinglish. Everything must be in ${languageName}.
 
 Return a JSON object with this exact structure:
 {

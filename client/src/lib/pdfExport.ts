@@ -82,10 +82,12 @@ export function exportToPDF(options: PDFExportOptions) {
     const pageCount = (pdf as any).internal.pages.length - 1;
     for (let i = 1; i <= pageCount; i++) {
       pdf.setPage(i);
-      pdf.setFontSize(9);
+      pdf.setFontSize(8);
       pdf.setTextColor(150, 150, 150);
+      pdf.setFontSize(8);
+      pdf.setTextColor(125, 125, 135);
       pdf.text(
-        `Page ${i} of ${pageCount}`,
+        `Lumae AI · lumae.co.in  |  Page ${i} of ${pageCount}`,
         pageWidth / 2,
         pageHeight - 10,
         { align: "center" }
