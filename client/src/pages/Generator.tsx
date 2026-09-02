@@ -235,7 +235,7 @@ export default function Generator() {
     language: "hinglish",
     videoLength: "60s",
     scriptLength: "medium",
-    customVideoSeconds: "",
+    customVideoMinutes: "",
     customScriptWordTarget: "",
   });
   const [trendingTopics, setTrendingTopics] = useState<string[]>([]);
@@ -273,7 +273,7 @@ export default function Generator() {
   const [hasRestoredLanguage, setHasRestoredLanguage] = useState(false);
 
   const platformPreset = PLATFORM_LENGTH_PRESETS[formData.platform];
-  const requestedVideoSeconds = formData.videoLength === "custom" ? Number(formData.customVideoSeconds) : VIDEO_SECONDS[formData.videoLength];
+  const requestedVideoSeconds = formData.videoLength === "custom" ? Math.round(Number(formData.customVideoMinutes) * 60) : VIDEO_SECONDS[formData.videoLength];
   const requestedScriptWords = formData.scriptLength === "custom" ? Number(formData.customScriptWordTarget) : SCRIPT_WORDS[formData.scriptLength];
   const applyPlatformPreset = () => {
     if (!platformPreset) return;
@@ -281,26 +281,26 @@ export default function Generator() {
       ...current,
       videoLength: platformPreset.videoLength,
       scriptLength: platformPreset.scriptLength,
-      customVideoSeconds: "",
+      customVideoMinutes: "",
       customScriptWordTarget: "",
     }));
   };
 
   const saveCurrentLengthPreferences = () => {
-    const customVideoSeconds = Number(formData.customVideoSeconds);
+    const customVideoMinutes = Number(formData.customVideoMinutes);
     const customScriptWordTarget = Number(formData.customScriptWordTarget);
-    if (formData.videoLength === "custom" && (!Number.isInteger(customVideoSeconds) || customVideoSeconds < 5 || customVideoSeconds > 3600)) {
-      toast.error("Choose a custom video duration between 5 seconds and 60 minutes before saving.");
+    if (formData.videoLength === "custom" && (!Number.isFinite(customVideoMinutes) || customVideoMinutes < 1 || customVideoMinutes > 60)) {
+      toast.error("Choose a custom video duration between 1 and 60 minutes before saving.");
       return;
     }
-    if (formData.scriptLength === "custom" && (!Number.isInteger(customScriptWordTarget) || customScriptWordTarget < 25 || customScriptWordTarget > 3000)) {
-      toast.error("Choose a custom script target between 25 and 3,000 words before saving.");
+    if (formData.scriptLength === "custom" && (!Number.isInteger(customScriptWordTarget) || customScriptWordTarget < 25 || customScriptWordTarget > 12000)) {
+      toast.error("Choose a custom script target between 25 and 12,000 words before saving.");
       return;
     }
     saveLengthPreferences.mutate({
       videoLength: formData.videoLength,
       scriptLength: formData.scriptLength,
-      customVideoSeconds: formData.videoLength === "custom" ? customVideoSeconds : undefined,
+      customVideoSeconds: formData.videoLength === "custom" ? Math.round(customVideoMinutes * 60) : undefined,
       customScriptWordTarget: formData.scriptLength === "custom" ? customScriptWordTarget : undefined,
     });
   };
@@ -319,7 +319,7 @@ export default function Generator() {
       ...current,
       videoLength: saved.videoLength,
       scriptLength: saved.scriptLength,
-      customVideoSeconds: saved.customVideoSeconds?.toString() ?? "",
+      customVideoMinutes: saved.customVideoSeconds ? (saved.customVideoSeconds / 60).toString() : "",
       customScriptWordTarget: saved.customScriptWordTarget?.toString() ?? "",
     }));
     setHasRestoredLengthPreferences(true);
@@ -346,14 +346,14 @@ export default function Generator() {
       toast.error("Please fill in all fields");
       return;
     }
-    const customVideoSeconds = Number(formData.customVideoSeconds);
+    const customVideoMinutes = Number(formData.customVideoMinutes);
     const customScriptWordTarget = Number(formData.customScriptWordTarget);
-    if (formData.videoLength === "custom" && (!Number.isInteger(customVideoSeconds) || customVideoSeconds < 5 || customVideoSeconds > 3600)) {
-      toast.error("Choose a custom video duration between 5 seconds and 60 minutes.");
+    if (formData.videoLength === "custom" && (!Number.isFinite(customVideoMinutes) || customVideoMinutes < 1 || customVideoMinutes > 60)) {
+      toast.error("Choose a custom video duration between 1 and 60 minutes.");
       return;
     }
-    if (formData.scriptLength === "custom" && (!Number.isInteger(customScriptWordTarget) || customScriptWordTarget < 25 || customScriptWordTarget > 3000)) {
-      toast.error("Choose a custom script target between 25 and 3,000 words.");
+    if (formData.scriptLength === "custom" && (!Number.isInteger(customScriptWordTarget) || customScriptWordTarget < 25 || customScriptWordTarget > 12000)) {
+      toast.error("Choose a custom script target between 25 and 12,000 words.");
       return;
     }
 
@@ -368,7 +368,7 @@ export default function Generator() {
     try {
       const result = await generateMutation.mutateAsync({
             ...formData,
-            customVideoSeconds: formData.videoLength === "custom" ? customVideoSeconds : undefined,
+            customVideoSeconds: formData.videoLength === "custom" ? Math.round(customVideoMinutes * 60) : undefined,
             customScriptWordTarget: formData.scriptLength === "custom" ? customScriptWordTarget : undefined,
             trendingTopics: trendingTopics.length > 0 ? trendingTopics : undefined,
             referenceDocumentText: referenceDocumentText || undefined,
@@ -574,7 +574,7 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
       language: "hinglish",
       videoLength: "60s",
       scriptLength: "medium",
-      customVideoSeconds: "",
+      customVideoMinutes: "",
       customScriptWordTarget: "",
     });
   };
@@ -706,8 +706,9 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
                     </Select>
                     {formData.videoLength === "custom" && (
                       <div className="mt-2">
-                        <Label className="text-xs text-[#9a9aa2]">Custom duration in seconds</Label>
-                        <Input type="number" min={5} max={3600} inputMode="numeric" value={formData.customVideoSeconds} onChange={(event) => setFormData({ ...formData, customVideoSeconds: event.target.value })} placeholder="e.g., 75" className="mt-1 border-[#26262b] bg-[#09090b] text-[#f5f5f7]" />
+                        <Label className="text-xs text-[#9a9aa2]">Custom duration in minutes</Label>
+                        <Input type="number" min={1} max={60} step={0.5} inputMode="decimal" value={formData.customVideoMinutes} onChange={(event) => setFormData({ ...formData, customVideoMinutes: event.target.value })} placeholder="e.g., 8" className="mt-1 border-[#26262b] bg-[#09090b] text-[#f5f5f7]" />
+                        <p className="mt-1 text-xs text-[#9a9aa2]">For a full cartoon, faceless, documentary, or explainer script, choose 3+ minutes.</p>
                       </div>
                     )}
                   </div>
@@ -729,7 +730,7 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
                     {formData.scriptLength === "custom" && (
                       <div className="mt-2">
                         <Label className="text-xs text-[#9a9aa2]">Custom word target</Label>
-                        <Input type="number" min={25} max={3000} inputMode="numeric" value={formData.customScriptWordTarget} onChange={(event) => setFormData({ ...formData, customScriptWordTarget: event.target.value })} placeholder="e.g., 425" className="mt-1 border-[#26262b] bg-[#09090b] text-[#f5f5f7]" />
+                        <Input type="number" min={25} max={12000} inputMode="numeric" value={formData.customScriptWordTarget} onChange={(event) => setFormData({ ...formData, customScriptWordTarget: event.target.value })} placeholder="e.g., 425" className="mt-1 border-[#26262b] bg-[#09090b] text-[#f5f5f7]" />
                       </div>
                     )}
                   </div>
@@ -997,7 +998,7 @@ Engagement Tricks: ${generatedContent.optimizationTips.engagementTricks.join(", 
                       <FileText className="w-5 h-5" />
                       Script
                     </CardTitle>
-                    <CardDescription>Short-form video script ({formData.videoLength === "short" ? "30-45 seconds" : "2-5 minutes"})</CardDescription>
+                    <CardDescription>{requestedVideoSeconds >= 180 ? "Long-form video script" : "Short-form video script"} ({requestedVideoSeconds > 0 ? formatDuration(requestedVideoSeconds) : "selected duration"}) · Suitable for cartoon stories, faceless channels, explainers, and more</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>

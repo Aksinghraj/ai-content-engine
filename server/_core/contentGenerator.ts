@@ -224,17 +224,17 @@ function getDetailedLanguageInstructions(language: string): string {
 function getVideoLengthInstructions(videoLength: string, customVideoSeconds?: number): string {
   if (videoLength === "custom" && customVideoSeconds) {
     const estimatedWords = Math.round(customVideoSeconds * 2.5);
-    return `Make the spoken script approximately ${customVideoSeconds} seconds long (about ${estimatedWords} words at a natural pace).`;
+    return `Make the complete spoken script approximately ${customVideoSeconds} seconds long (target about ${estimatedWords} words at a natural pace, with a hard minimum of ${Math.max(25, Math.floor(estimatedWords * 0.9))} words). This is a long-form request when the duration is 3 minutes or more; write the full narrative rather than a short summary.`;
   }
   const instructions: Record<string, string> = {
     "15s": "Make the script exactly 15 seconds when read aloud (about 35-40 words). Ultra-short, punchy, one key message.",
     "30s": "Make the script exactly 30 seconds when read aloud (about 75-80 words). Quick hook, one main point, strong CTA.",
     "60s": "Make the script exactly 60 seconds when read aloud (about 150-160 words). Hook, 2-3 key points, engaging CTA.",
     "90s": "Make the script exactly 90 seconds when read aloud (about 225-240 words). Hook, detailed content with 3-4 points, memorable ending.",
-    "3min": "Make the script exactly 3 minutes when read aloud (about 450-480 words). Full storytelling arc with hook, problem, solution, examples, and CTA.",
-    "5min": "Make the script exactly 5 minutes when read aloud (about 750-800 words). Comprehensive deep-dive with hook, multiple sections, examples, and strong conclusion.",
+    "3min": "Make the complete spoken script exactly 3 minutes when read aloud (target 450-480 words, never less than 410 words). Use a full storytelling arc with hook, setup, problem, solution, examples, transitions, and CTA.",
+    "5min": "Make the complete spoken script exactly 5 minutes when read aloud (target 750-800 words, never less than 680 words). Use a comprehensive deep dive with hook, setup, multiple clearly developed sections, examples, transitions, and a strong conclusion.",
     "short": "Make the script 30-45 seconds when read aloud (about 75-100 words). Quick, punchy, high-energy.",
-    "long": "Make the script 2-5 minutes when read aloud (about 300-750 words). Detailed, storytelling-driven, comprehensive.",
+    "long": "Make the complete spoken script 2-5 minutes when read aloud (about 300-750 words), but follow a longer selected video duration as the authoritative target. Use detailed, storytelling-driven sections rather than compressing the answer.",
   };
   return instructions[videoLength] || instructions["60s"];
 }
@@ -259,6 +259,10 @@ function buildContentPrompt(input: ContentGenerationInput): string {
   const languageInstructions = getDetailedLanguageInstructions(languageCode);
   const videoLengthInstructions = getVideoLengthInstructions(input.videoLength || "60s", input.customVideoSeconds);
   const scriptLengthInstructions = getScriptLengthInstructions(input.scriptLength || "medium", input.customScriptWordTarget);
+  const durationSeconds = input.videoLength === "custom" ? input.customVideoSeconds || 0 : ({ "15s": 15, "30s": 30, "60s": 60, "90s": 90, "3min": 180, "5min": 300 } as Record<string, number>)[input.videoLength || "60s"] || 60;
+  const longFormDirection = durationSeconds >= 180 ? `
+LONG-FORM PRIORITY:
+The selected duration is ${Math.round(durationSeconds / 60)} minutes. The video duration is authoritative over any shorter script-length preset. Generate the entire script at approximately ${Math.round(durationSeconds * 2.5)} words, not a 2-3 minute summary. Divide the body into substantial scenes or chapters with transitions, visual direction, character/action beats where appropriate, and a satisfying ending. This must work for cartoon storytelling, faceless narration, explainers, documentaries, tutorials, and story-led channels. Do not stop after the hook and a few paragraphs.` : "";
 
   // Build trending topics section
   let trendingSection = "";
@@ -290,6 +294,7 @@ ${languageInstructions}
 VIDEO/SCRIPT LENGTH REQUIREMENTS:
 ${videoLengthInstructions}
 ${scriptLengthInstructions}
+${longFormDirection}
 
   ${trendingSection}
 
@@ -300,7 +305,7 @@ ${scriptLengthInstructions}
   - The script must sound natural when spoken aloud, with varied sentence rhythm.
   - Use a strong first-line hook, useful body beats, and a goal-aligned CTA.
   - Target the requested script length within approximately 10% when feasible; do not pad with repetition.
-  - Respect both short-form and long-form requests, including custom duration and word targets.
+  - Respect both short-form and long-form requests, including custom duration and word targets; for 3+ minute selections, never collapse the script into a 2-3 minute summary.
   - Use only the supplied live trend titles as factual trend context; never invent metrics or claim a trend is live without evidence.
   - Use reference material only as context; do not expose private file contents outside the generated package.
 

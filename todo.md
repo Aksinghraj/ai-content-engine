@@ -1407,3 +1407,11 @@
 - [x] Add a skeleton loading animation inside the existing video-script generation area while Gemini is generating
 - [x] Keep the loading state accessible, restrained, and compatible with reduced-motion preferences
 - [x] Verify loading-to-result transition with TypeScript, tests, and a rendered preview
+
+## Content Studio Long-Form Duration Fix (IN PROGRESS)
+- [x] Replace custom video-duration seconds with minutes throughout the Content Studio UI and prompt context; retain seconds only at the backward-compatible API boundary
+- [x] Ensure selected long-form duration produces a genuinely expanded script rather than a 2–3 minute script
+- [x] Add long-form planning for cartoon videos, faceless channels, documentaries, and other narrative formats
+- [x] Preserve short-form generation and keep duration-to-word-count guidance accurate
+- [x] Add regression coverage for minute units, short-form targets, and long-form targets
+- [x] Run TypeScript, focused tests, production build, and responsive verification before publishing

@@ -250,7 +250,7 @@ export const appRouter = router({
           videoLength: z.string().refine((value) => ["15s", "30s", "60s", "90s", "3min", "5min", "custom"].includes(value), "Invalid video length").optional().default("60s"),
           scriptLength: z.string().refine((value) => ["brief", "short", "medium", "long", "extended", "custom"].includes(value), "Invalid script length").optional().default("medium"),
           customVideoSeconds: z.number().int().min(5).max(3600).optional(),
-          customScriptWordTarget: z.number().int().min(25).max(3000).optional(),
+          customScriptWordTarget: z.number().int().min(25).max(12000).optional(),
           trendingTopics: z.array(z.string().max(200)).max(10).optional(),
           referenceDocumentText: z.string().max(20_000).optional(),
           referenceImageUrl: z.string().url().max(2_000_000).refine((value) => value.startsWith("data:image/"), "Reference image must be an image data URL").optional(),
@@ -304,7 +304,7 @@ export const appRouter = router({
         videoLength: z.string().refine((value) => ["15s", "30s", "60s", "90s", "3min", "5min", "custom"].includes(value), "Invalid video length"),
         scriptLength: z.string().refine((value) => ["brief", "short", "medium", "long", "extended", "custom"].includes(value), "Invalid script length"),
         customVideoSeconds: z.number().int().min(5).max(3600).optional(),
-        customScriptWordTarget: z.number().int().min(25).max(3000).optional(),
+        customScriptWordTarget: z.number().int().min(25).max(12000).optional(),
       }).superRefine((input, refinement) => {
         if (input.videoLength === "custom" && !input.customVideoSeconds) refinement.addIssue({ code: "custom", path: ["customVideoSeconds"], message: "A custom video duration is required" });
         if (input.scriptLength === "custom" && !input.customScriptWordTarget) refinement.addIssue({ code: "custom", path: ["customScriptWordTarget"], message: "A custom script word target is required" });
