@@ -38,6 +38,16 @@ describe("profile sharing and accessibility", () => {
     expect(profilePage).toContain("Profile visibility: {profile.isPublic ? \"Public\" : \"Private\"}");
     expect(profilePage).toContain("const derivePublicSlug");
     expect(profilePage).toContain("Your share link is ready.");
+    expect(profilePage).toContain("Share your Lumae profile");
+    expect(profilePage).toContain("QRCodeSVG value={publicUrl}");
+    expect(profilePage).not.toContain("Copy profile</Button>");
+    expect((profilePage.match(/>Share profile<\/Button>/g) || []).length).toBe(1);
+    expect(profilePage).toContain("await profileQuery.refetch()");
+    const server = read("server/_core/index.ts");
+    expect(server).toContain("/api/profile/upload-avatar");
+    expect(server).toContain("/api/profile/upload-cover");
+    expect(server).toContain("updateProfessionalProfileMedia");
+    expect(db).toContain("updateProfessionalProfileMedia");
     expect(publicProfile).toContain("recordPublicView");
     expect(publicProfile).toContain('setMeta("og:title"');
     expect(db).toContain("professionalProfileViews");

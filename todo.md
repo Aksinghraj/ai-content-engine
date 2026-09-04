@@ -1423,3 +1423,12 @@
 - [x] Ensure private profiles do not expose a usable public profile and explain the privacy state clearly
 - [x] Add regression coverage for canonical links, copy/share behavior, and invalid/missing slugs
 - [x] Verify desktop and mobile profile-sharing flows, run TypeScript/tests/build, and publish only after validation
+
+## Final Profile and Instagram Consistency Repair (IN PROGRESS)
+- [x] Verify avatar and cover upload endpoints persist returned storage URLs and remain hydrated after navigation and full reload
+- [x] Fix any upload URL/object-URL lifecycle issue that causes images to disappear after leaving the profile section
+- [x] Remove duplicate Copy profile / Share profile controls and retain one clear profile-sharing action with QR support
+- [x] Make the Public ↔ Private control explicit, persisted, and reflected consistently in profile badges and share availability
+- [x] Keep Instagram account connection/privacy behavior separate from public profile sharing while exposing the same clear user-facing controls where applicable
+- [x] Add regression coverage for upload persistence, single sharing control, QR link generation, and public/private transitions
+- [x] Run TypeScript, focused tests, production build, and mobile reload/navigation verification before publishing

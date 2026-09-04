@@ -9,6 +9,8 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { COVER_PRESETS, getCoverPreset, PROFILE_THEMES, type CoverPresetId, type ProfileThemeId } from "@/lib/profileAppearance";
 import { toast } from "sonner";
+import { QRCodeSVG } from "qrcode.react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity, BadgeCheck, Bookmark, BriefcaseBusiness, CalendarClock, Camera, CheckCircle2,
@@ -76,6 +78,7 @@ export default function ProfileAdvanced() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [profile, setProfile] = useState<ProfileForm>(blankProfile);
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     const stored = profileQuery.data;
@@ -125,7 +128,8 @@ export default function ProfileAdvanced() {
       if (!response.ok) throw new Error("Upload failed");
       const result = await response.json();
       kind === "avatar" ? setAvatarUrl(result.url) : setCoverUrl(result.url);
-      toast.success(`${kind === "avatar" ? "Profile photo" : "Cover image"} updated.`);
+      await profileQuery.refetch();
+      toast.success(`${kind === "avatar" ? "Profile photo" : "Cover image"} updated and saved.`);
     } catch {
       toast.error("Image upload failed. Please try again.");
     } finally {
@@ -236,21 +240,25 @@ export default function ProfileAdvanced() {
     }
   };
 
-  const shareLink = async () => {
+  const shareLink = () => {
     if (!profile.isPublic || !publicUrl) {
       toast.info("Enable public sharing and choose a profile link first.");
       return;
     }
+    setShareOpen(true);
+  };
+  const shareNative = async () => {
     try {
       if (navigator.share) {
         await navigator.share({ title: `${profile.name} · Lumae AI`, text: `View ${profile.name}'s public Lumae profile`, url: publicUrl });
         toast.success("Profile shared.");
-        return;
+      } else {
+        await copyLink();
       }
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
+      toast.error("The profile could not be shared. Please copy the link instead.");
     }
-    await copyLink();
   };
 
   return (
@@ -279,7 +287,7 @@ export default function ProfileAdvanced() {
                   <p className="profile-identity-accent mt-1 text-sm font-medium">{profile.professionalTitle}</p>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={copyLink} disabled={!profile.isPublic || !publicUrl}><Copy className="mr-2 h-4 w-4" />Copy profile</Button><Button variant="outline" onClick={shareLink} disabled={!profile.isPublic || !publicUrl}><Link2 className="mr-2 h-4 w-4" />Share profile</Button><Button className="lumae-gradient-cta" onClick={() => { setEditing(true); setActiveTab("settings"); }}><PenLine className="mr-2 h-4 w-4" />Edit profile</Button></div>
+              <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={shareLink} disabled={!profile.isPublic || !publicUrl}><Link2 className="mr-2 h-4 w-4" />Share profile</Button><Button className="lumae-gradient-cta" onClick={() => { setEditing(true); setActiveTab("settings"); }}><PenLine className="mr-2 h-4 w-4" />Edit profile</Button></div>
             </div>
             <p className="mt-5 max-w-3xl text-sm leading-relaxed text-muted-foreground">{profile.bio || "Add a short introduction so your Lumae profile feels like yours."}</p>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -307,7 +315,7 @@ export default function ProfileAdvanced() {
           <TabsContent value="overview" className="space-y-4">
             <section className="grid gap-4 lg:grid-cols-[1.45fr_1fr]">
               <Card className="p-5"><p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Creator profile</p><h2 className="mt-2 text-xl font-semibold text-card-foreground">{profile.professionalTitle}</h2><div className="mt-4 flex flex-wrap gap-2">{expertise.length ? expertise.map((item) => <Badge key={item} className="border border-primary/20 bg-primary/10 text-primary">{item}</Badge>) : <span className="text-sm text-muted-foreground">Add your focus areas in Settings.</span>}</div><div className="mt-5 flex flex-wrap gap-4 text-sm text-muted-foreground">{profile.location && <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4 text-primary" />{profile.location}</span>}{profile.website && <a href={profile.website} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-primary hover:underline"><Globe className="h-4 w-4" />Website</a>}</div></Card>
-              <Card className="p-5"><p className="text-sm font-semibold text-card-foreground">Profile sharing</p><p className="mt-2 text-sm text-muted-foreground">{profile.isPublic && publicUrl ? "Your public profile is available at this link." : "Your profile is private. Turn on sharing only when you are ready."}</p><div className="mt-4 break-all rounded-lg border border-border bg-muted/35 p-3 text-xs text-muted-foreground">{profile.isPublic && publicUrl ? publicUrl : "Create a public link in Settings, then enable Public profile."}</div><div className="mt-4 grid gap-2 sm:grid-cols-2"><Button variant="outline" onClick={copyLink} disabled={!profile.isPublic || !publicUrl}><Copy className="mr-2 h-4 w-4" />Copy link</Button><Button variant="outline" onClick={shareLink} disabled={!profile.isPublic || !publicUrl}><Link2 className="mr-2 h-4 w-4" />Share link</Button></div><Button className="mt-3 w-full" variant="outline" onClick={() => { setEditing(true); setActiveTab("settings"); }}><ShieldCheck className="mr-2 h-4 w-4" />Manage privacy</Button></Card>
+              <Card className="p-5"><p className="text-sm font-semibold text-card-foreground">Profile sharing</p><p className="mt-2 text-sm text-muted-foreground">{profile.isPublic && publicUrl ? "Your public profile is available at this link." : "Your profile is private. Turn on sharing only when you are ready."}</p><div className="mt-4 break-all rounded-lg border border-border bg-muted/35 p-3 text-xs text-muted-foreground">{profile.isPublic && publicUrl ? publicUrl : "Create a public link in Settings, then enable Public profile."}</div><p className="mt-4 text-xs text-muted-foreground">Use the Share profile button above to copy the link, share it, or show its QR code.</p><Button className="mt-3 w-full" variant="outline" onClick={() => { setEditing(true); setActiveTab("settings"); }}><ShieldCheck className="mr-2 h-4 w-4" />Manage privacy</Button></Card>
             </section>
           </TabsContent>
 
@@ -324,6 +332,22 @@ export default function ProfileAdvanced() {
           </TabsContent>
         </Tabs>
       </main>
+      <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share your Lumae profile</DialogTitle>
+            <DialogDescription>Share one secure public link or let someone scan the QR code.</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 py-3">
+            {publicUrl ? <QRCodeSVG value={publicUrl} size={192} includeMargin className="rounded-lg bg-white p-3" aria-label={`QR code for ${profile.name}'s public profile`} /> : null}
+            <p className="w-full break-all rounded-lg border border-border bg-muted/35 p-3 text-center text-xs text-muted-foreground">{publicUrl || "Enable public sharing to create a link."}</p>
+          </div>
+          <DialogFooter className="gap-2 sm:justify-center">
+            <Button type="button" variant="outline" onClick={copyLink} disabled={!publicUrl || !profile.isPublic}><Copy className="mr-2 h-4 w-4" />Copy link</Button>
+            <Button type="button" className="lumae-gradient-cta" onClick={shareNative} disabled={!publicUrl || !profile.isPublic}><Link2 className="mr-2 h-4 w-4" />Share link</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

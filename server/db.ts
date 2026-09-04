@@ -879,6 +879,42 @@ export async function getProfessionalProfileByUserId(userId: number) {
   return rows[0] ?? null;
 }
 
+export async function updateProfessionalProfileMedia(userId: number, media: { avatarUrl?: string; coverUrl?: string }) {
+  const database = await getDb();
+  if (!database) throw new Error("Database unavailable");
+  const existing = await getProfessionalProfileByUserId(userId);
+  if (!existing) {
+    await database.insert(professionalProfiles).values({
+      userId,
+      displayName: "Lumae creator",
+      professionalTitle: "Content Strategist & AI Workflow Builder",
+      biography: null,
+      expertise: null,
+      availability: "Open to collaborations",
+      phone: null,
+      location: null,
+      website: null,
+      avatarUrl: media.avatarUrl ?? null,
+      coverUrl: media.coverUrl ?? null,
+      socialLinks: {},
+      username: null,
+      profileStatus: "Building with Lumae",
+      collaborationOpen: false,
+      profileTheme: "signal",
+      coverPreset: "aurora",
+      publicSlug: null,
+      isPublic: false,
+      shareSocialLinks: false,
+    });
+  } else {
+    const updates: { avatarUrl?: string; coverUrl?: string } = {};
+    if (media.avatarUrl !== undefined) updates.avatarUrl = media.avatarUrl;
+    if (media.coverUrl !== undefined) updates.coverUrl = media.coverUrl;
+    if (Object.keys(updates).length > 0) await database.update(professionalProfiles).set(updates).where(eq(professionalProfiles.userId, userId));
+  }
+  return getProfessionalProfileByUserId(userId);
+}
+
 export async function saveProfessionalProfile(userId: number, profile: ProfessionalProfileInput) {
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");

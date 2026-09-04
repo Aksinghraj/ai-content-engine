@@ -15,7 +15,10 @@ import { runScheduledAutomation } from "../routes/scheduledAutomation";
 import { refreshScheduledTrends } from "../routes/scheduledTrendRefresh";
 import { ensureTrendRefreshJob } from "./trendScheduler";
 import { ensureScheduledPostDispatcher, runScheduledPosts } from "./scheduledPostScheduler";
-import { storageGetSignedUrl } from "../storage";
+import { storageGetSignedUrl, storagePut } from "../storage";
+import { updateProfessionalProfileMedia } from "../db";
+import { sdk } from "./sdk";
+import multer from "multer";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
@@ -246,6 +249,34 @@ async function startServer() {
   // Bound non-file request bodies to reduce memory-exhaustion risk.
   app.use(express.json({ limit: "1mb" }));
   app.use(express.urlencoded({ limit: "1mb", extended: true }));
+
+  const profileUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024, files: 1 },
+    fileFilter: (_req, file, callback) => {
+      callback(null, ["image/png", "image/jpeg", "image/webp"].includes(file.mimetype));
+    },
+  });
+  const handleProfileImageUpload = (kind: "avatar" | "cover") => async (req: express.Request, res: express.Response) => {
+    if (!hasTrustedRequestOrigin(req)) return res.status(403).json({ error: "untrusted-origin" });
+    try {
+      const user = await sdk.authenticateRequest(req);
+      if (user.isCron || user.id < 1) return res.status(403).json({ error: "forbidden" });
+      const file = req.file;
+      const maxBytes = kind === "avatar" ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
+      if (!file || file.size > maxBytes || !["image/png", "image/jpeg", "image/webp"].includes(file.mimetype)) {
+        return res.status(400).json({ error: "invalid-image" });
+      }
+      const extension = file.mimetype === "image/png" ? "png" : file.mimetype === "image/webp" ? "webp" : "jpg";
+      const stored = await storagePut(`profile/${user.id}/${kind}-${crypto.randomUUID()}.${extension}`, file.buffer, file.mimetype);
+      await updateProfessionalProfileMedia(user.id, kind === "avatar" ? { avatarUrl: stored.url } : { coverUrl: stored.url });
+      return res.status(200).json({ url: stored.url });
+    } catch {
+      return res.status(500).json({ error: "profile-image-upload-failed" });
+    }
+  };
+  app.post("/api/profile/upload-avatar", profileUpload.single("file"), handleProfileImageUpload("avatar"));
+  app.post("/api/profile/upload-cover", profileUpload.single("file"), handleProfileImageUpload("cover"));
 
   // Keep the public Lumae preview animation on the same origin. The generic
   // storage route is intentionally intercepted by the deployment gateway,
