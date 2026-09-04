@@ -22,6 +22,7 @@ describe("profile sharing and accessibility", () => {
     const css = read("client/src/index.css");
     const settings = read("client/src/pages/SettingsAdvanced.tsx");
     const publicProfile = read("client/src/pages/PublicProfile.tsx");
+    const profilePage = read("client/src/pages/ProfileAdvanced.tsx");
     const db = read("server/db.ts");
     expect(app).toContain('path="/u/:slug"');
     expect(context).toContain("setHighContrastMutation.mutate");
@@ -30,6 +31,13 @@ describe("profile sharing and accessibility", () => {
     expect(css).toContain('[data-theme="dark"].high-contrast');
     expect(settings).toContain("High contrast");
     expect(publicProfile).toContain("QRCodeSVG");
+    expect(profilePage).toContain('window.location.origin}/u/${encodeURIComponent(profile.publicSlug.trim())}');
+    expect(profilePage).toContain("navigator.share");
+    expect(profilePage).toContain("document.execCommand(\"copy\")");
+    expect(profilePage).toContain("disabled={!profile.isPublic || !publicUrl}");
+    expect(profilePage).toContain("Profile visibility: {profile.isPublic ? \"Public\" : \"Private\"}");
+    expect(profilePage).toContain("const derivePublicSlug");
+    expect(profilePage).toContain("Your share link is ready.");
     expect(publicProfile).toContain("recordPublicView");
     expect(publicProfile).toContain('setMeta("og:title"');
     expect(db).toContain("professionalProfileViews");

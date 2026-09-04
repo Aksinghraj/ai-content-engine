@@ -102,10 +102,12 @@ export default function ProfileAdvanced() {
   }, [profileQuery.data, user?.name]);
 
   const activity = activityQuery.data;
-  const publicUrl = profile.publicSlug ? `${window.location.origin}/u/${profile.publicSlug}` : "";
+  const publicUrl = profile.publicSlug.trim() ? `${window.location.origin}/u/${encodeURIComponent(profile.publicSlug.trim())}` : "";
   const expertise = useMemo(() => profile.expertise.split(",").map((item) => item.trim()).filter(Boolean), [profile.expertise]);
   const avatarFallback = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(profile.name || "Lumae creator")}`;
   const coverPreset = getCoverPreset(profile.coverPreset);
+  const derivePublicSlug = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 100);
+  const getShareSlug = () => derivePublicSlug(profile.publicSlug || profile.username || profile.name);
 
   const uploadImage = async (kind: "avatar" | "cover", file?: File) => {
     if (!file) return;
@@ -132,6 +134,11 @@ export default function ProfileAdvanced() {
   };
 
   const persist = async () => {
+    const publicSlug = getShareSlug();
+    if (profile.isPublic && publicSlug.length < 3) {
+      toast.error("Add a username or display name with at least 3 letters before enabling public sharing.");
+      return;
+    }
     try {
       await saveProfile.mutateAsync({
         displayName: profile.name.trim() || "Lumae creator",
@@ -150,10 +157,11 @@ export default function ProfileAdvanced() {
         avatarUrl,
         coverUrl,
         socialLinks: {},
-        publicSlug: profile.publicSlug.trim() || null,
+        publicSlug: publicSlug || null,
         isPublic: profile.isPublic,
         shareSocialLinks: profile.shareSocialLinks,
       });
+      setProfile((current) => ({ ...current, publicSlug }));
       await Promise.all([profileQuery.refetch(), activityQuery.refetch()]);
       setEditing(false);
       toast.success("Profile saved securely.");
@@ -162,13 +170,87 @@ export default function ProfileAdvanced() {
     }
   };
 
+  const toggleVisibility = async () => {
+    const nextIsPublic = !profile.isPublic;
+    const publicSlug = getShareSlug();
+    if (nextIsPublic && publicSlug.length < 3) {
+      toast.info("Add a username or display name first so Lumae can create your share link.");
+      setEditing(true);
+      setActiveTab("settings");
+      return;
+    }
+    const nextProfile = { ...profile, isPublic: nextIsPublic, publicSlug };
+    setProfile(nextProfile);
+    try {
+      await saveProfile.mutateAsync({
+        displayName: nextProfile.name.trim() || "Lumae creator",
+        username: nextProfile.username.trim() || null,
+        professionalTitle: nextProfile.professionalTitle.trim() || blankProfile.professionalTitle,
+        biography: nextProfile.bio.trim() || null,
+        expertise: nextProfile.expertise.trim() || null,
+        availability: nextProfile.availability.trim() || null,
+        profileStatus: nextProfile.profileStatus.trim() || null,
+        collaborationOpen: nextProfile.collaborationOpen,
+        profileTheme: nextProfile.profileTheme,
+        coverPreset: nextProfile.coverPreset,
+        phone: null,
+        location: nextProfile.location.trim() || null,
+        website: nextProfile.website.trim() || null,
+        avatarUrl,
+        coverUrl,
+        socialLinks: {},
+        publicSlug: publicSlug || null,
+        isPublic: nextIsPublic,
+        shareSocialLinks: nextProfile.shareSocialLinks,
+      });
+      await profileQuery.refetch();
+      toast.success(nextIsPublic ? "Profile is now public. Your share link is ready." : "Profile is private. Your public link is disabled.");
+    } catch (error) {
+      setProfile(profile);
+      toast.error(error instanceof Error ? error.message : "Profile visibility could not be updated.");
+    }
+  };
+
   const copyLink = async () => {
     if (!profile.isPublic || !publicUrl) {
       toast.info("Enable public sharing and choose a profile link first.");
       return;
     }
-    await navigator.clipboard.writeText(publicUrl);
-    toast.success("Public profile link copied.");
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(publicUrl);
+      } else {
+        const input = document.createElement("textarea");
+        input.value = publicUrl;
+        input.setAttribute("readonly", "true");
+        input.style.position = "fixed";
+        input.style.opacity = "0";
+        document.body.appendChild(input);
+        input.select();
+        if (!document.execCommand("copy")) throw new Error("Clipboard unavailable");
+        document.body.removeChild(input);
+      }
+      toast.success("Public profile link copied.");
+    } catch {
+      toast.error("The link could not be copied. Please select and copy it manually.");
+    }
+  };
+
+  const shareLink = async () => {
+    if (!profile.isPublic || !publicUrl) {
+      toast.info("Enable public sharing and choose a profile link first.");
+      return;
+    }
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `${profile.name} · Lumae AI`, text: `View ${profile.name}'s public Lumae profile`, url: publicUrl });
+        toast.success("Profile shared.");
+        return;
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+    }
+    await copyLink();
   };
 
   return (
@@ -181,7 +263,7 @@ export default function ProfileAdvanced() {
           <div className="relative h-44 sm:h-56">
             {coverUrl ? <img src={coverUrl} alt="Profile cover" className="h-full w-full object-cover" /> : <div className={`h-full w-full ${coverPreset.className}`} />}
             <div className="absolute inset-0 bg-gradient-to-t from-card via-card/15 to-transparent" />
-            <Badge className="absolute left-5 top-5 border-white/15 bg-black/25 px-3 py-1.5 text-white backdrop-blur"><LockKeyhole className="mr-1.5 h-3.5 w-3.5" />Private by default</Badge>
+            <Button type="button" size="sm" variant="outline" aria-pressed={profile.isPublic} className="absolute left-5 top-5 border-white/20 bg-black/30 text-white hover:bg-black/50" onClick={toggleVisibility} disabled={saveProfile.isPending}><LockKeyhole className="mr-1.5 h-3.5 w-3.5" />Profile visibility: {profile.isPublic ? "Public" : "Private"}</Button>
             <Button size="sm" variant="outline" className="absolute right-5 top-5 border-white/20 bg-black/30 text-white hover:bg-black/50" onClick={() => coverInputRef.current?.click()}><ImagePlus className="mr-2 h-4 w-4" />Cover</Button>
           </div>
           <div className="relative px-5 pb-6 sm:px-8">
@@ -197,7 +279,7 @@ export default function ProfileAdvanced() {
                   <p className="profile-identity-accent mt-1 text-sm font-medium">{profile.professionalTitle}</p>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={copyLink}><Copy className="mr-2 h-4 w-4" />Copy profile</Button><Button className="lumae-gradient-cta" onClick={() => { setEditing(true); setActiveTab("settings"); }}><PenLine className="mr-2 h-4 w-4" />Edit profile</Button></div>
+              <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={copyLink} disabled={!profile.isPublic || !publicUrl}><Copy className="mr-2 h-4 w-4" />Copy profile</Button><Button variant="outline" onClick={shareLink} disabled={!profile.isPublic || !publicUrl}><Link2 className="mr-2 h-4 w-4" />Share profile</Button><Button className="lumae-gradient-cta" onClick={() => { setEditing(true); setActiveTab("settings"); }}><PenLine className="mr-2 h-4 w-4" />Edit profile</Button></div>
             </div>
             <p className="mt-5 max-w-3xl text-sm leading-relaxed text-muted-foreground">{profile.bio || "Add a short introduction so your Lumae profile feels like yours."}</p>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -225,7 +307,7 @@ export default function ProfileAdvanced() {
           <TabsContent value="overview" className="space-y-4">
             <section className="grid gap-4 lg:grid-cols-[1.45fr_1fr]">
               <Card className="p-5"><p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Creator profile</p><h2 className="mt-2 text-xl font-semibold text-card-foreground">{profile.professionalTitle}</h2><div className="mt-4 flex flex-wrap gap-2">{expertise.length ? expertise.map((item) => <Badge key={item} className="border border-primary/20 bg-primary/10 text-primary">{item}</Badge>) : <span className="text-sm text-muted-foreground">Add your focus areas in Settings.</span>}</div><div className="mt-5 flex flex-wrap gap-4 text-sm text-muted-foreground">{profile.location && <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4 text-primary" />{profile.location}</span>}{profile.website && <a href={profile.website} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-primary hover:underline"><Globe className="h-4 w-4" />Website</a>}</div></Card>
-              <Card className="p-5"><p className="text-sm font-semibold text-card-foreground">Profile sharing</p><p className="mt-2 text-sm text-muted-foreground">{profile.isPublic && publicUrl ? "Your public profile is available at this link." : "Your profile is private. Turn on sharing only when you are ready."}</p><div className="mt-4 rounded-lg border border-border bg-muted/35 p-3 text-xs text-muted-foreground">{publicUrl || "Create a public link in Settings."}</div><Button className="mt-4 w-full" variant="outline" onClick={() => { setEditing(true); setActiveTab("settings"); }}><ShieldCheck className="mr-2 h-4 w-4" />Manage privacy</Button></Card>
+              <Card className="p-5"><p className="text-sm font-semibold text-card-foreground">Profile sharing</p><p className="mt-2 text-sm text-muted-foreground">{profile.isPublic && publicUrl ? "Your public profile is available at this link." : "Your profile is private. Turn on sharing only when you are ready."}</p><div className="mt-4 break-all rounded-lg border border-border bg-muted/35 p-3 text-xs text-muted-foreground">{profile.isPublic && publicUrl ? publicUrl : "Create a public link in Settings, then enable Public profile."}</div><div className="mt-4 grid gap-2 sm:grid-cols-2"><Button variant="outline" onClick={copyLink} disabled={!profile.isPublic || !publicUrl}><Copy className="mr-2 h-4 w-4" />Copy link</Button><Button variant="outline" onClick={shareLink} disabled={!profile.isPublic || !publicUrl}><Link2 className="mr-2 h-4 w-4" />Share link</Button></div><Button className="mt-3 w-full" variant="outline" onClick={() => { setEditing(true); setActiveTab("settings"); }}><ShieldCheck className="mr-2 h-4 w-4" />Manage privacy</Button></Card>
             </section>
           </TabsContent>
 

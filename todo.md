@@ -1415,3 +1415,11 @@
 - [x] Preserve short-form generation and keep duration-to-word-count guidance accurate
 - [x] Add regression coverage for minute units, short-form targets, and long-form targets
 - [x] Run TypeScript, focused tests, production build, and responsive verification before publishing
+
+## Profile Sharing Reliability Fix (IN PROGRESS)
+- [x] Inspect the profile route and share-link construction without re-reading the supplied screenshots
+- [x] Ensure each user’s public profile URL is canonical, valid, and based on their persisted username/slug
+- [x] Make Copy profile link and native Share use the canonical URL, with a safe clipboard fallback and clear success/error feedback
+- [x] Ensure private profiles do not expose a usable public profile and explain the privacy state clearly
+- [x] Add regression coverage for canonical links, copy/share behavior, and invalid/missing slugs
+- [x] Verify desktop and mobile profile-sharing flows, run TypeScript/tests/build, and publish only after validation
