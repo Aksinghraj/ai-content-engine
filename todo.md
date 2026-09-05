@@ -1453,3 +1453,11 @@
 - [ ] Keep LinkedIn, X, and TikTok action availability truthful to their approval, budget, and provider limitations
 - [x] Improve Connected Accounts guidance so users can distinguish Auto-Post from comment, reply, and direct-message capabilities
 - [ ] Add focused tests for provider capability gates and verify responsive controls before publishing
+
+## Schedule Post Reliability Repair (IN PROGRESS)
+- [x] Trace the active Schedule Post button from client input through the protected server procedure, connection readiness checks, and persistence
+- [x] Identify and repair the cause of the silent schedule creation failure for connected, validated accounts
+- [x] Ensure UI failures always display a precise actionable error and success always refreshes the scheduled-post list
+- [x] Verify durable dispatch state and provider preconditions without publishing a real post during diagnosis
+- [x] Add regression coverage for successful schedule creation and all current blocking conditions
+- [x] Run TypeScript, focused scheduling tests, production build, and browser/mobile verification before publishing

@@ -52,7 +52,7 @@ export default function CreatePostAdvanced() {
   const accountByPlatform = useMemo(() => new Map((accounts.data ?? []).map((item) => [item.platform, item])), [accounts.data]);
   const isReady = (id: PlatformId, requireAutoPost: boolean) => {
     const account = accountByPlatform.get(id);
-    return Boolean(account?.isValidated && (!requireAutoPost || account.autoPost) && (!account.tokenExpiresAt || new Date(account.tokenExpiresAt).getTime() > Date.now()));
+    return Boolean(account?.isConnected && account.isValidated && (!requireAutoPost || account.autoPost) && (!account.tokenExpiresAt || new Date(account.tokenExpiresAt).getTime() > Date.now()));
   };
   const maxChars = platforms.length ? Math.min(...PLATFORMS.filter((item) => platforms.includes(item.id)).map((item) => item.maxChars)) : 5000;
   const parsedHashtags = hashtags.split(/[\s,]+/).map((value) => value.replace(/^#/, "").trim()).filter(Boolean);
@@ -125,17 +125,27 @@ export default function CreatePostAdvanced() {
 
   const schedulePost = async () => {
     if (!validate(true)) return;
-    const time = new Date(scheduledAt);
-    if (Number.isNaN(time.getTime()) || time.getTime() <= Date.now()) return toast.error("Choose a future date and time.");
-    const results = await Promise.allSettled(platforms.map((platform) => {
-      const account = accountByPlatform.get(platform);
-      if (!account) throw new Error(`No ${platform} connection found.`);
-      return schedule.mutateAsync({ socialConnectionId: account.id, platform, content, scheduledAt: time, mediaUrl: media?.url, mediaType: media?.mediaType, mediaKey: media?.key });
-    }));
-    await utils.socialMedia.getScheduledPosts.invalidate();
-    const failed = results.filter((result) => result.status === "rejected");
-    if (failed.length) toast.error(`${failed.length} post${failed.length === 1 ? " was" : "s were"} not scheduled. Check the connection status.`);
-    else toast.success(`Scheduled for ${platforms.length} platform${platforms.length === 1 ? "" : "s"}.`);
+    try {
+      const time = new Date(scheduledAt);
+      if (Number.isNaN(time.getTime()) || time.getTime() <= Date.now()) return toast.error("Choose a future date and time.");
+      const results = await Promise.allSettled(platforms.map((platform) => {
+        const account = accountByPlatform.get(platform);
+        if (!account) return Promise.reject(new Error(`No ${platform} connection is available.`));
+        return schedule.mutateAsync({ socialConnectionId: account.id, platform, content, scheduledAt: time, mediaUrl: media?.url, mediaType: media?.mediaType, mediaKey: media?.key });
+      }));
+      await utils.socialMedia.getScheduledPosts.invalidate();
+      const outcomes = results.map((result, index) => result.status === "fulfilled"
+        ? { platform: platforms[index], success: true, detail: `Scheduled for ${time.toLocaleString()}` }
+        : { platform: platforms[index], success: false, detail: result.reason instanceof Error ? result.reason.message : "Scheduling failed before the post was saved." });
+      setPublishResults(outcomes);
+      const failed = outcomes.filter((result) => !result.success);
+      if (failed.length) toast.error(failed.map((result) => `${result.platform}: ${result.detail}`).join(" "));
+      else toast.success(`Scheduled for ${platforms.length} platform${platforms.length === 1 ? "" : "s"}.`);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Scheduling failed before the post was saved.";
+      setPublishResults([{ platform: "schedule", success: false, detail }]);
+      toast.error(detail);
+    }
   };
 
   const removeDraft = async (draftId: number) => { try { await deleteDraft.mutateAsync({ draftId }); await utils.socialMedia.getDrafts.invalidate(); toast.success("Draft removed."); } catch (error) { toast.error(error instanceof Error ? error.message : "Unable to remove draft."); } };
