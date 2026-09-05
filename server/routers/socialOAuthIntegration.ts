@@ -27,7 +27,7 @@ export const socialOAuthIntegrationRouter = router({
   getAuthorizationUrl: protectedProcedure
     .input(z.object({ platform: supportedPlatforms }))
     .mutation(async ({ input, ctx }) => {
-      const baseUrl = process.env.FRONTEND_URL;
+      const baseUrl = process.env.FRONTEND_URL?.replace(/\/+$/, "");
       if (!baseUrl) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -104,7 +104,7 @@ export const socialOAuthIntegrationRouter = router({
   refreshToken: protectedProcedure
     .input(z.object({ platform: supportedPlatforms }))
     .mutation(async ({ input, ctx }) => {
-      const baseUrl = process.env.FRONTEND_URL;
+      const baseUrl = process.env.FRONTEND_URL?.replace(/\/+$/, "");
       if (!baseUrl) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "OAuth is temporarily unavailable." });
       }

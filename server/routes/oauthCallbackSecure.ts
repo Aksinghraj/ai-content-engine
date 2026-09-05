@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import { handleOAuthCallback as completeOAuthCallback } from "../_core/oauthFlow";
 
 const router = Router();
-const BASE_URL = process.env.FRONTEND_URL || "https://lumae.co.in";
+const BASE_URL = (process.env.FRONTEND_URL || "https://lumae.co.in").replace(/\/+$/, "");
 
 /**
  * Generic OAuth callback handler

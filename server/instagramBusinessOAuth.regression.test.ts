@@ -10,7 +10,8 @@ describe("Instagram Business OAuth contract", () => {
   const validation = read("server/_core/credentialValidation.ts");
   const flow = read("server/_core/oauthFlow.ts");
   const publishing = read("server/_core/socialMediaPosting.ts");
-  const oauthRouter = read("server/routers/socialOAuthIntegration.ts");
+    const oauthRouter = read("server/routers/socialOAuthIntegration.ts");
+    const callbackRouter = read("server/routes/oauthCallbackSecure.ts");
   const accountsPage = read("client/src/pages/ConnectedAccounts.tsx");
 
   it("uses the configured Instagram Business Login flow rather than Basic Display or Facebook Login", () => {
@@ -42,6 +43,11 @@ describe("Instagram Business OAuth contract", () => {
     expect(oauthRouter).toContain(".mutation(async ({ input, ctx }) => {");
     expect(accountsPage).toContain("getAuthorizationUrl.mutate(");
     expect(accountsPage).not.toContain("getAuthorizationUrl.query(");
+  });
+
+  it("normalizes the configured production origin before generating or handling callbacks", () => {
+    expect(oauthRouter).toContain('process.env.FRONTEND_URL?.replace(/\\/+$/, "")');
+    expect(callbackRouter).toContain('process.env.FRONTEND_URL || "https://lumae.co.in").replace(/\\/+$/, "")');
   });
 
   it("serializes Meta permissions as comma-delimited scopes rather than a literal separator label", () => {

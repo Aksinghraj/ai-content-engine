@@ -1432,3 +1432,12 @@
 - [x] Keep Instagram account connection/privacy behavior separate from public profile sharing while exposing the same clear user-facing controls where applicable
 - [x] Add regression coverage for upload persistence, single sharing control, QR link generation, and public/private transitions
 - [x] Run TypeScript, focused tests, production build, and mobile reload/navigation verification before publishing
+
+## Meta Published-App Activation and Implementation Audit (IN PROGRESS)
+- [x] Audit the current Facebook and Instagram OAuth redirect URLs, scopes, token exchange, account validation, and Auto-Post gating
+- [x] Verify Lumae exposes exact production callback guidance without relying on localhost or preview-only URLs
+- [x] Confirm provider-specific connection errors return actionable guidance without enabling unvalidated Auto-Post
+- [x] Implement necessary Lumae-side Meta readiness fix: normalize trailing slashes in production OAuth origins and add regression coverage
+- [ ] Validate Facebook Page and Instagram Business Login flows as far as the current provider credentials and user consent allow
+- [x] Provide the owner with exact Meta dashboard setup and final connection steps, clearly separating owner-only actions from code changes
+- [x] Publish only after TypeScript, focused OAuth/scheduling tests, and production build pass
