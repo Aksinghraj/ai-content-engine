@@ -59,6 +59,7 @@ export const socialOAuthIntegrationRouter = router({
         id: connection.id,
         platform: connection.platform,
         username: connection.username,
+        isConnected: connection.isConnected,
         isValidated: connection.isValidated,
         autoPost: connection.autoPost,
         canEnableAutoPost: connection.platform !== "twitter" || isXPublishingEnabled(),

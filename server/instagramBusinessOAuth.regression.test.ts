@@ -20,6 +20,8 @@ describe("Instagram Business OAuth contract", () => {
     expect(platforms).toContain('`${baseUrl}/api/oauth/callback/instagram/callback`');
     expect(platforms).toContain('"instagram_business_content_publish"');
     expect(platforms).toContain('"instagram_business_basic"');
+    expect(platforms).toContain('"instagram_business_manage_comments"');
+    expect(platforms).toContain('"instagram_business_manage_messages"');
     expect(platforms).not.toContain('authorizationEndpoint: "https://www.facebook.com/v26.0/dialog/oauth"');
   });
 

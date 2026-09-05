@@ -5,6 +5,7 @@ import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
+import { metaWebhookRouter } from "../routes/metaWebhook";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -245,6 +246,11 @@ async function startServer() {
       }
     }
   );
+
+  // Meta sends a GET challenge followed by SHA-256 signed JSON event payloads.
+  // Register its raw-body parser before global JSON parsing so signatures are
+  // checked against the exact bytes Meta sent.
+  app.use("/api/webhooks/meta", express.raw({ type: "application/json", limit: "256kb" }), metaWebhookRouter);
   
   // Bound non-file request bodies to reduce memory-exhaustion risk.
   app.use(express.json({ limit: "1mb" }));

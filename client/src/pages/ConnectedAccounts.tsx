@@ -22,7 +22,7 @@ type Connection = { id: number; platform: string; username: string; isConnected?
 
 const PROVIDER_GUIDANCE: Partial<Record<PlatformId, string>> = {
   facebook: "Choose an account that manages a Page. In Meta, add the Pages permissions and register https://lumae.co.in/api/oauth/callback/facebook exactly. Customer connections also need the required Meta review approval.",
-  instagram: "While the Meta app is unpublished, only app-role testers can connect. Customer connections need Meta Business Verification, App Review, and Live mode.",
+  instagram: "Instagram publishing is ready after validation. Comment replies and customer-initiated messages require the approved comment/messaging permissions, Meta webhook setup, and a fresh reconnection to grant them.",
   twitter: "X uses paid API credits. You can connect an account, but the owner must approve the API budget before publishing or Auto-Post is available.",
   linkedin: "In LinkedIn Developer Portal, enable OpenID Connect and Share on LinkedIn, then register https://lumae.co.in/api/oauth/callback/linkedin exactly. Current publishing supports text posts.",
   youtube: "The Google ‘app hasn’t been verified’ screen is a Google consent-screen requirement, not a Lumae login failure. Enable YouTube Data API v3 and add the connecting Google account under OAuth consent screen → Test users while the app is in Testing.",

@@ -36,6 +36,7 @@ describe("social Connect and automation reliability contracts", () => {
 
   it("requires a validated, non-expired connection before Auto-Post can be enabled", () => {
     const oauthRouter = read("server/routers/socialOAuthIntegration.ts");
+    expect(oauthRouter).toContain("isConnected: connection.isConnected");
     expect(oauthRouter).toContain("Reconnect and validate your ${input.platform} account before enabling Auto-Post.");
     expect(oauthRouter).toContain("access token has expired. Reconnect before enabling Auto-Post.");
     expect(oauthRouter).toContain("eq(socialConnections.id, connection.id)");

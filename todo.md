@@ -1441,3 +1441,15 @@
 - [ ] Validate Facebook Page and Instagram Business Login flows as far as the current provider credentials and user consent allow
 - [x] Provide the owner with exact Meta dashboard setup and final connection steps, clearly separating owner-only actions from code changes
 - [x] Publish only after TypeScript, focused OAuth/scheduling tests, and production build pass
+
+## Social Automation Activation and Capability Audit (IN PROGRESS)
+- [ ] Audit active Instagram, Facebook, YouTube, LinkedIn, X, and TikTok connection states, publishing paths, comment/reply/DM capabilities, and safety gates
+- [ ] Repair Instagram publishing and implement only consent-based comment, private-reply, and direct-message automation supported by approved Meta permissions and webhooks
+- [x] Add a signed Meta webhook verification endpoint at /api/webhooks/meta with a secret-validated challenge response and raw-body signature guard
+- [x] Request Instagram comment and messaging scopes on new Business Login authorizations, requiring a fresh user reconnection to grant them
+- [x] Fix Connected Accounts data so a validated connected Instagram account can enable Auto-Post instead of being falsely treated as disconnected
+- [ ] Verify Facebook Page publishing readiness and identify any Meta permission, Page role, or webhook requirement
+- [ ] Verify YouTube connection/publishing readiness and preserve truthful unavailable states for unsupported comment automation
+- [ ] Keep LinkedIn, X, and TikTok action availability truthful to their approval, budget, and provider limitations
+- [x] Improve Connected Accounts guidance so users can distinguish Auto-Post from comment, reply, and direct-message capabilities
+- [ ] Add focused tests for provider capability gates and verify responsive controls before publishing
