@@ -9,6 +9,7 @@ import { metaWebhookRouter } from "../routes/metaWebhook";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { seoMiddleware } from "./seoRenderer";
 import { handleStripeWebhook, verifyStripeSignature } from "./stripeWebhook";
 import { handleRazorpayWebhook, initializeRazorpayService } from "./razorpayWebhook";
 import { initializeAutomationEngine } from "./automationEngine";
@@ -396,6 +397,7 @@ async function startServer() {
   }
 
   // development mode uses Vite, production mode uses static files
+  app.use(seoMiddleware);
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {

@@ -78,6 +78,9 @@ const trpcClient = trpc.createClient({
   ],
 });
 
+const seoContent = document.getElementById("seo-content");
+if (seoContent) seoContent.remove();
+
 createRoot(document.getElementById("root")!).render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>
     <QueryClientProvider client={queryClient}>
