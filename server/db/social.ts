@@ -131,6 +131,24 @@ export async function getSocialConnectionByPlatform(userId: number, platform: st
   return result[0] || null;
 }
 
+/** Find an active Meta-owned connection by the provider account/page ID. */
+export async function getSocialConnectionByPlatformUserId(platformUserId: string, platforms = ["instagram", "facebook"]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db
+    .select()
+    .from(socialConnections)
+    .where(
+      and(
+        eq(socialConnections.platformUserId, platformUserId),
+        or(...platforms.map((platform) => eq(socialConnections.platform, platform))),
+        eq(socialConnections.isConnected, true)
+      )
+    )
+    .limit(1);
+  return result[0] || null;
+}
+
 /**
  * Update social connection
  */

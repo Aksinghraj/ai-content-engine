@@ -25,6 +25,22 @@ export async function createEngagementEvent(data: InsertEngagementEvent) {
   return result;
 }
 
+export async function hasEngagementEvent(userId: number, socialConnectionId: number, eventType: InsertEngagementEvent["eventType"], postId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db
+    .select({ id: engagementEvents.id })
+    .from(engagementEvents)
+    .where(and(
+      eq(engagementEvents.userId, userId),
+      eq(engagementEvents.socialConnectionId, socialConnectionId),
+      eq(engagementEvents.eventType, eventType),
+      eq(engagementEvents.postId, postId),
+    ))
+    .limit(1);
+  return result.length > 0;
+}
+
 export async function getEngagementEvents(userId: number, limit = 50) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
