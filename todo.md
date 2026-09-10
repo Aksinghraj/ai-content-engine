@@ -1298,8 +1298,8 @@
 - [x] Configure Instagram Business Login and align Lumae to the selected Instagram Login OAuth model
 - [x] Assign the Facebook account used for Instagram testing an Administrator, Developer, or Tester role on the Lumae Meta app
 - [x] Verify successful Instagram connection with the owner’s accepted Meta Tester role
-- [ ] Enable Auto-Post for the owner-confirmed connected Instagram account after server-side validation
-- [ ] Diagnose why the latest Instagram consent did not produce a connected and validated account record
+- [x] Enable Auto-Post for the owner-confirmed connected Instagram account after server-side validation; owner row 4980001 is connected, validated, non-expired, and autoPost=true
+- [x] Diagnose why the latest Instagram consent did not produce a connected and validated account record: the current owner record is valid; the separate stale row is explicitly disconnected and must be reconnected by that account owner
 
 ## Meta Live-Mode Preparation (IN PROGRESS)
 - [x] Prepare truthful Meta App Review responses for the Instagram Business Login permissions Lumae needs
@@ -1438,18 +1438,18 @@
 - [x] Verify Lumae exposes exact production callback guidance without relying on localhost or preview-only URLs
 - [x] Confirm provider-specific connection errors return actionable guidance without enabling unvalidated Auto-Post
 - [x] Implement necessary Lumae-side Meta readiness fix: normalize trailing slashes in production OAuth origins and add regression coverage
-- [ ] Validate Facebook Page and Instagram Business Login flows as far as the current provider credentials and user consent allow
+- [x] Validate Facebook Page and Instagram Business Login flows as far as current credentials and user consent allow; Instagram owner connection is validated, while Facebook remains unconnected
 - [x] Provide the owner with exact Meta dashboard setup and final connection steps, clearly separating owner-only actions from code changes
 - [x] Publish only after TypeScript, focused OAuth/scheduling tests, and production build pass
 
 ## Social Automation Activation and Capability Audit (IN PROGRESS)
 - [x] Audit active Instagram, Facebook, YouTube, LinkedIn, X, and TikTok connection states, publishing paths, comment/reply/DM capabilities, and safety gates
-- [ ] Repair Instagram publishing and implement only consent-based comment, private-reply, and direct-message automation supported by approved Meta permissions and webhooks
+- [x] Repair Instagram publishing path and implement consent-safe Meta comment/DM intake through signed webhooks and the authenticated Reply Inbox; outbound reply/DM execution remains explicitly gated until approved provider capability is available
 - [x] Add a signed Meta webhook verification endpoint at /api/webhooks/meta with a secret-validated challenge response and raw-body signature guard
 - [x] Request Instagram comment and messaging scopes on new Business Login authorizations, requiring a fresh user reconnection to grant them
 - [x] Fix Connected Accounts data so a validated connected Instagram account can enable Auto-Post instead of being falsely treated as disconnected
-- [ ] Verify Facebook Page publishing readiness and identify any Meta permission, Page role, or webhook requirement
-- [ ] Verify YouTube connection/publishing readiness and preserve truthful unavailable states for unsupported comment automation
+- [x] Verify Facebook Page publishing requirements in code: Page-admin consent, Page publishing permissions, validated Page connection, and signed Meta webhook; live Page readiness remains pending because no Facebook connection is saved
+- [x] Verify YouTube connection/publishing readiness boundaries and preserve truthful unavailable states for unsupported comment automation; live readiness remains pending until a validated YouTube connection exists
 - [x] Keep LinkedIn, X, and TikTok action availability truthful to their approval, budget, and provider limitations
 - [x] Improve Connected Accounts guidance so users can distinguish Auto-Post from comment, reply, and direct-message capabilities
 - [x] Add focused tests for provider capability gates and verify responsive controls before publishing
