@@ -51,6 +51,24 @@ async function getProviderError(response: Response, fallback: string): Promise<s
   }
 }
 
+async function waitForInstagramVideoContainer(containerId: string, accessToken: string): Promise<string | null> {
+  const deadline = Date.now() + 60_000;
+  let lastStatus = "IN_PROGRESS";
+  while (Date.now() < deadline) {
+    const statusResponse = await fetch(
+      `https://graph.instagram.com/${INSTAGRAM_API_VERSION}/${containerId}?fields=status_code,status`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+    if (!statusResponse.ok) return await getProviderError(statusResponse, "Instagram could not check video processing status");
+    const status = await statusResponse.json() as { status_code?: string; status?: string };
+    lastStatus = status.status_code || status.status || lastStatus;
+    if (lastStatus === "FINISHED" || lastStatus === "PUBLISHED") return null;
+    if (lastStatus === "ERROR" || lastStatus === "EXPIRED") return `Instagram video processing failed with status ${lastStatus}.`;
+    await new Promise((resolve) => setTimeout(resolve, 2_000));
+  }
+  return `Instagram video is still processing after 60 seconds (status ${lastStatus}). Try scheduling it again later.`;
+}
+
 /**
  * Post to Instagram
  */
@@ -99,6 +117,11 @@ export async function postToInstagram(
 
     const container = await createResponse.json() as { id?: string };
     if (!container.id) return { success: false, error: "Instagram did not return a media container ID" };
+
+    if (content.videoUrl) {
+      const processingError = await waitForInstagramVideoContainer(container.id, accessToken);
+      if (processingError) return { success: false, error: processingError };
+    }
 
     const publishResponse = await fetch(`https://graph.instagram.com/${INSTAGRAM_API_VERSION}/${igUserId}/media_publish`, {
       method: "POST",

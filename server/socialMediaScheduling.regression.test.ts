@@ -30,4 +30,18 @@ describe("social media scheduling reliability", () => {
     expect(page).toContain("Scheduling failed before the post was saved.");
     expect(page).toContain("toast.error(failed.map");
   });
+
+  it("waits for Instagram video containers before publishing scheduled reels", () => {
+    const posting = read("server/_core/socialMediaPosting.ts");
+    expect(posting).toContain("waitForInstagramVideoContainer");
+    expect(posting).toContain("status_code,status");
+    expect(posting).toContain("Instagram video is still processing after 60 seconds");
+    expect(posting).toContain("const processingError = await waitForInstagramVideoContainer");
+  });
+
+  it("records the real provider error when the durable dispatcher cannot publish", () => {
+    const scheduler = read("server/_core/scheduledPostScheduler.ts");
+    expect(scheduler).toContain("updateScheduledPostStatus(post.id, \"failed\", undefined, result?.error");
+    expect(scheduler).toContain("postToMultiplePlatforms(post.userId, [post.platform]");
+  });
 });
