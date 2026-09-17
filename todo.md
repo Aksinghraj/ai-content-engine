@@ -1475,6 +1475,7 @@
 - [x] Bound trend AI-estimation latency so the live trend test and production refresh cannot hang indefinitely
 - [x] Re-run the complete test suite and production build after these compatibility fixes
 
-## Provider Readiness Follow-up
-- [ ] Continue remaining Meta/LinkedIn provider-readiness tasks after the Instagram scheduling repair
+## Provider Readiness Follow-up (CODE COMPLETE; EXTERNAL ACTIONS PENDING)
+- [x] Implement visible Meta and LinkedIn activation checklists and platform-specific blocking guidance in Connected Accounts
+- [x] Continue remaining code-level Meta/LinkedIn provider-readiness tasks after the Instagram scheduling repair
 
