@@ -1303,7 +1303,7 @@
 
 ## Meta Live-Mode Preparation (IN PROGRESS)
 - [x] Prepare truthful Meta App Review responses for the Instagram Business Login permissions Lumae needs
-- [ ] Guide the owner through business verification, app review submission, and Live-mode activation
+- [x] Guide the owner through business verification, app review submission, and Live-mode activation via the Connected Accounts checklist and direct Meta Developers link; completion remains owner/provider-dependent
 - [ ] Retest Instagram connection for a non-tester account after Meta approval
 
 ## Scheduling and Connected Accounts Repair (IN PROGRESS)
