@@ -203,52 +203,53 @@ export async function publishToTwitter(
  */
 export async function publishToLinkedIn(
   accessToken: string,
+  platformUserId: string,
   content: string,
   mediaUrls?: string[]
 ): Promise<PublishResult> {
   try {
     const decryptedToken = decryptToken(accessToken);
-
-    const body: any = {
-      commentary: content,
-      visibility: "PUBLIC",
-    };
-
-    // Add media if provided
     if (mediaUrls && mediaUrls.length > 0) {
-      body.content = {
-        media: {
-          title: "Shared content",
-          description: content,
-          originalUrl: mediaUrls[0],
-        },
+      return {
+        platform: "linkedin",
+        success: false,
+        error: "LinkedIn media posts require a separately uploaded LinkedIn asset; use text-only publishing until asset uploads are added.",
       };
     }
 
-    const response = await fetch(
-      "https://api.linkedin.com/v2/ugcPosts",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${decryptedToken}`,
+    const response = await fetch("https://api.linkedin.com/rest/posts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${decryptedToken}`,
+        "Linkedin-Version": "202608",
+        "X-Restli-Protocol-Version": "2.0.0",
+      },
+      body: JSON.stringify({
+        author: `urn:li:person:${platformUserId}`,
+        commentary: content,
+        visibility: "PUBLIC",
+        distribution: {
+          feedDistribution: "MAIN_FEED",
+          targetEntities: [],
+          thirdPartyDistributionChannels: [],
         },
-        body: JSON.stringify(body),
-      }
-    );
+        lifecycleState: "PUBLISHED",
+        isReshareDisabledByAuthor: false,
+      }),
+    });
 
     if (!response.ok) {
       const error = await response.text();
       throw new Error(`LinkedIn publish failed: ${error}`);
     }
 
-    const data = await response.json();
-
+    const postId = response.headers.get("x-restli-id");
     return {
       platform: "linkedin",
       success: true,
-      postId: data.id,
-      url: `https://linkedin.com/feed/update/${data.id}`,
+      postId: postId || undefined,
+      url: postId ? `https://linkedin.com/feed/update/${postId}` : undefined,
     };
   } catch (error) {
     console.error("[SocialPost] LinkedIn publish error:", error);
@@ -421,6 +422,7 @@ export async function publishToMultiplePlatforms(
         case "linkedin":
           result = await publishToLinkedIn(
             connection.accessToken,
+            connection.platformUserId,
             post.content,
             post.mediaUrls
           );

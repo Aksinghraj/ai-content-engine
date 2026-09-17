@@ -22,7 +22,8 @@ describe("Instagram Business OAuth contract", () => {
     expect(platforms).toContain('"instagram_business_basic"');
     expect(platforms).toContain('"instagram_business_manage_comments"');
     expect(platforms).toContain('"instagram_business_manage_messages"');
-    expect(platforms).not.toContain('authorizationEndpoint: "https://www.facebook.com/v26.0/dialog/oauth"');
+    const instagramConfig = platforms.slice(platforms.indexOf("instagram: {"), platforms.indexOf("twitter: {"));
+    expect(instagramConfig).not.toContain('authorizationEndpoint: "https://www.facebook.com/v26.0/dialog/oauth"');
   });
 
   it("accepts both the registered Instagram callback path and the previous callback alias", () => {

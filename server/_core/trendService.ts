@@ -5,6 +5,7 @@ import { invokeLLM } from "./llm";
 
 export const UNIFIED_TREND_CACHE_KEY = "unified_social_trends_v1";
 export const TREND_CACHE_TTL_MS = 3 * 60 * 60 * 1000;
+const TREND_AI_TIMEOUT_MS = 12_000;
 
 export type TrendSource = "youtube" | "instagram" | "facebook" | "tiktok" | "twitter";
 export type TrendDataKind = "live" | "ai_estimated";
@@ -93,7 +94,7 @@ const deterministicEstimatedTopics = (youtubeTopics: UnifiedTrend[], now: Date):
 const estimateUnsupportedPlatformTopics = async (youtubeTopics: UnifiedTrend[], now: Date): Promise<UnifiedTrend[]> => {
   const context = youtubeTopics.map(topic => topic.title).join(" | ") || "No live video titles were available";
   try {
-    const result = await invokeLLM({
+    const llmRequest = invokeLLM({
       model: "gpt-5-mini",
       maxTokens: 900,
       messages: [
@@ -130,6 +131,10 @@ const estimateUnsupportedPlatformTopics = async (youtubeTopics: UnifiedTrend[], 
         },
       },
     });
+    const timeout = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error(`Trend AI estimation timed out after ${TREND_AI_TIMEOUT_MS}ms`)), TREND_AI_TIMEOUT_MS);
+    });
+    const result = await Promise.race([llmRequest, timeout]);
     const content = result.choices[0]?.message.content;
     const parsed = typeof content === "string" ? JSON.parse(content) as { topics: Omit<UnifiedTrend, "id" | "dataKind" | "observedAt">[] } : null;
     if (!parsed?.topics?.length) return deterministicEstimatedTopics(youtubeTopics, now);

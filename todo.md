@@ -1462,10 +1462,19 @@
 - [x] Add regression coverage for successful schedule creation and all current blocking conditions
 - [x] Run TypeScript, focused scheduling tests, production build, and browser/mobile verification before publishing
 
-## Instagram Auto-Post Scheduling Repair (IN PROGRESS)
+## Instagram Auto-Post Scheduling Repair (COMPLETED)
 - [x] Trace owner Instagram Auto-Post from validated connection state through schedule persistence, heartbeat dispatch, media validation, and provider response
 - [x] Identify and repair the live Instagram scheduling/publishing blocker without weakening connection or token safeguards; video containers now wait for Meta processing before publish
 - [x] Ensure schedule success, failure, and provider rejection states are visible and persisted; Post Scheduling now shows per-platform API outcomes and the dispatcher stores provider errors
 - [x] Add regression coverage for Instagram Auto-Post scheduling, video-container readiness, and idempotent dispatcher behavior
 - [x] Verify with TypeScript, focused tests, production build, and a safe owner-account diagnostic without publishing unintended content
+- [x] Complete code-level Meta/LinkedIn provider-readiness work; external approval and account reconnection remain separately tracked
+
+## Full Suite Compatibility Repair (COMPLETED)
+- [x] Update the stale profile regression contract to match the current professional profile copy
+- [x] Bound trend AI-estimation latency so the live trend test and production refresh cannot hang indefinitely
+- [x] Re-run the complete test suite and production build after these compatibility fixes
+
+## Provider Readiness Follow-up
 - [ ] Continue remaining Meta/LinkedIn provider-readiness tasks after the Instagram scheduling repair
+

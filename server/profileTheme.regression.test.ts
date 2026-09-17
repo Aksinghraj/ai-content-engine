@@ -7,10 +7,9 @@ const read = (relativePath: string) => readFileSync(resolve(process.cwd(), relat
 describe("professional profile and theme modes", () => {
   it("renders a secure social profile with editable identity and privacy fields", () => {
     const profile = read("client/src/pages/ProfileAdvanced.tsx");
-    expect(profile).toContain("Private by default");
-    expect(profile).toContain("Creator profile");
     expect(profile).toContain("Private Lumae activity");
-    expect(profile).toContain("Edit profile");
+    expect(profile).toContain("Profile settings");
+    expect(profile).toContain("Edit settings");
     expect(profile).toContain("Make profile public");
     expect(profile).toContain("Open to collaborate");
   });

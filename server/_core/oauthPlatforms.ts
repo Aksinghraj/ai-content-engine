@@ -98,8 +98,8 @@ export function initializeOAuthConfigs(baseUrl: string): OAuthPlatforms {
       clientId: process.env.FACEBOOK_CLIENT_ID || "YOUR_FACEBOOK_CLIENT_ID",
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET || "YOUR_FACEBOOK_CLIENT_SECRET",
       redirectUri: getRedirectUri(baseUrl, "facebook"),
-      authorizationEndpoint: "https://www.facebook.com/v18.0/dialog/oauth",
-      tokenEndpoint: "https://graph.facebook.com/v18.0/oauth/access_token",
+      authorizationEndpoint: "https://www.facebook.com/v26.0/dialog/oauth",
+      tokenEndpoint: "https://graph.facebook.com/v26.0/oauth/access_token",
       userInfoEndpoint: "https://graph.facebook.com/me",
       scopes: [
         "pages_show_list",

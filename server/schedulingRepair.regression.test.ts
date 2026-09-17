@@ -107,6 +107,22 @@ describe("scheduling and connected-account repair contracts", () => {
     expect(validator).toContain('page.tasks.includes("CREATE_CONTENT")');
     expect(validator).toContain("publishingAccessToken: page.access_token");
     expect(publisher).toContain("/${connection.platformUserId}/photos");
+    expect(platforms).toContain('authorizationEndpoint: "https://www.facebook.com/v26.0/dialog/oauth"');
+    expect(platforms).toContain('tokenEndpoint: "https://graph.facebook.com/v26.0/oauth/access_token"');
+  });
+
+  it("uses LinkedIn's current REST posts endpoint and never the retired activity-post path", () => {
+    const publisher = read("server/_core/socialMediaPosting.ts");
+    const legacyPublisher = read("server/_core/socialPostService.ts");
+    expect(publisher).toContain('https://api.linkedin.com/rest/posts');
+    expect(legacyPublisher).toContain('https://api.linkedin.com/rest/posts');
+    for (const source of [publisher, legacyPublisher]) {
+      expect(source).not.toContain('/v2/ugcPosts');
+      expect(source).not.toContain('/v2/shares');
+      expect(source).not.toContain('/v2/activity');
+    }
+    expect(publisher).toContain('"Linkedin-Version": LINKEDIN_API_VERSION');
+    expect(legacyPublisher).toContain('"Linkedin-Version": "202608"');
   });
 
   it("requests durable offline access when a user connects YouTube", () => {
