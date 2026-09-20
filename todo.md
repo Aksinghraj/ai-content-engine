@@ -1280,6 +1280,7 @@
 - [x] Replace the LinkedIn legacy UGC post call with the current Posts API request contract
 - [x] Replace the obsolete YouTube activity-post call with safe video-upload capability handling
 - [ ] Verify Instagram and LinkedIn reconnection readiness and enable Auto-Post only after successful validation
+  - Code-side readiness is complete: connections require server validation, non-expired tokens, ownership, and provider capability checks. Final reconnection validation is blocked until the owner reconnects the real provider accounts.
 - [x] Add optional, validated media references to platform automation schedules for provider-valid publishing
 - [x] Require a validated and non-expired connection before Auto-Post can be enabled
 - [x] Provision the required server-side OAuth state encryption key before reconnection
@@ -1295,6 +1296,7 @@
 - [x] Restore the screenshot-confirmed Instagram callback URI ending in /instagram/callback and preserve the shorter alias
 - [x] Verify the remaining external Meta app mode, product, permission, and role requirements behind the persistent provider rejection
 - [ ] Complete Meta business verification and add the Instagram API Content Publishing use case before retrying connection
+  - Owner/provider action required in Meta Developers; this cannot be completed or truthfully simulated by application code.
 - [x] Configure Instagram Business Login and align Lumae to the selected Instagram Login OAuth model
 - [x] Assign the Facebook account used for Instagram testing an Administrator, Developer, or Tester role on the Lumae Meta app
 - [x] Verify successful Instagram connection with the owner’s accepted Meta Tester role
@@ -1305,6 +1307,7 @@
 - [x] Prepare truthful Meta App Review responses for the Instagram Business Login permissions Lumae needs
 - [x] Guide the owner through business verification, app review submission, and Live-mode activation via the Connected Accounts checklist and direct Meta Developers link; completion remains owner/provider-dependent
 - [ ] Retest Instagram connection for a non-tester account after Meta approval
+  - Blocked until Meta Business Verification, Content Publishing approval, and Live-mode activation are complete; then the owner must reconnect a non-tester account and run the safe diagnostic.
 
 ## Scheduling and Connected Accounts Repair (IN PROGRESS)
 - [x] Remove mock scheduled-post metrics and placeholder activity from the scheduling workspace
@@ -1478,4 +1481,3 @@
 ## Provider Readiness Follow-up (CODE COMPLETE; EXTERNAL ACTIONS PENDING)
 - [x] Implement visible Meta and LinkedIn activation checklists and platform-specific blocking guidance in Connected Accounts
 - [x] Continue remaining code-level Meta/LinkedIn provider-readiness tasks after the Instagram scheduling repair
-
