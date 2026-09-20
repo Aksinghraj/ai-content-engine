@@ -25,6 +25,10 @@ describe("authenticated dashboard usability repair", () => {
     expect(dashboard).toContain("Workspace signal");
     expect(dashboard).toContain("Start here");
     expect(dashboard).toContain("Account signal");
+    expect(dashboard).toContain("Meta integration");
+    expect(dashboard).toContain("Pending Verification");
+    expect(dashboard).toContain('aria-label="Meta integration status: Pending Verification"');
+    expect(dashboard).toContain("Business verification and Content Publishing approval are still required");
     expect(dashboard).not.toContain("WORKSPACE SIGNAL");
     expect(overrides).toContain("text-transform: none");
     expect(overrides).toContain("font-size: 34px");
