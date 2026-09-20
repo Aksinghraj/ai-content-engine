@@ -31,13 +31,16 @@ describe("Google Play release readiness safeguards", () => {
     const html = readProject("client/index.html");
     const consent = readProject("client/src/components/CookieConsentBanner.tsx");
 
-    expect(html).toContain("window.__lumaeNativeContainer");
-    expect(html).toContain("window.loadLumaeWebTracking");
-    expect(html).toContain("window.__lumaeNativeContainer || localStorage.getItem('cookie-consent') !== 'accepted-all'");
+    const tracking = readProject("client/src/lib/webTracking.ts");
+    expect(tracking).toContain("window.__lumaeNativeContainer");
+    expect(tracking).toContain("window.loadLumaeWebTracking");
+    expect(tracking).toContain('localStorage.getItem("cookie-consent") !== "accepted-all"');
+    expect(html).not.toContain("<script>");
+    expect(html).not.toContain("<script type=\"application/ld+json\">");
     expect(html).not.toContain('<script async src="https://pagead2.googlesyndication.com');
     expect(html).not.toContain('<script async src="https://www.googletagmanager.com');
     expect(html).not.toContain('src="%VITE_ANALYTICS_ENDPOINT%/umami"');
-    expect(html).toContain("const umamiEndpoint = '%VITE_ANALYTICS_ENDPOINT%'");
+    expect(tracking).toContain("import.meta.env.VITE_ANALYTICS_ENDPOINT");
     expect(consent).toContain("window.loadLumaeWebTracking?.()");
   });
 

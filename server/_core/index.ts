@@ -118,6 +118,13 @@ async function startServer() {
   // Trust the reverse proxy (Manus/Cloud Run) so req.protocol is correct
   // This is required for cookies with secure:true and sameSite:none to work
   app.set("trust proxy", 1);
+  app.disable("x-powered-by");
+  app.use((_req, res, next) => {
+    // Express does not own the edge-generated Server header, but never disclose
+    // an origin-server identity when this app is reached directly.
+    res.removeHeader("Server");
+    next();
+  });
 
   // Security headers
   app.use(helmet({
@@ -129,8 +136,9 @@ async function startServer() {
         frameAncestors: ["'self'"],
         imgSrc: ["'self'", "data:", "blob:", "https:"],
         objectSrc: ["'none'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "https:"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+        scriptSrc: ["'self'", "https://www.googletagmanager.com", "https://pagead2.googlesyndication.com", "https://*.google-analytics.com"],
+        styleSrc: ["'self'", "https://fonts.googleapis.com"],
+        styleSrcAttr: ["'none'"],
         fontSrc: ["'self'", "data:", "https:"],
         connectSrc: ["'self'", "https:"],
         // Razorpay opens its PCI-hosted checkout inside a nested browsing context.

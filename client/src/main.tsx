@@ -10,6 +10,7 @@ import { registerServiceWorker } from "./serviceWorkerRegister";
 import { notifyRateLimited } from "./lib/rateLimitFeedback";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import "./index.css";
+import "./lib/webTracking";
 
 // Register service worker for PWA support
 registerServiceWorker();

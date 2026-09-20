@@ -113,12 +113,13 @@ export function registerOAuthRoutes(app: Express) {
 
     // NOTE: scope value is plain text — the browser encodes it once on submit.
     // Do NOT pre-encode it here.
-    const html = `<!DOCTYPE html>
+    const cspNonce = crypto.randomBytes(18).toString("base64");
+    const html = `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <title>Signing in with Google…</title>
-  <style>
+  <style nonce="${cspNonce}">
     body { font-family: sans-serif; display: flex; align-items: center;
            justify-content: center; min-height: 100vh; margin: 0;
            background: #0f172a; color: #94a3b8; }
@@ -135,17 +136,16 @@ export function registerOAuthRoutes(app: Express) {
     <input type="hidden" name="access_type"   value="offline">
     <input type="hidden" name="prompt"        value="consent">
   </form>
-  <script>document.getElementById('f').submit();</script>
+  <script nonce="${cspNonce}">document.getElementById('f').submit();</script>
 </body>
 </html>`;
 
     // This isolated transition page needs an external form action and one
     // auto-submit script. Its narrow CSP overrides the broader app policy only
-    // for this response, keeping Google OAuth functional without loosening all
-    // application pages.
+    // for this response, using a one-time nonce rather than unsafe-inline.
     res.setHeader(
       "Content-Security-Policy",
-      "default-src 'none'; base-uri 'none'; form-action https://accounts.google.com; style-src 'unsafe-inline'; script-src 'unsafe-inline'"
+      `default-src 'none'; base-uri 'none'; form-action https://accounts.google.com; style-src 'nonce-${cspNonce}'; script-src 'nonce-${cspNonce}'`
     );
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     return res.send(html);

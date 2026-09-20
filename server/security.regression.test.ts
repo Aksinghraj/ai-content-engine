@@ -45,6 +45,11 @@ describe("defensive security hardening", () => {
     expect(server).toContain('app.use("/api/trpc/twoFactor", twoFactorLimiter)');
     expect(server).toContain('app.use("/api/trpc/localAuth", localAuthLimiter)');
     expect(server).toContain('return res.status(403).json({ error: "untrusted-origin" })');
+    expect(server).toContain('app.disable("x-powered-by")');
+    expect(server).toContain('res.removeHeader("Server")');
+    expect(server).not.toContain('scriptSrc: ["\'self\'", "\'unsafe-inline\'"');
+    expect(server).not.toContain('styleSrc: ["\'self\'", "\'unsafe-inline\'"');
+    expect(server).toContain('styleSrcAttr: ["\'none\'"]');
     expect(server).toContain('express.json({ limit: "1mb" })');
     expect(server).toContain('express.raw({ type: "application/json", limit: "256kb" })');
     expect(server).not.toContain("Key ID loaded:");
@@ -82,6 +87,8 @@ describe("defensive security hardening", () => {
     expect(oauth).toContain("statesMatch(storedState.nonce, stateRaw)");
     expect(oauth).toContain('return res.redirect("/login?error=invalid_state")');
     expect(oauth).toContain("form-action https://accounts.google.com");
+    expect(oauth).toContain("const cspNonce = crypto.randomBytes(18).toString(\"base64\")");
+    expect(oauth).not.toContain("script-src 'unsafe-inline'");
     expect(oauth).not.toContain("JSON.parse(Buffer.from(stateRaw");
   });
 
